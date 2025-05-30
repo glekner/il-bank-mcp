@@ -78,3 +78,15 @@ Thumbs.db
 # Backup files
 *.bak
 *.backup
+
+# Docker
+docker-compose.override.yml
+.dockerignore.local
+
+# Backups
+backups/
+*.backup
+*.tar.gz
+
+# Claude Desktop config backups
+claude_desktop_config.json.backup.*

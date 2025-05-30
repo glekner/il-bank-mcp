@@ -1,0 +1,33 @@
+version: "3.8"
+
+# Development overrides for docker-compose.yml
+# Usage: docker-compose -f docker-compose.yml -f docker-compose.dev.yml up
+
+services:
+  scraper:
+    environment:
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+      - DEBUG=true
+    volumes:
+      # Mount source code for hot reload
+      - ./packages/scraper/src:/app/packages/scraper/src:ro
+      - ./packages/scraper/package.json:/app/packages/scraper/package.json:ro
+    command: ["yarn", "dev"]
+    # Disable restart in development
+    restart: "no"
+
+  mcp-server:
+    environment:
+      - NODE_ENV=development
+      - LOG_LEVEL=debug
+      - DEBUG=true
+    volumes:
+      # Mount source code for development
+      - ./packages/mcp-server/src:/app/packages/mcp-server/src:ro
+      - ./packages/scraper/src:/app/packages/scraper/src:ro
+    # For debugging
+    ports:
+      - "9229:9229"
+    command: ["node", "--inspect=0.0.0.0:9229", "dist/index.js"]
+    restart: "no"

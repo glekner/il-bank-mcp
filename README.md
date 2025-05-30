@@ -62,6 +62,68 @@ cp env.example .env
 yarn build
 ```
 
+## Docker Setup (Recommended)
+
+The project includes a complete Docker infrastructure for easy deployment and management.
+
+### Quick Start with Docker
+
+1. **Initial setup:**
+
+   ```bash
+   make setup
+   # or manually:
+   cp env.example .env
+   # Edit .env with your credentials
+   docker-compose up -d --build
+   ```
+
+2. **Configure Claude Desktop:**
+
+   ```bash
+   make claude-config
+   # or manually:
+   ./scripts/generate-claude-config.sh
+   ```
+
+3. **Restart Claude Desktop** to load the MCP server
+
+### Docker Features
+
+- **Automated Chromium**: Pre-installed Chromium for Puppeteer scraping
+- **Health Monitoring**: Built-in health checks for both services
+- **Data Persistence**: SQLite database stored in persistent volume
+- **Security**: Read-only access for MCP server, isolated networking
+- **Easy Management**: Makefile commands for common operations
+
+### Docker Commands
+
+```bash
+# Start services
+make up
+
+# View logs
+make logs
+
+# Stop services
+make down
+
+# Test MCP connection
+make test-mcp
+
+# Access container shells
+make shell-scraper
+make shell-mcp
+
+# Backup database
+make backup
+
+# View service status
+make status
+```
+
+For detailed Docker documentation, see [docs/DOCKER.md](docs/DOCKER.md).
+
 ## Configuration
 
 Create a `.env` file with the following variables:

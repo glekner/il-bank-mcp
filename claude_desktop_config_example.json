@@ -1,0 +1,16 @@
+{
+  "mcpServers": {
+    "bank-assistant": {
+      "command": "docker",
+      "args": [
+        "compose",
+        "-f",
+        "/ABSOLUTE/PATH/TO/YOUR/REPO/docker-compose.yml",
+        "run",
+        "--rm",
+        "-i",
+        "mcp-server"
+      ]
+    }
+  }
+}

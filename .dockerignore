@@ -1,0 +1,60 @@
+# Node modules
+node_modules/
+*/node_modules/
+*/*/node_modules/
+
+# Build outputs
+dist/
+*/dist/
+build/
+*/build/
+*.tsbuildinfo
+
+# Development files
+.git/
+.gitignore
+.env.local
+.env.development
+.env.test
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Test files
+coverage/
+.nyc_output/
+*.test.js
+*.spec.js
+__tests__/
+
+# Documentation
+README.md
+docs/
+*.md
+
+# Docker files (prevent recursion)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# Data and logs (will be mounted as volumes)
+data/
+logs/
+packages/scraper/logs/
+
+# Temporary files
+tmp/
+temp/
+.cache/
+
+# Turbo
+.turbo/ 

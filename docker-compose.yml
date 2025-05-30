@@ -1,0 +1,68 @@
+version: "3.8"
+
+services:
+  # Scraper service - runs the bank scraping backend
+  scraper:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: scraper
+    container_name: bank-scraper
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_PATH=/app/data/bank.db
+      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+      - PUPPETEER_ARGS=--no-sandbox,--disable-setuid-sandbox,--disable-dev-shm-usage
+    volumes:
+      - ./data:/app/data
+      - ./packages/scraper/logs:/app/packages/scraper/logs
+    command: ["node", "dist/index.js"]
+    networks:
+      - bank-network
+    security_opt:
+      - seccomp=unconfined
+    cap_add:
+      - SYS_ADMIN
+    healthcheck:
+      test: ["CMD", "node", "-e", "process.exit(0)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # MCP Server - Model Context Protocol server
+  mcp-server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: mcp-server
+    container_name: bank-mcp-server
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - DATABASE_PATH=/app/data/bank.db
+    volumes:
+      - ./data:/app/data:ro # Read-only access to data
+    depends_on:
+      scraper:
+        condition: service_healthy
+    networks:
+      - bank-network
+    stdin_open: true
+    tty: true
+    # MCP servers communicate via stdio, so we don't expose ports
+    # The server will be accessed via docker exec or docker run commands
+
+networks:
+  bank-network:
+    driver: bridge
+    name: bank-assistant-network
+
+volumes:
+  bank-data:
+    driver: local

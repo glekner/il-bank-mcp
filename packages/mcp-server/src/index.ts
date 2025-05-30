@@ -169,10 +169,27 @@ class BankLeumiMCPServer {
               ? new Date(typedArgs.endDate)
               : undefined;
 
-            const summary = await this.scraperService.getFinancialSummary(
+            let summary = await this.scraperService.getFinancialSummary(
               startDate,
               endDate
             );
+
+            // If summary is empty, trigger a scrape and retry
+            if (
+              !summary ||
+              summary.transactions.length === 0 ||
+              (Object.keys(summary.income).length === 0 &&
+                Object.keys(summary.expenses).length === 0)
+            ) {
+              console.error("Financial summary is empty, triggering scrape...");
+              await this.scraperService.forceScrape();
+
+              // Retry getting the summary after scraping
+              summary = await this.scraperService.getFinancialSummary(
+                startDate,
+                endDate
+              );
+            }
 
             return {
               content: [
@@ -192,7 +209,16 @@ class BankLeumiMCPServer {
           }
 
           case "get_accounts": {
-            const accounts = await this.scraperService.getAccounts();
+            let accounts = await this.scraperService.getAccounts();
+
+            // If no accounts found, trigger a scrape and retry
+            if (accounts.length === 0) {
+              console.error("No accounts found, triggering scrape...");
+              await this.scraperService.forceScrape();
+
+              // Retry getting accounts after scraping
+              accounts = await this.scraperService.getAccounts();
+            }
 
             return {
               content: [
