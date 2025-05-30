@@ -1,5 +1,5 @@
 import * as cron from "node-cron";
-import { ScraperService } from "./services/scraperService";
+import { ScraperService } from "./index";
 import { logger } from "./utils/logger";
 import * as dotenv from "dotenv";
 import * as path from "path";
