@@ -1,0 +1,8 @@
+{
+  "files": [],
+  "references": [
+    { "path": "./packages/scraper" },
+    { "path": "./packages/query-server" },
+    { "path": "./tsconfig.node.json" }
+  ]
+}
