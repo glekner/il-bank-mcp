@@ -1,104 +1,223 @@
-# Bank Leumi Financial Assistant
+# Bank Leumi MCP Scraper
 
-A TypeScript monorepo for scraping and analyzing Bank Leumi financial data, with plans for MCP (Model Context Protocol) integration.
+A TypeScript-based financial data scraper for Bank Leumi (Israel) with Model Context Protocol (MCP) server integration. This project enables AI assistants to access and analyze your bank data through a secure, local MCP interface.
 
-## 🏗 Architecture
+## Architecture
 
-This project uses a monorepo structure with the following packages:
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│  Bank Leumi API │────▶│ Scraper Service │────▶│ SQLite Database │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+                                                          │
+                                                          ▼
+                                                 ┌─────────────────┐
+                                                 │   MCP Server    │
+                                                 └─────────────────┘
+                                                          │
+                                                          ▼
+                                                 ┌─────────────────┐
+                                                 │  AI Assistant   │
+                                                 └─────────────────┘
+```
 
-- **`packages/scraper`**: Core service for scraping Bank Leumi data using [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers)
-- **`packages/query-server`**: REST API server for querying scraped financial data (with future MCP integration)
+## Features
 
-## 🚀 Getting Started
+- **Automated Bank Scraping**: Periodically scrapes transaction data from Bank Leumi
+- **Data Persistence**: Stores historical data in a local SQLite database
+- **Financial Analysis**: Built-in analyzers for income, expenses, and trends
+- **MCP Integration**: Exposes bank data through MCP tools for AI assistants
+- **CLI Tools**: Manual scraping and data inspection commands
 
-### Prerequisites
+## Prerequisites
 
-- Node.js (v18+)
-- npm (v9+)
-- Bank Leumi credentials
+- Node.js 18+
+- Yarn 4.x
+- Bank Leumi online banking credentials
 
-### Installation
+## Installation
 
 1. Clone the repository:
 
 ```bash
-git clone <repository-url>
-cd bank-leumi-financial-assistant
+git clone https://github.com/yourusername/mcp-scraper.git
+cd mcp-scraper
 ```
 
 2. Install dependencies:
 
 ```bash
-npm install
+yarn install
 ```
 
-3. Set up environment variables:
+3. Configure environment variables:
 
 ```bash
-cd packages/scraper
-cp .env.example .env
+cp env.example .env
 # Edit .env with your Bank Leumi credentials
 ```
 
-### Development
-
-Run all services in development mode:
+4. Build the project:
 
 ```bash
-npm run dev
+yarn build
 ```
 
-Build all packages:
+## Configuration
+
+Create a `.env` file with the following variables:
+
+```env
+# Bank Leumi Credentials (required)
+BANK_USERNAME=your_username
+BANK_PASSWORD=your_password
+
+# Scraping Configuration
+SCRAPE_MONTHS_BACK=3              # How many months of data to fetch
+SCRAPE_CRON_SCHEDULE=0 */6 * * * # Cron schedule (default: every 6 hours)
+
+# Database Configuration
+DATABASE_PATH=./data/bank-data.db # SQLite database location
+
+# Logging
+LOG_LEVEL=info                    # winston log level
+```
+
+## Usage
+
+### 1. Initial Setup & First Scrape
 
 ```bash
-npm run build
+# Create data directory
+mkdir -p data
+
+# Run initial scrape
+yarn workspace @bank-assistant/scraper scrape scrape
 ```
 
-## 📦 Packages
+### 2. Start Scheduled Scraper
 
-### Scraper (`packages/scraper`)
+Run the scheduler to automatically scrape data periodically:
 
-The scraper service is responsible for:
+```bash
+yarn workspace @bank-assistant/scraper scrape:scheduled
+```
 
-- Fetching transactions from Bank Leumi
-- Processing and categorizing transactions
-- Analyzing financial trends
-- Breaking down income and expenses
+### 3. CLI Commands
 
-See [packages/scraper/README.md](packages/scraper/README.md) for detailed documentation.
+```bash
+# Force a fresh scrape
+yarn workspace @bank-assistant/scraper scrape scrape
 
-### Query Server (`packages/query-server`)
+# View financial summary
+yarn workspace @bank-assistant/scraper scrape summary
 
-The query server provides:
+# List accounts
+yarn workspace @bank-assistant/scraper scrape accounts
+```
 
-- REST API for accessing scraped data
-- Integration with the scraper service
-- (Future) MCP protocol support for AI assistants
+### 4. MCP Server Integration
 
-## 🔮 Future Features
+The MCP server can be integrated with AI assistants like Claude Desktop.
 
-### MCP Integration
+#### Available MCP Tools:
 
-We plan to add MCP (Model Context Protocol) support to enable:
+- **get_transactions**: Retrieve transactions for a date range
+- **get_financial_summary**: Get comprehensive financial analysis
+- **get_accounts**: List all accounts with balances
+- **get_account_balance_history**: View balance trends
+- **refresh_bank_data**: Force a fresh data scrape
 
-- AI assistants to query financial data
-- Natural language interactions with your bank data
-- Automated financial insights and recommendations
+#### Claude Desktop Configuration
 
-## 🛡 Security
+Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 
-- **Never commit** `.env` files or `config.json` containing credentials
-- All credentials are stored locally
-- The scraper runs in headless mode for security
+```json
+{
+  "mcpServers": {
+    "bank-leumi": {
+      "command": "node",
+      "args": ["/path/to/mcp-scraper/packages/mcp-server/dist/index.js"],
+      "env": {
+        "BANK_USERNAME": "your_username",
+        "BANK_PASSWORD": "your_password",
+        "DATABASE_PATH": "/path/to/data/bank-data.db"
+      }
+    }
+  }
+}
+```
 
-## 🧩 Tech Stack
+## Project Structure
 
-- **TypeScript**: Type-safe development
-- **Turbo**: Monorepo build system
-- **israeli-bank-scrapers**: Bank scraping library
-- **Express**: REST API framework
-- **Winston**: Logging
+```
+mcp-scraper/
+├── packages/
+│   ├── scraper/               # Core scraping functionality
+│   │   ├── src/
+│   │   │   ├── analyzers/     # Financial analysis logic
+│   │   │   ├── database/      # Data persistence layer
+│   │   │   ├── processors/    # Transaction processing
+│   │   │   ├── services/      # Business logic
+│   │   │   └── utils/         # Utilities
+│   │   └── package.json
+│   └── mcp-server/            # MCP server implementation
+│       ├── src/
+│       │   └── index.ts       # MCP server entry point
+│       └── package.json
+├── data/                      # SQLite database (gitignored)
+├── .env                       # Environment variables (gitignored)
+└── package.json              # Root package configuration
+```
 
-## 📝 License
+## Security Considerations
 
-Private repository - All rights reserved
+- **Credentials**: Never commit your `.env` file. Bank credentials are stored locally only.
+- **Data Storage**: All financial data is stored locally in SQLite - no cloud services involved.
+- **MCP Access**: The MCP server runs locally and doesn't expose any network endpoints.
+
+## Development
+
+```bash
+# Run in development mode
+yarn dev
+
+# Run linting
+yarn lint
+
+# Format code
+yarn format
+```
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"Cannot find module" errors**: Run `yarn install` to ensure all dependencies are installed.
+
+2. **Scraping fails**:
+
+   - Verify your Bank Leumi credentials
+   - Check if Bank Leumi's website structure has changed
+   - Look at logs for detailed error messages
+
+3. **Database errors**:
+
+   - Ensure the data directory exists
+   - Check file permissions
+
+4. **MCP connection issues**:
+   - Verify the MCP server path in your AI assistant configuration
+   - Check that environment variables are properly set
+
+## License
+
+This project is for personal use only. Use responsibly and in accordance with Bank Leumi's terms of service.
+
+## Disclaimer
+
+This tool interacts with your personal banking data. Always:
+
+- Keep your credentials secure
+- Monitor the scraping activity
+- Use on trusted devices only
+- Comply with your bank's terms of service

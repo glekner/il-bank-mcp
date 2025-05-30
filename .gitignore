@@ -1,11 +1,11 @@
 # Dependencies
-node_modules
+node_modules/
 .pnp
 .pnp.js
 
 # Build outputs
-dist
-build
+dist/
+build/
 out
 
 # Debug
@@ -33,11 +33,14 @@ yarn-error.log*
 *.sw?
 
 # Logs
-logs
+logs/
 *.log
 
 # Project specific
 config.json
+
+# Turbo
+.turbo
 
 # yarn berry
 .yarn/*
@@ -46,3 +49,32 @@ config.json
 !.yarn/releases
 !.yarn/sdks
 !.yarn/versions
+
+# typescript
+*.tsbuildinfo
+
+# Database and data files
+data/
+*.db
+*.sqlite
+*.sqlite3
+
+# Temporary files
+tmp/
+temp/
+.tmp/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Backup files
+*.bak
+*.backup

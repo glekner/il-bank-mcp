@@ -1,8 +1,30 @@
 {
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "commonjs",
+    "baseUrl": "./",
+    "paths": {
+      "@bank-assistant/*": ["packages/*/src"]
+    },
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "removeComments": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true
+  },
+  "exclude": ["node_modules", "dist", "build"],
   "files": [],
   "references": [
-    { "path": "./packages/scraper" },
-    { "path": "./packages/query-server" },
-    { "path": "./tsconfig.node.json" }
+    { "path": "./packages/scraper/tsconfig.json" },
+    { "path": "./packages/query-server/tsconfig.json" }
   ]
 }
