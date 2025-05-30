@@ -1,5 +1,3 @@
-version: "3.8"
-
 services:
   # Scraper service - runs the bank scraping backend
   scraper:
@@ -19,7 +17,7 @@ services:
     volumes:
       - ./data:/app/data
       - ./packages/scraper/logs:/app/packages/scraper/logs
-    command: ["node", "dist/index.js"]
+    command: ["node", "dist/scheduler.js"]
     networks:
       - bank-network
     security_opt:

@@ -10,6 +10,13 @@ import * as os from "os";
  * Get the Chrome executable path installed by puppeteer
  */
 function getChromeExecutablePath(): string | undefined {
+  // First check if we're in a Docker container with system-installed Chrome
+  const envPath = process.env.PUPPETEER_EXECUTABLE_PATH;
+  if (envPath && fs.existsSync(envPath)) {
+    logger.info("Using Chrome from environment variable", { path: envPath });
+    return envPath;
+  }
+
   const cacheDir = path.join(os.homedir(), ".cache", "puppeteer", "chrome");
 
   try {
@@ -82,6 +89,20 @@ export async function scrapeBankData(): Promise<ScrapedAccountData> {
     }
     logger.info("Using Chrome executable", { path: executablePath });
 
+    // Get Chrome args from environment or use defaults
+    const defaultArgs = [
+      "--no-sandbox",
+      "--disable-setuid-sandbox",
+      "--disable-dev-shm-usage",
+      "--disable-gpu",
+      "--disable-web-security",
+      "--disable-features=IsolateOrigins",
+      "--disable-site-isolation-trials",
+    ];
+
+    const envArgs = process.env.PUPPETEER_ARGS?.split(",") || [];
+    const chromeArgs = envArgs.length > 0 ? envArgs : defaultArgs;
+
     logger.info("Initializing Bank Leumi scraper");
     const options = {
       companyId: CompanyTypes.leumi, // Use CompanyTypes enum
@@ -89,9 +110,10 @@ export async function scrapeBankData(): Promise<ScrapedAccountData> {
         new Date().setMonth(new Date().getMonth() - monthsBack)
       ), // Use environment variable
       verbose: false,
-      // Browser launch options should be passed directly in options, not wrapped in browser object
+      // Browser launch options
       headless: true,
-      executablePath, // Use puppeteer's Chrome installation
+      executablePath, // Use Chrome installation
+      args: chromeArgs,
     };
 
     const scraper = createScraper(options);
