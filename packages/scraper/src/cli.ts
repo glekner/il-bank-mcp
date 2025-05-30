@@ -2,9 +2,10 @@
 import { ScraperService } from "./services/scraperService";
 import { logger } from "./utils/logger";
 import * as dotenv from "dotenv";
+import * as path from "path";
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from root directory
+dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
 const command = process.argv[2];
 

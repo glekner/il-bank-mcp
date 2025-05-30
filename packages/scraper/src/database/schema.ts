@@ -1,12 +1,48 @@
 import Database from "better-sqlite3";
 import { logger } from "../utils/logger";
 import path from "path";
+import fs from "fs";
 
-const DB_PATH =
-  process.env.DATABASE_PATH || path.join(process.cwd(), "data", "bank-data.db");
+// Helper function to find workspace root
+function findWorkspaceRoot(): string {
+  let currentDir = __dirname;
+
+  // Look for the root package.json that has workspaces defined
+  while (currentDir !== path.dirname(currentDir)) {
+    const packageJsonPath = path.join(currentDir, "package.json");
+    if (fs.existsSync(packageJsonPath)) {
+      try {
+        const packageJson = JSON.parse(
+          fs.readFileSync(packageJsonPath, "utf-8")
+        );
+        if (packageJson.workspaces) {
+          return currentDir;
+        }
+      } catch {
+        // Continue searching
+      }
+    }
+    currentDir = path.dirname(currentDir);
+  }
+
+  // Fallback to current working directory
+  return process.cwd();
+}
+
+// Use workspace root for default database path
+const workspaceRoot = findWorkspaceRoot();
+const DEFAULT_DB_PATH = path.join(workspaceRoot, "data", "bank-data.db");
+const DB_PATH = process.env.DATABASE_PATH || DEFAULT_DB_PATH;
 
 export function initializeDatabase(): Database.Database {
   logger.info("Initializing database", { path: DB_PATH });
+
+  // Ensure the directory exists
+  const dbDir = path.dirname(DB_PATH);
+  if (!fs.existsSync(dbDir)) {
+    logger.info("Creating database directory", { directory: dbDir });
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
 
   const db = new Database(DB_PATH);
 

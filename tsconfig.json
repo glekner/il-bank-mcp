@@ -25,6 +25,6 @@
   "files": [],
   "references": [
     { "path": "./packages/scraper/tsconfig.json" },
-    { "path": "./packages/query-server/tsconfig.json" }
+    { "path": "./packages/mcp-server/tsconfig.json" }
   ]
 }

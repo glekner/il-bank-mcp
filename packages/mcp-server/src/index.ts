@@ -7,9 +7,10 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { ScraperService } from "@bank-assistant/scraper";
 import * as dotenv from "dotenv";
+import * as path from "path";
 
-// Load environment variables
-dotenv.config();
+// Load environment variables from root directory
+dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 
 // Define available tools
 const TOOLS: Tool[] = [

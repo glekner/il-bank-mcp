@@ -30,7 +30,7 @@ A TypeScript-based financial data scraper for Bank Leumi (Israel) with Model Con
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 22+
 - Yarn 4.x
 - Bank Leumi online banking credentials
 
