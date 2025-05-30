@@ -4,6 +4,31 @@ export interface ScraperCredentials {
   password: string;
 }
 
+// Extended credential types for different services
+export interface BaseCredentials {
+  username: string;
+  password: string;
+}
+
+export interface LeumiCredentials extends BaseCredentials {}
+
+export interface VisaCalCredentials extends BaseCredentials {}
+
+export interface MaxCredentials extends BaseCredentials {}
+
+export type ServiceCredentials =
+  | { type: "leumi"; credentials: LeumiCredentials }
+  | { type: "visaCal"; credentials: VisaCalCredentials }
+  | { type: "max"; credentials: MaxCredentials };
+
+export interface MultiServiceCredentials {
+  leumi?: LeumiCredentials;
+  visaCal?: VisaCalCredentials;
+  max?: MaxCredentials;
+}
+
+export type ServiceType = "leumi" | "visaCal" | "max";
+
 export interface Transaction {
   id: string;
   date: Date;

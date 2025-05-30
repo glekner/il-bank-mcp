@@ -1,45 +1,37 @@
-# Bank Leumi MCP Scraper
+# Israeli Bank Scraper MCP Server
 
-A TypeScript-based financial data scraper for Bank Leumi (Israel) with Model Context Protocol (MCP) server integration. This project enables AI assistants to access and analyze your bank data through a secure, local MCP interface.
-
-## Architecture
-
-```
-┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
-│  Bank Leumi API │────▶│ Scraper Service │────▶│ SQLite Database │
-└─────────────────┘     └─────────────────┘     └─────────────────┘
-                                                          │
-                                                          ▼
-                                                 ┌─────────────────┐
-                                                 │   MCP Server    │
-                                                 └─────────────────┘
-                                                          │
-                                                          ▼
-                                                 ┌─────────────────┐
-                                                 │  AI Assistant   │
-                                                 └─────────────────┘
-```
+A Model Context Protocol (MCP) server that provides bank data scraping tools for Israeli banks and credit cards. Currently supports Bank Leumi, Visa Cal, and Max (formerly Leumi Card).
 
 ## Features
 
-- **Automated Bank Scraping**: Periodically scrapes transaction data from Bank Leumi
-- **Data Persistence**: Stores historical data in a local SQLite database
-- **Financial Analysis**: Built-in analyzers for income, expenses, and trends
-- **MCP Integration**: Exposes bank data through MCP tools for AI assistants
-- **CLI Tools**: Manual scraping and data inspection commands
+- 🏦 Multi-service support: Bank Leumi, Visa Cal, and Max credit cards
+- 🔄 Automated bank and credit card data scraping using [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers)
+- 📊 Financial analysis including trends, income/expense categorization
+- 💾 Local SQLite database for data persistence
+- 🔧 MCP server exposing banking tools for AI assistants
+- 🐳 Docker support for easy deployment
 
-## Prerequisites
+## Architecture
 
-- Node.js 22+
-- Yarn 4.x
-- Bank Leumi online banking credentials
+The project is organized as a monorepo with two main packages:
 
-## Installation
+- **`packages/scraper`**: Backend service for scraping bank and credit card data
+- **`packages/mcp-server`**: MCP server exposing the scraping functionality as tools
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 18+
+- Yarn (for workspace management)
+- Chrome/Chromium (will be installed automatically by puppeteer)
+
+### Installation
 
 1. Clone the repository:
 
 ```bash
-git clone https://github.com/yourusername/mcp-scraper.git
+git clone <your-repo-url>
 cd mcp-scraper
 ```
 
@@ -49,237 +41,197 @@ cd mcp-scraper
 yarn install
 ```
 
-3. Configure environment variables:
+3. Set up environment variables:
 
 ```bash
 cp env.example .env
-# Edit .env with your Bank Leumi credentials
 ```
 
-4. Build the project:
+Edit `.env` and add your credentials:
+
+```env
+# Bank Leumi Credentials
+BANK_LEUMI_USERNAME=your_username_here
+BANK_LEUMI_PASSWORD=your_password_here
+
+# Visa Cal Credentials
+VISA_CAL_USERNAME=your_username_here
+VISA_CAL_PASSWORD=your_password_here
+
+# Max (Leumi Card) Credentials
+MAX_USERNAME=your_username_here
+MAX_PASSWORD=your_password_here
+
+# Scraping Configuration
+SCRAPE_MONTHS_BACK=3
+SCRAPE_CRON_SCHEDULE=0 */6 * * *
+```
+
+4. Install Chrome for puppeteer:
+
+```bash
+cd packages/scraper
+npx puppeteer browsers install chrome
+```
+
+### Running the Services
+
+#### Development Mode
+
+```bash
+# Run both scraper and MCP server in development mode
+yarn dev
+
+# Run only the scraper
+yarn workspace @bank-assistant/scraper dev
+
+# Run only the MCP server
+yarn workspace @bank-assistant/mcp-server dev
+```
+
+#### Production Mode
+
+```bash
+# Build all packages
+yarn build
+
+# Run the MCP server
+yarn workspace @bank-assistant/mcp-server start
+```
+
+### Using with Claude Desktop
+
+1. Build the project:
 
 ```bash
 yarn build
 ```
 
-## Docker Setup (Recommended)
-
-The project includes a complete Docker infrastructure for easy deployment and management.
-
-### Quick Start with Docker
-
-1. **Initial setup:**
-
-   ```bash
-   make setup
-   # or manually:
-   cp env.example .env
-   # Edit .env with your credentials
-   docker-compose up -d --build
-   ```
-
-2. **Configure Claude Desktop:**
-
-   ```bash
-   make claude-config
-   # or manually:
-   ./scripts/generate-claude-config.sh
-   ```
-
-3. **Restart Claude Desktop** to load the MCP server
-
-### Docker Features
-
-- **Automated Chromium**: Pre-installed Chromium for Puppeteer scraping
-- **Health Monitoring**: Built-in health checks for both services
-- **Data Persistence**: SQLite database stored in persistent volume
-- **Security**: Read-only access for MCP server, isolated networking
-- **Easy Management**: Makefile commands for common operations
-
-### Docker Commands
-
-```bash
-# Start services
-make up
-
-# View logs
-make logs
-
-# Stop services
-make down
-
-# Test MCP connection
-make test-mcp
-
-# Access container shells
-make shell-scraper
-make shell-mcp
-
-# Backup database
-make backup
-
-# View service status
-make status
-```
-
-For detailed Docker documentation, see [docs/DOCKER.md](docs/DOCKER.md).
-
-## Configuration
-
-Create a `.env` file with the following variables:
-
-```env
-# Bank Leumi Credentials (required)
-BANK_USERNAME=your_username
-BANK_PASSWORD=your_password
-
-# Scraping Configuration
-SCRAPE_MONTHS_BACK=3              # How many months of data to fetch
-SCRAPE_CRON_SCHEDULE=0 */6 * * * # Cron schedule (default: every 6 hours)
-
-# Database Configuration
-DATABASE_PATH=./data/bank-data.db # SQLite database location
-
-# Logging
-LOG_LEVEL=info                    # winston log level
-```
-
-## Usage
-
-### 1. Initial Setup & First Scrape
-
-```bash
-# Create data directory
-mkdir -p data
-
-# Run initial scrape
-yarn workspace @bank-assistant/scraper scrape scrape
-```
-
-### 2. Start Scheduled Scraper
-
-Run the scheduler to automatically scrape data periodically:
-
-```bash
-yarn workspace @bank-assistant/scraper scrape:scheduled
-```
-
-### 3. CLI Commands
-
-```bash
-# Force a fresh scrape
-yarn workspace @bank-assistant/scraper scrape scrape
-
-# View financial summary
-yarn workspace @bank-assistant/scraper scrape summary
-
-# List accounts
-yarn workspace @bank-assistant/scraper scrape accounts
-```
-
-### 4. MCP Server Integration
-
-The MCP server can be integrated with AI assistants like Claude Desktop.
-
-#### Available MCP Tools:
-
-- **get_transactions**: Retrieve transactions for a date range
-- **get_financial_summary**: Get comprehensive financial analysis
-- **get_accounts**: List all accounts with balances
-- **get_account_balance_history**: View balance trends
-- **refresh_bank_data**: Force a fresh data scrape
-
-#### Claude Desktop Configuration
-
-Add to your Claude Desktop configuration (`~/Library/Application Support/Claude/claude_desktop_config.json`):
+2. Add to your Claude Desktop configuration:
 
 ```json
 {
   "mcpServers": {
-    "bank-leumi": {
+    "israeli-bank-assistant": {
       "command": "node",
       "args": ["/path/to/mcp-scraper/packages/mcp-server/dist/index.js"],
       "env": {
-        "BANK_USERNAME": "your_username",
-        "BANK_PASSWORD": "your_password",
-        "DATABASE_PATH": "/path/to/data/bank-data.db"
+        "BANK_LEUMI_USERNAME": "your_username",
+        "BANK_LEUMI_PASSWORD": "your_password",
+        "VISA_CAL_USERNAME": "your_username",
+        "VISA_CAL_PASSWORD": "your_password",
+        "MAX_USERNAME": "your_username",
+        "MAX_PASSWORD": "your_password"
       }
     }
   }
 }
 ```
 
-## Project Structure
+## Available MCP Tools
+
+- **`get_transactions`**: Get bank and credit card transactions for a specific time period
+- **`get_financial_summary`**: Get comprehensive financial analysis including trends, income, and expenses
+- **`get_accounts`**: List all bank accounts and credit cards with balances
+- **`get_account_balance_history`**: Get balance history for a specific account
+- **`refresh_all_data`**: Force refresh data from all configured services
+- **`refresh_service_data`**: Force refresh data from a specific service (leumi, visaCal, or max)
+
+## Docker Support
+
+Build and run with Docker:
+
+```bash
+# Build the image
+docker build -t israeli-bank-scraper .
+
+# Run the container
+docker run -d \
+  -e BANK_LEUMI_USERNAME=your_username \
+  -e BANK_LEUMI_PASSWORD=your_password \
+  -e VISA_CAL_USERNAME=your_username \
+  -e VISA_CAL_PASSWORD=your_password \
+  -e MAX_USERNAME=your_username \
+  -e MAX_PASSWORD=your_password \
+  -v $(pwd)/data:/app/data \
+  israeli-bank-scraper
+```
+
+## Development
+
+### Project Structure
 
 ```
 mcp-scraper/
 ├── packages/
-│   ├── scraper/               # Core scraping functionality
+│   ├── scraper/          # Bank scraping service
 │   │   ├── src/
-│   │   │   ├── analyzers/     # Financial analysis logic
-│   │   │   ├── database/      # Data persistence layer
-│   │   │   ├── processors/    # Transaction processing
-│   │   │   ├── services/      # Business logic
-│   │   │   └── utils/         # Utilities
+│   │   │   ├── scrapers/  # Individual service scrapers
+│   │   │   ├── services/  # Business logic
+│   │   │   ├── database/  # Data persistence
+│   │   │   └── utils/     # Utilities
 │   │   └── package.json
-│   └── mcp-server/            # MCP server implementation
+│   └── mcp-server/       # MCP server
 │       ├── src/
-│       │   └── index.ts       # MCP server entry point
 │       └── package.json
-├── data/                      # SQLite database (gitignored)
-├── .env                       # Environment variables (gitignored)
-└── package.json              # Root package configuration
+├── docker-compose.yml
+├── Dockerfile
+└── package.json          # Root workspace config
 ```
 
-## Security Considerations
+### Adding New Services
 
-- **Credentials**: Never commit your `.env` file. Bank credentials are stored locally only.
-- **Data Storage**: All financial data is stored locally in SQLite - no cloud services involved.
-- **MCP Access**: The MCP server runs locally and doesn't expose any network endpoints.
+To add support for a new bank or credit card:
 
-## Development
-
-```bash
-# Run in development mode
-yarn dev
-
-# Run linting
-yarn lint
-
-# Format code
-yarn format
-```
+1. Create a new scraper in `packages/scraper/src/scrapers/`
+2. Implement the `BaseScraper` interface
+3. Add the service type to `types.ts`
+4. Update the credentials loader
+5. Add environment variables to `.env.example`
 
 ## Troubleshooting
 
-### Common Issues
+### Chrome/Puppeteer Issues
 
-1. **"Cannot find module" errors**: Run `yarn install` to ensure all dependencies are installed.
+If you encounter Chrome-related errors:
 
-2. **Scraping fails**:
+```bash
+# Install Chrome manually
+cd packages/scraper
+npx puppeteer browsers install chrome
 
-   - Verify your Bank Leumi credentials
-   - Check if Bank Leumi's website structure has changed
-   - Look at logs for detailed error messages
+# Or use system Chrome by setting PUPPETEER_EXECUTABLE_PATH
+export PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome
+```
 
-3. **Database errors**:
+### Permission Issues
 
-   - Ensure the data directory exists
-   - Check file permissions
+If running in Docker, ensure the data directory has proper permissions:
 
-4. **MCP connection issues**:
-   - Verify the MCP server path in your AI assistant configuration
-   - Check that environment variables are properly set
+```bash
+chmod -R 777 ./data
+```
+
+## Security Notes
+
+- Credentials are stored in environment variables or a local config file
+- The SQLite database is stored locally in the `data/` directory
+- Never commit credentials to version control
+- Use strong, unique passwords for your bank accounts
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## License
 
-This project is for personal use only. Use responsibly and in accordance with Bank Leumi's terms of service.
+This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Disclaimer
+## Acknowledgments
 
-This tool interacts with your personal banking data. Always:
-
-- Keep your credentials secure
-- Monitor the scraping activity
-- Use on trusted devices only
-- Comply with your bank's terms of service
+- [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers) for the core scraping functionality
+- [Model Context Protocol](https://modelcontextprotocol.io/) for the MCP framework

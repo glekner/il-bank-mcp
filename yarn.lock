@@ -653,17 +653,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"bank-leumi-financial-assistant@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "bank-leumi-financial-assistant@workspace:."
-  dependencies:
-    eslint: "npm:^9.27.0"
-    prettier: "npm:^3.5.3"
-    turbo: "npm:^2.3.3"
-    typescript: "npm:^5.8.3"
-  languageName: unknown
-  linkType: soft
-
 "bare-events@npm:^2.0.0, bare-events@npm:^2.2.0, bare-events@npm:^2.5.4":
   version: 2.5.4
   resolution: "bare-events@npm:2.5.4"
@@ -2185,6 +2174,17 @@ __metadata:
   checksum: 10/7fe1931ee4e88eb5aa524cd3ceb8c882537bc3a81b02e438b240e47012eef49c86904d0f0e593ea7c3a9996d18d0f1f3be8d3eaa92333977b0c3a9d353d5563e
   languageName: node
   linkType: hard
+
+"israeli-bank-scraper-mcp@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "israeli-bank-scraper-mcp@workspace:."
+  dependencies:
+    eslint: "npm:^9.27.0"
+    prettier: "npm:^3.5.3"
+    turbo: "npm:^2.3.3"
+    typescript: "npm:^5.8.3"
+  languageName: unknown
+  linkType: soft
 
 "israeli-bank-scrapers@npm:^6.1.2":
   version: 6.1.2

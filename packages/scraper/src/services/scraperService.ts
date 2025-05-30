@@ -1,11 +1,11 @@
-import { scrapeBankData } from "../scraper";
+import { categorizeExpenses } from "../analyzers/expenseAnalyzer";
+import { categorizeIncome } from "../analyzers/incomeAnalyzer";
+import { analyzeFinancialTrends } from "../analyzers/trendAnalyzer";
 import { BankDataRepository } from "../database/repository";
 import { processTransactions } from "../processors/transactionProcessor";
-import { analyzeFinancialTrends } from "../analyzers/trendAnalyzer";
-import { categorizeIncome } from "../analyzers/incomeAnalyzer";
-import { categorizeExpenses } from "../analyzers/expenseAnalyzer";
+import { scrapeAllBankData, scrapeSingleService } from "../scraper";
+import { FinancialSummary, ServiceType, Transaction } from "../types";
 import { logger } from "../utils/logger";
-import { FinancialSummary, Transaction } from "../types";
 
 export class ScraperService {
   private repository: BankDataRepository;
@@ -15,11 +15,11 @@ export class ScraperService {
   }
 
   /**
-   * Scrape fresh data from bank and save to database
+   * Scrape fresh data from all configured banks/credit cards and save to database
    */
   async scrapeAndSave(): Promise<void> {
     try {
-      logger.info("Starting bank data scraping");
+      logger.info("Starting multi-service data scraping");
 
       // Check if we should scrape
       if (!this.repository.shouldScrape()) {
@@ -27,35 +27,75 @@ export class ScraperService {
         return;
       }
 
-      // Scrape data
-      const scrapedData = await scrapeBankData();
+      // Scrape data from all services
+      const scrapedData = await scrapeAllBankData();
 
       // Save to database
       this.repository.saveScrapedData(scrapedData);
 
-      logger.info("Bank data scraped and saved successfully");
+      logger.info("Multi-service data scraped and saved successfully");
     } catch (error) {
-      logger.error("Failed to scrape and save bank data", { error });
+      logger.error("Failed to scrape and save multi-service data", { error });
       throw error;
     }
   }
 
   /**
-   * Force a fresh scrape regardless of last scrape time
+   * Scrape data from a specific service
    */
-  async forceScrape(): Promise<void> {
+  async scrapeSingleServiceAndSave(service: ServiceType): Promise<void> {
     try {
-      logger.info("Force scraping bank data");
+      logger.info(`Starting ${service} data scraping`);
 
-      // Scrape data
-      const scrapedData = await scrapeBankData();
+      // Scrape data from specific service
+      const scrapedData = await scrapeSingleService(service);
 
       // Save to database
       this.repository.saveScrapedData(scrapedData);
 
-      logger.info("Bank data force scraped and saved successfully");
+      logger.info(`${service} data scraped and saved successfully`);
     } catch (error) {
-      logger.error("Failed to force scrape bank data", { error });
+      logger.error(`Failed to scrape and save ${service} data`, { error });
+      throw error;
+    }
+  }
+
+  /**
+   * Force a fresh scrape of all services regardless of last scrape time
+   */
+  async forceScrape(): Promise<void> {
+    try {
+      logger.info("Force scraping multi-service data");
+
+      // Scrape data from all services
+      const scrapedData = await scrapeAllBankData();
+
+      // Save to database
+      this.repository.saveScrapedData(scrapedData);
+
+      logger.info("Multi-service data force scraped and saved successfully");
+    } catch (error) {
+      logger.error("Failed to force scrape multi-service data", { error });
+      throw error;
+    }
+  }
+
+  /**
+   * Force scrape a specific service
+   */
+  async forceScrapeService(service: ServiceType): Promise<void> {
+    try {
+      logger.info(`Force scraping ${service} data`);
+
+      // Scrape data from specific service
+      const scrapedData = await scrapeSingleService(service);
+
+      // Save to database
+      this.repository.saveScrapedData(scrapedData);
+
+      logger.info(`${service} data force scraped and saved successfully`);
+    } catch (error) {
+      logger.error(`Failed to force scrape ${service} data`, { error });
       throw error;
     }
   }

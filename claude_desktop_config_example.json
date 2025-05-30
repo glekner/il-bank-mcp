@@ -1,16 +1,20 @@
 {
   "mcpServers": {
-    "bank-assistant": {
-      "command": "docker",
+    "israeli-bank-assistant": {
+      "command": "node",
       "args": [
-        "compose",
-        "-f",
-        "/ABSOLUTE/PATH/TO/YOUR/REPO/docker-compose.yml",
-        "run",
-        "--rm",
-        "-i",
-        "mcp-server"
-      ]
+        "<REPLACE_WITH_ABSOLUTE_PATH>/packages/mcp-server/dist/index.js"
+      ],
+      "env": {
+        "BANK_LEUMI_USERNAME": "<YOUR_BANK_LEUMI_USERNAME>",
+        "BANK_LEUMI_PASSWORD": "<YOUR_BANK_LEUMI_PASSWORD>",
+        "VISA_CAL_USERNAME": "<YOUR_VISA_CAL_USERNAME>",
+        "VISA_CAL_PASSWORD": "<YOUR_VISA_CAL_PASSWORD>",
+        "MAX_USERNAME": "<YOUR_MAX_USERNAME>",
+        "MAX_PASSWORD": "<YOUR_MAX_PASSWORD>",
+        "DATABASE_PATH": "<REPLACE_WITH_ABSOLUTE_PATH>/data/bank-data.db",
+        "SCRAPE_MONTHS_BACK": "3"
+      }
     }
   }
 }

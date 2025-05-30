@@ -16,7 +16,8 @@ dotenv.config({ path: path.resolve(__dirname, "../../../.env") });
 const TOOLS: Tool[] = [
   {
     name: "get_transactions",
-    description: "Get bank transactions for a specific time period",
+    description:
+      "Get bank and credit card transactions for a specific time period from all configured services",
     inputSchema: {
       type: "object",
       properties: {
@@ -30,7 +31,8 @@ const TOOLS: Tool[] = [
         },
         accountId: {
           type: "string",
-          description: "Optional account ID to filter by",
+          description:
+            "Optional account ID to filter by (e.g., 'leumi-123456', 'visacal-7890', 'max-4567')",
         },
       },
     },
@@ -38,7 +40,7 @@ const TOOLS: Tool[] = [
   {
     name: "get_financial_summary",
     description:
-      "Get a comprehensive financial summary including trends, income, and expenses",
+      "Get a comprehensive financial summary including trends, income, and expenses from all services",
     inputSchema: {
       type: "object",
       properties: {
@@ -55,7 +57,7 @@ const TOOLS: Tool[] = [
   },
   {
     name: "get_accounts",
-    description: "Get all bank accounts with current balances",
+    description: "Get all bank accounts and credit cards with current balances",
     inputSchema: {
       type: "object",
       properties: {},
@@ -69,7 +71,8 @@ const TOOLS: Tool[] = [
       properties: {
         accountId: {
           type: "string",
-          description: "Account ID",
+          description:
+            "Account ID (e.g., 'leumi-123456', 'visacal-7890', 'max-4567')",
           required: true,
         },
         days: {
@@ -81,24 +84,40 @@ const TOOLS: Tool[] = [
     },
   },
   {
-    name: "refresh_bank_data",
-    description: "Force a fresh scrape of bank data",
+    name: "refresh_all_data",
+    description: "Force a fresh scrape of all bank and credit card data",
     inputSchema: {
       type: "object",
       properties: {},
     },
   },
+  {
+    name: "refresh_service_data",
+    description: "Force a fresh scrape of data from a specific service",
+    inputSchema: {
+      type: "object",
+      properties: {
+        service: {
+          type: "string",
+          description: "Service to refresh ('leumi', 'visaCal', or 'max')",
+          enum: ["leumi", "visaCal", "max"],
+          required: true,
+        },
+      },
+      required: ["service"],
+    },
+  },
 ];
 
-class BankLeumiMCPServer {
+class IsraeliBankMCPServer {
   private server: Server;
   private scraperService: ScraperService;
 
   constructor() {
     this.server = new Server(
       {
-        name: "bank-leumi-assistant",
-        version: "1.0.0",
+        name: "israeli-bank-assistant",
+        version: "2.0.0",
       },
       {
         capabilities: {
@@ -266,7 +285,7 @@ class BankLeumiMCPServer {
             };
           }
 
-          case "refresh_bank_data": {
+          case "refresh_all_data": {
             await this.scraperService.forceScrape();
 
             return {
@@ -276,7 +295,42 @@ class BankLeumiMCPServer {
                   text: JSON.stringify(
                     {
                       success: true,
-                      message: "Bank data refreshed successfully",
+                      message:
+                        "All bank and credit card data refreshed successfully",
+                    },
+                    null,
+                    2
+                  ),
+                },
+              ],
+            };
+          }
+
+          case "refresh_service_data": {
+            const typedArgs = args as { service?: string };
+            if (!typedArgs?.service) {
+              throw new Error("service is required");
+            }
+
+            const validServices = ["leumi", "visaCal", "max"];
+            if (!validServices.includes(typedArgs.service)) {
+              throw new Error(
+                `Invalid service. Must be one of: ${validServices.join(", ")}`
+              );
+            }
+
+            await this.scraperService.forceScrapeService(
+              typedArgs.service as any
+            );
+
+            return {
+              content: [
+                {
+                  type: "text",
+                  text: JSON.stringify(
+                    {
+                      success: true,
+                      message: `${typedArgs.service} data refreshed successfully`,
                     },
                     null,
                     2
@@ -313,12 +367,12 @@ class BankLeumiMCPServer {
   async start() {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
-    console.error("Bank Leumi MCP Server started");
+    console.error("Israeli Bank MCP Server started");
   }
 }
 
 // Start the server
-const server = new BankLeumiMCPServer();
+const server = new IsraeliBankMCPServer();
 server.start().catch((error) => {
   console.error("Failed to start server:", error);
   process.exit(1);

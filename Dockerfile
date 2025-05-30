@@ -73,7 +73,7 @@ WORKDIR /app/packages/scraper
 
 # Use entrypoint script
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
-CMD ["node", "dist/index.js"]
+CMD ["node", "dist/scheduler.js"]
 
 # Production stage for MCP server
 FROM node:22-alpine AS mcp-server

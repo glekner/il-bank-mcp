@@ -1,223 +1,118 @@
-import { CompanyTypes, createScraper } from "israeli-bank-scrapers";
-import { ScrapedAccountData } from "./types";
-import { loadCredentials } from "./utils/credentials";
+import {
+  ScrapedAccountData,
+  ServiceType,
+  MultiServiceCredentials,
+} from "./types";
+import {
+  loadAllCredentials,
+  loadServiceCredentials,
+} from "./utils/credentials";
 import { logger } from "./utils/logger";
-import * as fs from "fs";
-import * as path from "path";
-import * as os from "os";
+import { createScraperInstance } from "./scrapers";
 
 /**
- * Get the Chrome executable path installed by puppeteer
+ * Scrapes financial data from all configured services
+ * @returns Promise resolving to the combined scraped data
  */
-function getChromeExecutablePath(): string | undefined {
-  // First check if we're in a Docker container with system-installed Chrome
-  const envPath = process.env.PUPPETEER_EXECUTABLE_PATH;
-  if (envPath && fs.existsSync(envPath)) {
-    logger.info("Using Chrome from environment variable", { path: envPath });
-    return envPath;
-  }
-
-  const cacheDir = path.join(os.homedir(), ".cache", "puppeteer", "chrome");
-
+export async function scrapeAllBankData(): Promise<ScrapedAccountData> {
   try {
-    if (fs.existsSync(cacheDir)) {
-      const chromeDirs = fs.readdirSync(cacheDir);
+    logger.info("Starting multi-service scraping process");
+    const credentials = loadAllCredentials();
 
-      for (const dir of chromeDirs) {
-        const platform = process.platform;
-        let executablePath: string;
+    const allAccounts: any[] = [];
+    const allTransactions: any[] = [];
+    const allRawData: any[] = [];
 
-        if (platform === "darwin") {
-          // macOS path
-          executablePath = path.join(
-            cacheDir,
-            dir,
-            fs.readdirSync(path.join(cacheDir, dir))[0],
-            "Google Chrome for Testing.app",
-            "Contents",
-            "MacOS",
-            "Google Chrome for Testing"
-          );
-        } else if (platform === "win32") {
-          // Windows path
-          executablePath = path.join(
-            cacheDir,
-            dir,
-            fs.readdirSync(path.join(cacheDir, dir))[0],
-            "chrome.exe"
-          );
-        } else {
-          // Linux path
-          executablePath = path.join(
-            cacheDir,
-            dir,
-            fs.readdirSync(path.join(cacheDir, dir))[0],
-            "chrome"
-          );
+    // Get list of services to scrape from credentials
+    const services = Object.keys(credentials) as ServiceType[];
+    logger.info(
+      `Found credentials for ${services.length} services: ${services.join(", ")}`
+    );
+
+    // Scrape each service
+    for (const service of services) {
+      try {
+        logger.info(`Scraping ${service}...`);
+        const scraper = createScraperInstance(service, credentials);
+
+        if (!scraper) {
+          logger.warn(`No scraper available for ${service}`);
+          continue;
         }
 
-        if (fs.existsSync(executablePath)) {
-          return executablePath;
-        }
+        const result = await scraper.scrape();
+
+        // Aggregate results
+        allAccounts.push(...result.accounts);
+        allTransactions.push(...result.transactions);
+        allRawData.push({ service, data: result.rawData });
+
+        logger.info(
+          `Successfully scraped ${service}: ${result.accounts.length} accounts, ${result.transactions.length} transactions`
+        );
+      } catch (error) {
+        logger.error(`Failed to scrape ${service}`, { error });
+        // Continue with other services even if one fails
       }
     }
-  } catch (error) {
-    logger.error("Error finding Chrome executable", { error });
-  }
 
-  return undefined;
+    if (allAccounts.length === 0) {
+      throw new Error("No accounts found from any service");
+    }
+
+    logger.info(
+      `Scraping completed: ${allAccounts.length} total accounts, ${allTransactions.length} total transactions`
+    );
+
+    return {
+      accounts: allAccounts,
+      transactions: allTransactions,
+      rawData: allRawData,
+      scrapedAt: new Date(),
+    };
+  } catch (error) {
+    logger.error("Error during multi-service scraping process", { error });
+    throw new Error(
+      `Multi-service scraping error: ${error instanceof Error ? error.message : String(error)}`
+    );
+  }
 }
 
 /**
- * Scrapes financial data from Bank Leumi
+ * Scrapes financial data from a specific service
+ * @param service The service to scrape
  * @returns Promise resolving to the scraped data
  */
-export async function scrapeBankData(): Promise<ScrapedAccountData> {
+export async function scrapeSingleService(
+  service: ServiceType
+): Promise<ScrapedAccountData> {
   try {
-    logger.info("Loading Bank Leumi credentials");
-    const credentials = loadCredentials();
+    logger.info(`Starting single service scraping for ${service}`);
 
-    // Get months to scrape from environment variable
-    const monthsBack = parseInt(process.env.SCRAPE_MONTHS_BACK || "3", 10);
-
-    // Get the path to Chrome executable
-    const executablePath = getChromeExecutablePath();
-    if (!executablePath) {
-      throw new Error(
-        "Chrome executable not found. Please run: npx puppeteer browsers install chrome"
-      );
-    }
-    logger.info("Using Chrome executable", { path: executablePath });
-
-    // Get Chrome args from environment or use defaults
-    const defaultArgs = [
-      "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-dev-shm-usage",
-      "--disable-gpu",
-      "--disable-web-security",
-      "--disable-features=IsolateOrigins",
-      "--disable-site-isolation-trials",
-    ];
-
-    const envArgs = process.env.PUPPETEER_ARGS?.split(",") || [];
-    const chromeArgs = envArgs.length > 0 ? envArgs : defaultArgs;
-
-    logger.info("Initializing Bank Leumi scraper");
-    const options = {
-      companyId: CompanyTypes.leumi, // Use CompanyTypes enum
-      startDate: new Date(
-        new Date().setMonth(new Date().getMonth() - monthsBack)
-      ), // Use environment variable
-      verbose: false,
-      // Browser launch options
-      headless: true,
-      executablePath, // Use Chrome installation
-      args: chromeArgs,
-    };
-
-    const scraper = createScraper(options);
-
-    logger.info("Starting scraping process");
-    const scrapeResult = await scraper.scrape(credentials);
-
-    if (!scrapeResult.success) {
-      logger.error("Scraping failed", { error: scrapeResult.errorType });
-      throw new Error(`Scraping failed: ${scrapeResult.errorType}`);
+    const credentials = loadServiceCredentials(service);
+    if (!credentials) {
+      throw new Error(`No credentials found for ${service}`);
     }
 
-    // Check if accounts exist
-    if (!scrapeResult.accounts || scrapeResult.accounts.length === 0) {
-      logger.error("No accounts found in scrape result");
-      throw new Error("No accounts found");
+    const allCredentials: MultiServiceCredentials = {
+      [service]: credentials,
+    } as MultiServiceCredentials;
+
+    const scraper = createScraperInstance(service, allCredentials);
+    if (!scraper) {
+      throw new Error(`No scraper implementation found for ${service}`);
     }
 
-    logger.info("Scraping completed successfully", {
-      accountsFound: scrapeResult.accounts.length,
-    });
+    const result = await scraper.scrape();
+    logger.info(
+      `Successfully scraped ${service}: ${result.accounts.length} accounts, ${result.transactions.length} transactions`
+    );
 
-    // Format data into our application structure
-    return formatScrapedData(scrapeResult.accounts);
+    return result;
   } catch (error) {
-    logger.error("Error during scraping process", { error });
+    logger.error(`Error during ${service} scraping process`, { error });
     throw new Error(
-      `Scraping process error: ${error instanceof Error ? error.message : String(error)}`
+      `${service} scraping error: ${error instanceof Error ? error.message : String(error)}`
     );
   }
-}
-
-/**
- * Formats the raw scraped data into our application structure
- */
-function formatScrapedData(accounts: any[]): ScrapedAccountData {
-  logger.info("Formatting scraped data");
-
-  // Extract all transactions from all accounts
-  const allTransactions = accounts.flatMap((account) => {
-    logger.info(`Processing account ${account.accountNumber}`, {
-      transactionCount: account.txns?.length || 0,
-    });
-
-    return (
-      account.txns?.map((txn: any) => {
-        // Log transaction details for debugging
-        if (txn.amount === null || txn.amount === undefined) {
-          logger.warn("Transaction with null/undefined amount", {
-            date: txn.date,
-            description: txn.description,
-            originalAmount: txn.originalAmount,
-            chargedAmount: txn.chargedAmount,
-          });
-        }
-
-        // Use chargedAmount or originalAmount if amount is not available
-        const amount =
-          txn.amount ?? txn.chargedAmount ?? txn.originalAmount ?? 0;
-
-        return {
-          id: `${txn.identifier || txn.date}-${txn.description}-${amount}`,
-          date: new Date(txn.date),
-          description: txn.description || "No description",
-          amount: amount,
-          category: txn.category || "Uncategorized",
-          accountId: account.accountNumber,
-          reference: txn.reference || null,
-          memo: txn.memo || null,
-        };
-      }) || []
-    );
-  });
-
-  // Filter out any invalid transactions
-  const validTransactions = allTransactions.filter((txn) => {
-    if (
-      !txn.date ||
-      !txn.description ||
-      txn.amount === null ||
-      txn.amount === undefined
-    ) {
-      logger.warn("Filtering out invalid transaction", { transaction: txn });
-      return false;
-    }
-    return true;
-  });
-
-  logger.info(
-    `Processed ${validTransactions.length} valid transactions out of ${allTransactions.length} total`
-  );
-
-  // Extract account information
-  const accountsInfo = accounts.map((account) => ({
-    id: account.accountNumber,
-    balance: account.balance ?? 0,
-    type: account.type || "Unknown",
-    name: `Bank Leumi - ${account.accountNumber}`,
-  }));
-
-  return {
-    accounts: accountsInfo,
-    transactions: validTransactions,
-    rawData: accounts, // Keep raw data for reference if needed
-    scrapedAt: new Date(),
-  };
 }
