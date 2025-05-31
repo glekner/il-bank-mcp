@@ -244,6 +244,66 @@ export class BankDataRepository {
     return hoursSinceLastRun >= hoursThreshold;
   }
 
+  /**
+   * Check if a scrape is currently running
+   */
+  isScrapeRunning(): boolean {
+    const stmt = this.db.prepare(`
+      SELECT COUNT(*) as count
+      FROM scrape_runs
+      WHERE status = 'running'
+        AND datetime(started_at) >= datetime('now', '-1 hour')
+    `);
+
+    const result = stmt.get() as any;
+    return result.count > 0;
+  }
+
+  /**
+   * Get information about the last scrape
+   */
+  getLastScrapeInfo(): {
+    lastScrapeAt?: Date;
+    status?: string;
+    duration?: number;
+    transactionsCount?: number;
+    accountsCount?: number;
+    error?: string;
+    isRunning: boolean;
+  } {
+    // Check if currently running
+    const isRunning = this.isScrapeRunning();
+
+    // Get last completed or failed scrape
+    const stmt = this.db.prepare(`
+      SELECT *
+      FROM scrape_runs
+      WHERE status IN ('completed', 'failed')
+      ORDER BY completed_at DESC
+      LIMIT 1
+    `);
+
+    const lastRun = stmt.get() as any;
+
+    if (!lastRun) {
+      return { isRunning };
+    }
+
+    const startedAt = new Date(lastRun.started_at);
+    const completedAt = new Date(lastRun.completed_at);
+    const duration = (completedAt.getTime() - startedAt.getTime()) / 1000; // in seconds
+
+    return {
+      lastScrapeAt: completedAt,
+      status: lastRun.status,
+      duration,
+      transactionsCount: lastRun.transactions_count,
+      accountsCount: lastRun.accounts_count,
+      error: lastRun.error_message,
+      isRunning,
+    };
+  }
+
   close(): void {
     this.db.close();
   }

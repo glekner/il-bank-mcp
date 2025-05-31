@@ -44,13 +44,19 @@ services:
     environment:
       - NODE_ENV=production
       - DATABASE_PATH=/app/data/bank.db
+      - PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+      - PUPPETEER_ARGS=--no-sandbox,--disable-setuid-sandbox,--disable-dev-shm-usage
     volumes:
-      - ./data:/app/data:ro # Read-only access to data
+      - ./data:/app/data # Read-write access to data for force scraping
     depends_on:
       scraper:
         condition: service_healthy
     networks:
       - bank-network
+    security_opt:
+      - seccomp=unconfined
+    cap_add:
+      - SYS_ADMIN
     stdin_open: true
     tty: true
     # MCP servers communicate via stdio, so we don't expose ports

@@ -159,6 +159,20 @@ export class ScraperService {
   }
 
   /**
+   * Check if a scrape is currently running
+   */
+  isScrapeRunning(): boolean {
+    return this.repository.isScrapeRunning();
+  }
+
+  /**
+   * Get information about the last scrape
+   */
+  getLastScrapeInfo() {
+    return this.repository.getLastScrapeInfo();
+  }
+
+  /**
    * Clean up resources
    */
   close(): void {
