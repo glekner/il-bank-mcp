@@ -22,6 +22,13 @@ This isn't just another transaction scraper. It's a comprehensive financial inte
 - 💾 Local SQLite database for secure data persistence
 - 🐳 Docker support for easy deployment
 
+### MCP Server Capabilities
+
+- 🤖 **Server Instructions**: Automatic context about the server's purpose and capabilities
+- 📝 **Pre-defined Prompts**: Structured templates for common financial analysis workflows
+- 🛠️ **Tools**: Direct access to real-time bank data and analysis functions
+- 🔄 **Dynamic Context**: Prompts automatically incorporate current financial data
+
 ### Advanced Financial Advisory Tools
 
 - 💳 **Monthly Credit Card Summaries** - Track spending across all your cards
@@ -183,6 +190,28 @@ yarn build
 - **`get_tax_summary`**: Generate tax-relevant transaction summaries
 - **`get_financial_health_score`**: Comprehensive financial wellness assessment
 
+## Available MCP Prompts
+
+The server provides intelligent prompts that structure financial conversations:
+
+- **`financial_advisor_context`**: Activates the full financial advisor persona with comprehensive capabilities
+- **`financial_review`**: Monthly comprehensive financial analysis
+- **`budget_planning`**: Personalized budget creation based on your data
+- **`subscription_audit`**: Detect and analyze all recurring charges
+- **`spending_optimization`**: Find ways to reduce expenses
+- **`fraud_detection`**: Scan for suspicious transactions
+- **`tax_preparation`**: Generate tax-relevant summaries
+- **`emergency_fund_analysis`**: Assess savings adequacy
+- **`debt_optimization`**: Credit card usage analysis and debt reduction
+
+## How Instructions and Prompts Work Together
+
+- **Server Instructions**: Automatically loaded when connecting to the MCP server, providing Claude with context about being a financial advisor
+- **Prompts**: User-triggered templates for specific financial analysis tasks
+- **Tools**: Direct access to fetch and analyze your bank data
+
+The server instructions ensure Claude always understands its role as a financial advisor, while prompts provide structured workflows for specific tasks.
+
 ## Example Use Cases
 
 ### With AI Assistants
@@ -196,6 +225,24 @@ Ask your AI assistant questions like:
 - "Help me create a budget that lets me save 30% of my income"
 - "Compare my spending this month vs last month"
 - "What's my financial health score and how can I improve it?"
+
+### Using Prompts for Structured Analysis
+
+The pre-defined prompts ensure comprehensive analysis:
+
+```
+# Trigger a complete financial review
+/financial_review month=2024-11
+
+# Create a budget with 25% savings goal
+/budget_planning savings_goal_percentage=25 focus_categories=dining,entertainment
+
+# Run a high-sensitivity fraud scan
+/fraud_detection sensitivity=high
+
+# Prepare for tax season
+/tax_preparation tax_year=2024
+```
 
 ### Automation Ideas
 

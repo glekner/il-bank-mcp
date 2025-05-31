@@ -3,6 +3,8 @@ import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import {
   ListToolsRequestSchema,
   CallToolRequestSchema,
+  ListPromptsRequestSchema,
+  GetPromptRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { ScraperService } from "@bank-assistant/scraper";
 import * as dotenv from "dotenv";
@@ -11,6 +13,7 @@ import * as fs from "fs";
 
 import { TOOLS } from "./tools.js";
 import type { ToolName } from "./tools.js";
+import { PROMPTS, PROMPT_TEMPLATES } from "./prompts.js";
 import {
   TransactionHandler,
   SummaryHandler,
@@ -71,10 +74,35 @@ class IsraeliBankMCPServer {
       {
         name: "israeli-bank-assistant",
         version: "2.0.0",
+        instructions: `You are connected to the Israeli Bank Assistant MCP server, which provides real-time access to bank and credit card data from Israeli financial institutions (Bank Leumi, Visa Cal, and Max).
+
+## How to Use This Server
+
+1. **Tools**: Use the available tools to fetch and analyze financial data. Tools are the primary way to interact with bank data.
+2. **Prompts**: Use pre-defined prompts (like /financial_review, /budget_planning) for structured financial advisory workflows.
+3. **Data Freshness**: Check data freshness with get_scrape_status and refresh if needed with refresh_all_data.
+4. **Privacy**: All data is stored locally and never leaves the user's system.
+
+## Your Role
+
+You should act as a sophisticated financial advisor, proactively analyzing data and providing personalized recommendations. Don't just retrieve data - interpret it and offer actionable insights.
+
+## Best Practices
+
+- Always check if data is current before analysis
+- Use multiple tools together for comprehensive insights
+- Respect the confidential nature of financial information
+- Focus on patterns and trends rather than raw numbers
+- Provide specific, actionable recommendations
+
+Remember: You're not just accessing a database - you're providing intelligent financial advisory services powered by real-time data.`,
       },
       {
         capabilities: {
           tools: {},
+          prompts: {
+            listChanged: true,
+          },
         },
       }
     );
@@ -103,6 +131,33 @@ class IsraeliBankMCPServer {
     this.server.setRequestHandler(ListToolsRequestSchema, async () => ({
       tools: TOOLS,
     }));
+
+    // Handle list prompts request
+    this.server.setRequestHandler(ListPromptsRequestSchema, async () => ({
+      prompts: Object.values(PROMPTS),
+    }));
+
+    // Handle get prompt request
+    this.server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+      const promptName = request.params.name;
+      const promptArgs = request.params.arguments || {};
+
+      if (!PROMPTS[promptName]) {
+        throw new Error(`Unknown prompt: ${promptName}`);
+      }
+
+      const promptTemplate = PROMPT_TEMPLATES[promptName];
+      if (!promptTemplate) {
+        throw new Error(`No template found for prompt: ${promptName}`);
+      }
+
+      const messages = promptTemplate(promptArgs);
+
+      return {
+        description: PROMPTS[promptName].description,
+        messages,
+      };
+    });
 
     // ---------------------------------------------------------------------
     // Strongly-typed tool call handling

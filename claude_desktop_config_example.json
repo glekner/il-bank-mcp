@@ -13,8 +13,10 @@
         "MAX_USERNAME": "<YOUR_MAX_USERNAME>",
         "MAX_PASSWORD": "<YOUR_MAX_PASSWORD>",
         "DATABASE_PATH": "<REPLACE_WITH_ABSOLUTE_PATH>/data/bank-data.db",
-        "SCRAPE_MONTHS_BACK": "3"
+        "SCRAPE_MONTHS_BACK": "3",
+        "SCRAPE_CRON_SCHEDULE": "0 */6 * * *"
       }
     }
-  }
+  },
+  "_comment": "This MCP server provides both tools and prompts for comprehensive financial analysis. The system prompt establishes Claude as an Israeli financial advisor with access to real-time bank data."
 }

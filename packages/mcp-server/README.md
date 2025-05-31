@@ -89,6 +89,141 @@ Get information about the scraping status and last scrape details.
 - `accountsCount`: Number of accounts from the last scrape
 - `error`: Error message if the last scrape failed
 
+## Available Prompts
+
+The MCP server provides pre-defined prompts that help structure interactions with the financial assistant. These prompts ensure consistent, high-quality financial analysis.
+
+### System Prompt
+
+The system prompt defines the Israeli Bank Assistant's role, capabilities, and approach to financial advisory. It establishes:
+
+- Professional yet approachable communication style
+- Privacy and security guidelines
+- Proactive financial analysis approach
+- Focus on actionable, personalized advice
+
+### User Prompts
+
+#### 1. `financial_review`
+
+Comprehensive monthly financial review and recommendations.
+
+**Arguments:**
+
+- `month` (optional): Month to review in YYYY-MM format
+
+**Provides:**
+
+- Overall financial summary and health score
+- Income vs expenses analysis
+- Spending trends and patterns
+- Comparison with previous periods
+- Specific recommendations for improvement
+
+#### 2. `budget_planning`
+
+Create a personalized budget plan based on income and spending patterns.
+
+**Arguments:**
+
+- `savings_goal_percentage` (optional): Desired savings percentage (0-100)
+- `focus_categories` (optional): Comma-separated spending categories to optimize
+
+**Provides:**
+
+- Recommended budget allocation by category
+- Specific areas for spending reduction
+- Actionable steps to achieve savings goals
+- Implementation timeline and milestones
+
+#### 3. `subscription_audit`
+
+Comprehensive audit of all recurring charges and subscriptions.
+
+**Arguments:** None
+
+**Provides:**
+
+- List of all detected recurring charges
+- Categorization (essential vs non-essential)
+- Identification of unused or duplicate services
+- Total monthly/annual cost calculations
+- Optimization opportunities
+
+#### 4. `spending_optimization`
+
+Analyze spending patterns and suggest optimization strategies.
+
+**Arguments:**
+
+- `time_period_days` (optional): Number of days to analyze (default: 30)
+
+**Provides:**
+
+- Top spending categories and patterns
+- Cost reduction opportunities
+- Alternative merchants/services for better value
+- Potential monthly savings calculations
+
+#### 5. `fraud_detection`
+
+Scan for suspicious transactions and potential fraud.
+
+**Arguments:**
+
+- `sensitivity` (optional): Detection sensitivity - low, medium, or high (default: medium)
+
+**Provides:**
+
+- Unusual transaction patterns identification
+- Suspicious merchant flagging
+- Duplicate charge detection
+- Geographic anomaly analysis
+- Action steps for concerns
+
+#### 6. `tax_preparation`
+
+Generate tax-relevant summaries and identify deduction opportunities.
+
+**Arguments:**
+
+- `tax_year` (optional): Tax year to prepare for (YYYY format)
+
+**Provides:**
+
+- Transaction categorization by tax relevance
+- Business expense deduction identification
+- Income source summaries
+- Year-end tax optimization strategies
+
+#### 7. `emergency_fund_analysis`
+
+Analyze emergency fund adequacy and provide savings recommendations.
+
+**Arguments:** None
+
+**Provides:**
+
+- Monthly essential expense calculations
+- Recommended emergency fund size
+- Savings rate analysis
+- Month-by-month savings plan
+- Automatic savings strategies
+
+#### 8. `debt_optimization`
+
+Analyze credit card usage and create debt reduction strategies.
+
+**Arguments:** None
+
+**Provides:**
+
+- Credit utilization analysis
+- Debt prioritization strategies
+- Balance transfer opportunities
+- Debt snowball vs avalanche comparison
+- Credit score improvement tactics
+
 ## Development
 
 ### Building
