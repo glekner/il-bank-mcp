@@ -11,7 +11,7 @@ import { logger } from "./utils/logger";
 import { createScraperInstance } from "./scrapers";
 
 /**
- * Scrapes financial data from all configured services
+ * Scrapes financial data from all configured services in parallel
  * @returns Promise resolving to the combined scraped data
  */
 export async function scrapeAllBankData(): Promise<ScrapedAccountData> {
@@ -19,41 +19,70 @@ export async function scrapeAllBankData(): Promise<ScrapedAccountData> {
     logger.info("Starting multi-service scraping process");
     const credentials = loadAllCredentials();
 
-    const allAccounts: any[] = [];
-    const allTransactions: any[] = [];
-    const allRawData: any[] = [];
-
     // Get list of services to scrape from credentials
     const services = Object.keys(credentials) as ServiceType[];
     logger.info(
       `Found credentials for ${services.length} services: ${services.join(", ")}`
     );
 
-    // Scrape each service
-    for (const service of services) {
+    // Create scraping promises for all services
+    const scrapePromises = services.map(async (service) => {
       try {
-        logger.info(`Scraping ${service}...`);
+        logger.info(`Starting async scrape for ${service}...`);
         const scraper = createScraperInstance(service, credentials);
 
         if (!scraper) {
           logger.warn(`No scraper available for ${service}`);
-          continue;
+          return null;
         }
 
+        const startTime = Date.now();
         const result = await scraper.scrape();
-
-        // Aggregate results
-        allAccounts.push(...result.accounts);
-        allTransactions.push(...result.transactions);
-        allRawData.push({ service, data: result.rawData });
+        const duration = Date.now() - startTime;
 
         logger.info(
-          `Successfully scraped ${service}: ${result.accounts.length} accounts, ${result.transactions.length} transactions`
+          `Successfully scraped ${service} in ${duration}ms: ${result.accounts.length} accounts, ${result.transactions.length} transactions`
         );
+
+        return { service, result };
       } catch (error) {
         logger.error(`Failed to scrape ${service}`, { error });
-        // Continue with other services even if one fails
+        return { service, error };
       }
+    });
+
+    // Execute all scrapes in parallel with Promise.allSettled
+    const scrapeResults = await Promise.allSettled(scrapePromises);
+
+    const allAccounts: any[] = [];
+    const allTransactions: any[] = [];
+    const allRawData: any[] = [];
+    const errors: { service: string; error: any }[] = [];
+
+    // Process results
+    scrapeResults.forEach((result, index) => {
+      if (result.status === "fulfilled" && result.value) {
+        if ("result" in result.value && result.value.result) {
+          const { service, result: scrapedData } = result.value;
+          allAccounts.push(...scrapedData.accounts);
+          allTransactions.push(...scrapedData.transactions);
+          allRawData.push({ service, data: scrapedData.rawData });
+        } else if ("error" in result.value) {
+          errors.push(result.value as { service: string; error: any });
+        }
+      } else if (result.status === "rejected") {
+        logger.error(`Promise rejected for service ${services[index]}`, {
+          reason: result.reason,
+        });
+        errors.push({ service: services[index], error: result.reason });
+      }
+    });
+
+    // Log errors summary
+    if (errors.length > 0) {
+      logger.warn(`Scraping completed with ${errors.length} failures`, {
+        failedServices: errors.map((e) => e.service),
+      });
     }
 
     if (allAccounts.length === 0) {
@@ -61,7 +90,7 @@ export async function scrapeAllBankData(): Promise<ScrapedAccountData> {
     }
 
     logger.info(
-      `Scraping completed: ${allAccounts.length} total accounts, ${allTransactions.length} total transactions`
+      `Parallel scraping completed: ${allAccounts.length} total accounts, ${allTransactions.length} total transactions`
     );
 
     return {

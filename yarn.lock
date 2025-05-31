@@ -51,6 +51,7 @@ __metadata:
     tsx: "npm:^4.19.2"
     typescript: "npm:^5.8.3"
     winston: "npm:^3.17.0"
+    zod: "npm:^3.25.42"
   languageName: unknown
   linkType: soft
 
@@ -4079,7 +4080,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.23.8, zod@npm:^3.24.1":
+"zod@npm:^3.23.8, zod@npm:^3.24.1, zod@npm:^3.25.42":
   version: 3.25.42
   resolution: "zod@npm:3.25.42"
   checksum: 10/eb1f86ef6c29f1cb35245b671a1f2a6ad1a40b3b56acd98d72afb1775c12d72631ad161fdf5e5041bcc78560df6a135096244f74734885458ee0aeec8ccb288d

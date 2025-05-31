@@ -6,11 +6,14 @@ import { processTransactions } from "../processors/transactionProcessor";
 import { scrapeAllBankData, scrapeSingleService } from "../scraper";
 import { FinancialSummary, ServiceType, Transaction } from "../types";
 import { createComponentLogger, createTimer } from "../utils/logger";
+import { getCacheService, CacheKeys } from "./cacheService";
+import { validateScrapedData } from "../validation/schemas";
 
 const logger = createComponentLogger("ScraperService");
 
 export class ScraperService {
   private repository: BankDataRepository;
+  private cache = getCacheService();
 
   constructor() {
     logger.info("Initializing ScraperService");
@@ -48,9 +51,27 @@ export class ScraperService {
         operationId,
       });
 
-      logger.info("Saving scraped data to database", { operationId });
+      // Validate scraped data
+      logger.info("Validating scraped data", { operationId });
+      const validationResult = validateScrapedData(scrapedData);
+
+      if (!validationResult.success) {
+        logger.error("Data validation failed", {
+          errors: validationResult.errors,
+          operationId,
+        });
+        throw new Error(
+          `Data validation failed: ${JSON.stringify(validationResult.errors)}`
+        );
+      }
+
+      logger.info("Saving validated data to database", { operationId });
       // Save to database
       this.repository.saveScrapedData(scrapedData);
+
+      // Clear cache after successful scrape
+      this.cache.clear();
+      logger.info("Cache cleared after successful scrape", { operationId });
 
       const duration = timer.elapsed();
       logger.endOperation("multi-service data scraping", duration, {
@@ -231,6 +252,18 @@ export class ScraperService {
         operationId,
       });
 
+      // Check cache first
+      const cacheKey = CacheKeys.financialSummary(startDate, endDate);
+      const cached = this.cache.get<FinancialSummary>(cacheKey);
+
+      if (cached) {
+        logger.info("Returning cached financial summary", {
+          transactionCount: cached.transactions.length,
+          operationId,
+        });
+        return cached;
+      }
+
       logger.info("Fetching transactions from database", { operationId });
       // Get transactions from database
       const transactions = this.repository.getTransactions(startDate, endDate);
@@ -249,6 +282,16 @@ export class ScraperService {
       logger.info("Categorizing expenses", { operationId });
       const expenses = categorizeExpenses(processedTransactions);
 
+      const summary: FinancialSummary = {
+        transactions: processedTransactions,
+        trends,
+        income,
+        expenses,
+      };
+
+      // Cache the results
+      this.cache.set(cacheKey, summary, 10 * 60 * 1000); // 10 minutes
+
       const duration = timer.elapsed();
       logger.endOperation("generating financial summary", duration, {
         transactionCount: processedTransactions.length,
@@ -257,12 +300,7 @@ export class ScraperService {
         operationId,
       });
 
-      return {
-        transactions: processedTransactions,
-        trends,
-        income,
-        expenses,
-      };
+      return summary;
     } catch (error) {
       logger.errorOperation("generating financial summary", error as Error, {
         startDate: startDate?.toISOString(),
@@ -293,11 +331,31 @@ export class ScraperService {
     });
 
     try {
+      // Check cache first
+      const cacheKey = CacheKeys.transactions(
+        options?.startDate,
+        options?.endDate,
+        options?.accountId
+      );
+      const cached = this.cache.get<Transaction[]>(cacheKey);
+
+      if (cached) {
+        logger.info("Returning cached transactions", {
+          transactionCount: cached.length,
+          operationId,
+        });
+        return cached;
+      }
+
+      // Not in cache, fetch from database
       const transactions = this.repository.getTransactions(
         options?.startDate,
         options?.endDate,
         options?.accountId
       );
+
+      // Cache the results
+      this.cache.set(cacheKey, transactions, 5 * 60 * 1000); // 5 minutes
 
       const duration = timer.elapsed();
       logger.endOperation("fetching transactions", duration, {
@@ -325,7 +383,23 @@ export class ScraperService {
     logger.startOperation("fetching accounts", { operationId });
 
     try {
+      // Check cache first
+      const cacheKey = CacheKeys.accounts();
+      const cached = this.cache.get<any[]>(cacheKey);
+
+      if (cached) {
+        logger.info("Returning cached accounts", {
+          accountCount: cached.length,
+          operationId,
+        });
+        return cached;
+      }
+
+      // Not in cache, fetch from database
       const accounts = this.repository.getAccounts();
+
+      // Cache the results
+      this.cache.set(cacheKey, accounts, 10 * 60 * 1000); // 10 minutes
 
       const duration = timer.elapsed();
       logger.endOperation("fetching accounts", duration, {

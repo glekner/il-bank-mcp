@@ -22,7 +22,8 @@
     "israeli-bank-scrapers": "^6.1.2",
     "node-cron": "^3.0.3",
     "puppeteer": "^24.9.0",
-    "winston": "^3.17.0"
+    "winston": "^3.17.0",
+    "zod": "^3.25.42"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
