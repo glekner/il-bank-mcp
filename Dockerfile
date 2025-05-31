@@ -1,5 +1,8 @@
+# syntax=docker/dockerfile:1.6
+ARG NODE_VERSION=22-alpine
+
 # Build stage
-FROM node:22-alpine AS builder
+FROM node:${NODE_VERSION} AS builder
 
 # Install build dependencies
 RUN apk add --no-cache python3 make g++
@@ -16,7 +19,8 @@ COPY packages/scraper/package.json ./packages/scraper/
 COPY packages/mcp-server/package.json ./packages/mcp-server/
 
 # Install dependencies
-RUN yarn install --immutable
+RUN --mount=type=cache,target=/usr/local/share/.cache/yarn \
+    yarn install --immutable
 
 # Copy source code
 COPY . .
@@ -24,8 +28,10 @@ COPY . .
 # Build all packages
 RUN yarn build
 
-# Production stage for scraper service
-FROM node:22-alpine AS scraper
+# -------------------------------------------------------------------
+# Runtime base – shared by scraper & MCP server
+# -------------------------------------------------------------------
+FROM node:${NODE_VERSION} AS runtime-base
 
 # Install Chromium and dependencies for Puppeteer
 RUN apk add --no-cache \
@@ -35,18 +41,24 @@ RUN apk add --no-cache \
     freetype-dev \
     harfbuzz \
     ca-certificates \
-    ttf-freefont \
-    nodejs \
-    yarn
+    ttf-freefont
+
+# Tell Puppeteer to skip installing Chrome. We'll be using the installed package.
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser \
+    NODE_ENV=production
 
 # Enable corepack for Yarn
 RUN corepack enable
 
-# Tell Puppeteer to skip installing Chrome. We'll be using the installed package.
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-
 WORKDIR /app
+
+# -------------------------------------------------------------------
+# Production stage for scraper service
+# -------------------------------------------------------------------
+FROM runtime-base AS scraper
+
+# Install Chromium and dependencies for Puppeteer (provided by runtime-base stage)
 
 # Copy package structure
 COPY --from=builder /app/package.json ./
@@ -75,27 +87,13 @@ WORKDIR /app/packages/scraper
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["node", "dist/scheduler.js"]
 
+# -------------------------------------------------------------------
 # Production stage for MCP server
-FROM node:22-alpine AS mcp-server
+# -------------------------------------------------------------------
+FROM runtime-base AS mcp-server
 
 # Install Chromium and dependencies for Puppeteer (needed for refresh commands)
-RUN apk add --no-cache \
-    chromium \
-    nss \
-    freetype \
-    freetype-dev \
-    harfbuzz \
-    ca-certificates \
-    ttf-freefont
-
-# Tell Puppeteer to skip installing Chrome. We'll be using the installed package.
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
-
-# Enable corepack for Yarn
-RUN corepack enable
-
-WORKDIR /app
+# Provided by runtime-base stage
 
 # Copy package structure
 COPY --from=builder /app/package.json ./

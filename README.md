@@ -91,6 +91,11 @@ MAX_PASSWORD=your_password_here
 # Scraping Configuration
 SCRAPE_MONTHS_BACK=3
 SCRAPE_CRON_SCHEDULE=0 */6 * * *
+
+# Query Configuration (optional)
+# Comma-separated list of account IDs to ignore when querying (does not affect scraping)
+# Example: IGNORED_ACCOUNT_IDS=account1,account2,account3
+IGNORED_ACCOUNT_IDS=
 ```
 
 4. Install Chrome for puppeteer:
@@ -273,6 +278,27 @@ If running in Docker, ensure the data directory has proper permissions:
 ```bash
 chmod -R 777 ./data
 ```
+
+## Configuration Options
+
+### Ignoring Accounts in Queries
+
+You can configure the system to ignore specific bank accounts when querying data (this does not affect the scraping process itself). This is useful when you want to exclude certain accounts from analysis or reports.
+
+Set the `IGNORED_ACCOUNT_IDS` environment variable with a comma-separated list of account IDs:
+
+```bash
+IGNORED_ACCOUNT_IDS=account123,account456,account789
+```
+
+When accounts are ignored:
+
+- They won't appear in `get_accounts` results
+- Their transactions won't be included in `get_transactions` queries
+- Balance history requests for ignored accounts will return empty results
+- All financial analysis tools will automatically exclude these accounts
+
+To find account IDs, first run the scraper without any ignored accounts and check the account IDs in the results.
 
 ## Security Notes
 

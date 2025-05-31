@@ -5,9 +5,38 @@ import { logger } from "../utils/logger";
 
 export class BankDataRepository {
   private db: Database.Database;
+  private ignoredAccountIds: Set<string>;
 
   constructor() {
     this.db = getDatabase();
+    this.ignoredAccountIds = this.parseIgnoredAccounts();
+  }
+
+  /**
+   * Parse ignored account IDs from environment variable
+   */
+  private parseIgnoredAccounts(): Set<string> {
+    const ignoredAccounts = process.env.IGNORED_ACCOUNT_IDS || "";
+    const accountIds = ignoredAccounts
+      .split(",")
+      .map((id) => id.trim())
+      .filter((id) => id.length > 0);
+
+    if (accountIds.length > 0) {
+      logger.info("Ignoring accounts when querying", {
+        accountIds,
+        count: accountIds.length,
+      });
+    }
+
+    return new Set(accountIds);
+  }
+
+  /**
+   * Check if an account should be ignored in queries
+   */
+  private isAccountIgnored(accountId: string): boolean {
+    return this.ignoredAccountIds.has(accountId);
   }
 
   /**
@@ -155,6 +184,15 @@ export class BankDataRepository {
       params.push(accountId);
     }
 
+    // Add filter for ignored accounts
+    if (this.ignoredAccountIds.size > 0) {
+      const placeholders = Array.from(this.ignoredAccountIds)
+        .map(() => "?")
+        .join(",");
+      query += ` AND account_id NOT IN (${placeholders})`;
+      params.push(...Array.from(this.ignoredAccountIds));
+    }
+
     query += " ORDER BY date DESC";
 
     const stmt = this.db.prepare(query);
@@ -176,7 +214,7 @@ export class BankDataRepository {
    * Get latest account balances
    */
   getAccounts(): Account[] {
-    const stmt = this.db.prepare(`
+    let query = `
       SELECT a.*, b.balance
       FROM accounts a
       LEFT JOIN (
@@ -184,9 +222,21 @@ export class BankDataRepository {
                ROW_NUMBER() OVER (PARTITION BY account_id ORDER BY recorded_at DESC) as rn
         FROM account_balances
       ) b ON a.id = b.account_id AND b.rn = 1
-    `);
+    `;
 
-    const rows = stmt.all();
+    const params: any[] = [];
+
+    // Add filter for ignored accounts
+    if (this.ignoredAccountIds.size > 0) {
+      const placeholders = Array.from(this.ignoredAccountIds)
+        .map(() => "?")
+        .join(",");
+      query += ` WHERE a.id NOT IN (${placeholders})`;
+      params.push(...Array.from(this.ignoredAccountIds));
+    }
+
+    const stmt = this.db.prepare(query);
+    const rows = stmt.all(...params);
 
     return rows.map((row: any) => ({
       id: row.id,
@@ -203,6 +253,14 @@ export class BankDataRepository {
     accountId: string,
     days = 30
   ): { date: Date; balance: number }[] {
+    // Return empty array if account is ignored
+    if (this.isAccountIgnored(accountId)) {
+      logger.debug("Skipping balance history for ignored account", {
+        accountId,
+      });
+      return [];
+    }
+
     const stmt = this.db.prepare(`
       SELECT recorded_at, balance
       FROM account_balances
