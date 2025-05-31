@@ -69,3 +69,46 @@ export interface ScrapeStatusResponse extends ToolResponse {
 
 export const DEFAULT_BALANCE_HISTORY_DAYS = 30;
 export const VALID_SERVICES: ServiceName[] = ["leumi", "visaCal", "max"];
+
+// New financial advisory tool types
+export interface MonthlyCreditSummaryArgs {
+  month?: number;
+  year?: number;
+  includeCategories?: boolean;
+}
+
+export interface RecurringChargesArgs {
+  minOccurrences?: number;
+  lookbackMonths?: number;
+}
+
+export interface FinancialHealthScoreArgs {
+  includeDetails?: boolean;
+  customWeights?: {
+    savingsRate?: number;
+    spendingControl?: number;
+    incomeStability?: number;
+    emergencyFund?: number;
+  };
+}
+
+// Response types for new tools
+export interface CreditCardSummary {
+  cardId: string;
+  cardName: string;
+  totalSpent: number;
+  transactionCount: number;
+  averageTransaction: number;
+  largestTransaction?: Transaction;
+  categoryBreakdown?: Record<string, number>;
+}
+
+export interface RecurringCharge {
+  merchantName: string;
+  averageAmount: number;
+  frequency: string; // "weekly", "monthly", "quarterly", etc.
+  occurrences: number;
+  lastCharge: string;
+  nextExpectedCharge?: string;
+  totalSpent: number;
+}

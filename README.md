@@ -1,15 +1,41 @@
 # Israeli Bank Scraper MCP Server
 
-A Model Context Protocol (MCP) server that provides bank data scraping tools for Israeli banks and credit cards. Currently supports Bank Leumi, Visa Cal, and Max (formerly Leumi Card).
+A powerful Model Context Protocol (MCP) server that provides intelligent financial advisory tools powered by automated Israeli bank and credit card data scraping.
+
+## 🚀 What Makes This Special
+
+This isn't just another transaction scraper. It's a comprehensive financial intelligence platform that:
+
+- 🧠 **Analyzes your spending patterns** to provide actionable insights
+- 💰 **Detects recurring charges** and helps identify unused subscriptions
+- 📊 **Provides financial health scoring** with personalized improvement recommendations
+- 🎯 **Creates custom budgets** based on your income and spending habits
+- 🔔 **Alerts you to anomalies** and potential fraudulent transactions
+- 📈 **Forecasts cash flow** to help you plan ahead
 
 ## Features
 
-- 🏦 Multi-service support: Bank Leumi, Visa Cal, and Max credit cards
+### Core Banking Features
+
+- 🏦 Multi-service support: Bank Leumi, Visa Cal, and Max (formerly Leumi Card)
 - 🔄 Automated bank and credit card data scraping using [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers)
-- 📊 Financial analysis including trends, income/expense categorization
-- 💾 Local SQLite database for data persistence
-- 🔧 MCP server exposing banking tools for AI assistants
+- 💾 Local SQLite database for secure data persistence
 - 🐳 Docker support for easy deployment
+
+### Advanced Financial Advisory Tools
+
+- 💳 **Monthly Credit Card Summaries** - Track spending across all your cards
+- 🔄 **Recurring Charge Detection** - Never miss a subscription again
+- 💡 **AI-Powered Spending Insights** - Get personalized financial advice
+- 📊 **Cash Flow Analysis & Forecasting** - Predict future balances
+- 📈 **Period Comparison** - Compare spending across different time periods
+- 🏪 **Merchant Analysis** - Identify your top spending destinations
+- 💰 **Budget Recommendations** - Get personalized budget plans
+- 🚨 **Anomaly Detection** - Catch unusual transactions early
+- 📋 **Tax Summary Generation** - Simplify tax preparation
+- ❤️ **Financial Health Score** - Get a comprehensive wellness check
+
+[View detailed documentation for financial advisory tools →](docs/financial-advisory-tools.md)
 
 ## Architecture
 
@@ -130,12 +156,48 @@ yarn build
 
 ## Available MCP Tools
 
+### Basic Banking Tools
+
 - **`get_transactions`**: Get bank and credit card transactions for a specific time period
 - **`get_financial_summary`**: Get comprehensive financial analysis including trends, income, and expenses
 - **`get_accounts`**: List all bank accounts and credit cards with balances
 - **`get_account_balance_history`**: Get balance history for a specific account
 - **`refresh_all_data`**: Force refresh data from all configured services
-- **`refresh_service_data`**: Force refresh data from a specific service (leumi, visaCal, or max)
+- **`refresh_service_data`**: Force refresh data from a specific service
+
+### Financial Advisory Tools
+
+- **`get_monthly_credit_summary`**: Detailed credit card spending analysis by month
+- **`get_recurring_charges`**: Automatically detect and analyze subscriptions
+- **`get_spending_insights`**: AI-powered insights about spending patterns
+- **`get_cashflow_analysis`**: Analyze and forecast cash flow patterns
+- **`compare_spending_periods`**: Compare spending between time periods
+- **`get_merchant_analysis`**: Analyze spending by merchant
+- **`get_budget_recommendations`**: Get personalized budget recommendations
+- **`get_anomaly_alerts`**: Detect unusual transactions and potential fraud
+- **`get_tax_summary`**: Generate tax-relevant transaction summaries
+- **`get_financial_health_score`**: Comprehensive financial wellness assessment
+
+## Example Use Cases
+
+### With AI Assistants
+
+Ask your AI assistant questions like:
+
+- "How much did I spend on each credit card this month?"
+- "What subscriptions am I paying for and can I cancel any?"
+- "Show me my spending trends and give me advice on how to save money"
+- "Alert me to any suspicious transactions in the last week"
+- "Help me create a budget that lets me save 30% of my income"
+- "Compare my spending this month vs last month"
+- "What's my financial health score and how can I improve it?"
+
+### Automation Ideas
+
+- Set up monthly financial review summaries
+- Get alerts when new recurring charges are detected
+- Weekly spending anomaly reports
+- Automated budget vs actual spending comparisons
 
 ## Docker Support
 

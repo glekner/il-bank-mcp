@@ -1,7 +1,7 @@
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { VALID_SERVICES } from "./types.js";
 
-export const TOOLS: Tool[] = [
+export const TOOLS = [
   {
     name: "get_transactions",
     description:
@@ -102,4 +102,52 @@ export const TOOLS: Tool[] = [
       properties: {},
     },
   },
-];
+  {
+    name: "get_monthly_credit_summary",
+    description:
+      "Get a summary of spending for each credit card for the current or specified month, including total charges, number of transactions, and average transaction size",
+    inputSchema: {
+      type: "object",
+      properties: {
+        month: {
+          type: "number",
+          description: "Month number (1-12). Defaults to current month",
+          minimum: 1,
+          maximum: 12,
+        },
+        year: {
+          type: "number",
+          description: "Year (YYYY). Defaults to current year",
+        },
+        includeCategories: {
+          type: "boolean",
+          description: "Include spending breakdown by category if available",
+        },
+      },
+    },
+  },
+  {
+    name: "get_recurring_charges",
+    description:
+      "Identify and analyze recurring charges like subscriptions, memberships, and regular payments across all accounts",
+    inputSchema: {
+      type: "object",
+      properties: {
+        minOccurrences: {
+          type: "number",
+          description:
+            "Minimum number of occurrences to consider as recurring (default: 2)",
+          minimum: 2,
+        },
+        lookbackMonths: {
+          type: "number",
+          description: "Number of months to analyze (default: 6)",
+          minimum: 1,
+          maximum: 12,
+        },
+      },
+    },
+  },
+] as const satisfies Tool[];
+
+export type ToolName = (typeof TOOLS)[number]["name"];

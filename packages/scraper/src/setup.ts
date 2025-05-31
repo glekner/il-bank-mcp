@@ -61,20 +61,20 @@ export function runSetup() {
     );
     console.log(`   ${envPath}`);
     console.log("\n   Required variables:");
-    console.log("   - BANK_USERNAME=your_username");
-    console.log("   - BANK_PASSWORD=your_password");
+    console.log("   - BANK_LEUMI_USERNAME=your_username");
+    console.log("   - BANK_LEUMI_PASSWORD=your_password");
   } else {
     console.log("✅ .env file exists");
 
     // Check if credentials are set
-    const hasUsername = !!process.env.BANK_USERNAME;
-    const hasPassword = !!process.env.BANK_PASSWORD;
+    const hasUsername = !!process.env.BANK_LEUMI_USERNAME;
+    const hasPassword = !!process.env.BANK_LEUMI_PASSWORD;
 
     if (!hasUsername || !hasPassword) {
       console.log("\n⚠️  Bank credentials not configured!");
       console.log("   Please edit your .env file and set:");
-      if (!hasUsername) console.log("   - BANK_USERNAME");
-      if (!hasPassword) console.log("   - BANK_PASSWORD");
+      if (!hasUsername) console.log("   - BANK_LEUMI_USERNAME");
+      if (!hasPassword) console.log("   - BANK_LEUMI_PASSWORD");
     } else {
       console.log("✅ Bank credentials configured");
     }
