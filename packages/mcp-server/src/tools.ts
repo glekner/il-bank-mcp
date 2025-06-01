@@ -5,7 +5,7 @@ export const TOOLS = [
   {
     name: 'get_transactions',
     description:
-      'Get bank and credit card transactions for a specific time period from all configured services. When filtering by account, ALWAYS call get_accounts first to get the actual account IDs.',
+      'Get bank and credit card transactions for a specific time period from all configured services. When filtering by account, ALWAYS call get_accounts first to get the actual account IDs. Note: For timeframes over 90 days or datasets with 500+ transactions, only the most recent 500 transactions will be returned to prevent response size issues.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -28,7 +28,7 @@ export const TOOLS = [
   {
     name: 'get_financial_summary',
     description:
-      'Get a comprehensive financial summary including trends, income, and expenses from all services',
+      'Get a comprehensive financial summary including trends, income, and expenses from all services. Note: For timeframes over 90 days, responses are automatically optimized to include aggregated data without individual transaction details to prevent response size issues.',
     inputSchema: {
       type: 'object',
       properties: {

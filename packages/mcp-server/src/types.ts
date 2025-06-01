@@ -4,6 +4,7 @@ import {
   FinancialSummary,
   ProviderKey,
 } from '@bank-assistant/scraper';
+import type { OptimizedFinancialSummary } from './utils/response-optimizer.js';
 
 export interface TransactionArgs {
   startDate?: string;
@@ -43,7 +44,7 @@ export interface AccountsResponse extends ToolResponse {
 }
 
 export interface SummaryResponse extends ToolResponse {
-  summary?: FinancialSummary;
+  summary?: FinancialSummary | OptimizedFinancialSummary;
 }
 
 export interface BalanceHistoryResponse extends ToolResponse {

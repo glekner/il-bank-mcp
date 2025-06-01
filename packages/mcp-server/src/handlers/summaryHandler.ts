@@ -2,6 +2,7 @@ import { BaseHandler } from './base.js';
 import { SummaryArgs, SummaryResponse } from '../types.js';
 import { logger } from '../utils/logger.js';
 import type { FinancialSummary } from '@bank-assistant/scraper';
+import { optimizeFinancialSummary } from '../utils/response-optimizer.js';
 
 export class SummaryHandler extends BaseHandler {
   async getFinancialSummary(args: SummaryArgs) {
@@ -22,9 +23,16 @@ export class SummaryHandler extends BaseHandler {
       // The user will be notified that scraping is in progress
     }
 
+    // Optimize the summary for large timeframes to prevent MCP response size errors
+    const optimizedSummary = optimizeFinancialSummary(
+      summary,
+      startDate,
+      endDate
+    );
+
     let response: SummaryResponse = {
       success: true,
-      summary,
+      summary: optimizedSummary,
     };
 
     // Add scrape status if running

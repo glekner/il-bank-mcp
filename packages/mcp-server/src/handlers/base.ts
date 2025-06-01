@@ -1,4 +1,6 @@
 import { ScraperService } from '@bank-assistant/scraper';
+import { logger } from '../utils/logger.js';
+import { omitNullValues } from '../utils/response-optimizer.js';
 
 export abstract class BaseHandler {
   constructor(protected scraperService: ScraperService) {}
@@ -34,11 +36,27 @@ export abstract class BaseHandler {
   protected formatResponse<T>(data: T): {
     content: Array<{ type: string; text: string }>;
   } {
+    // Remove null values to reduce response size
+    const cleanedData = omitNullValues(data);
+
+    // Check response size and warn if too large
+    const responseStr = JSON.stringify(cleanedData, null, 2);
+    const sizeInBytes = responseStr.length * 2; // Rough estimate
+
+    if (sizeInBytes > 50 * 1024) {
+      // 50KB threshold
+      logger.warn('Large MCP response detected', {
+        sizeInBytes,
+        sizeInKB: Math.round(sizeInBytes / 1024),
+        handler: this.constructor.name,
+      });
+    }
+
     return {
       content: [
         {
           type: 'text',
-          text: JSON.stringify(data, null, 2),
+          text: responseStr,
         },
       ],
     };
@@ -62,5 +80,21 @@ export abstract class BaseHandler {
         },
       ],
     };
+  }
+
+  /**
+   * Calculate the number of days between two dates
+   */
+  protected getDaysBetween(startDate?: Date, endDate?: Date): number {
+    if (!startDate || !endDate) return 0;
+    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  }
+
+  /**
+   * Check if the requested timeframe is considered "large"
+   */
+  protected isLargeTimeframe(startDate?: Date, endDate?: Date): boolean {
+    return this.getDaysBetween(startDate, endDate) > 90;
   }
 }
