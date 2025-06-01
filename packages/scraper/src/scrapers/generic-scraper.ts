@@ -3,12 +3,12 @@ import {
   createScraper,
   type ScraperOptions,
 } from 'israeli-bank-scrapers';
-import { ScrapedAccountData, ProviderCredentials } from '../types';
-import { logger } from '../utils/logger';
-import { BaseScraper } from './base';
-import { getChromeExecutablePath } from '../utils/chrome';
-import type { ProviderKey } from '../utils/providers';
 import type { TransactionsAccount } from 'israeli-bank-scrapers/lib/transactions';
+import { ProviderCredentials, ScrapedAccountData } from '../types';
+import { getChromeExecutablePath } from '../utils/chrome';
+import { logger } from '../utils/logger';
+import { getProviderDisplayName, type ProviderKey } from '../utils/providers';
+import { BaseScraper } from './base';
 
 /**
  * Generic scraper that can handle any Israeli bank provider
@@ -175,7 +175,7 @@ export class GenericScraper implements BaseScraper {
       id: `${this.type}-${account.accountNumber}`,
       balance: account.balance ?? 0,
       type: this.getAccountTypeForProvider(), // account.type doesn't exist in israeli-bank-scrapers
-      name: `${this.getProviderDisplayName()} - ${account.accountNumber}`,
+      name: `${getProviderDisplayName(this.type)} - ${account.accountNumber}`,
     }));
 
     return {
@@ -190,29 +190,5 @@ export class GenericScraper implements BaseScraper {
     // Credit card providers
     const creditCardProviders = ['visaCal', 'max', 'isracard', 'amex'];
     return creditCardProviders.includes(this.type) ? 'Credit Card' : 'Bank';
-  }
-
-  private getProviderDisplayName(): string {
-    const displayNames: Record<string, string> = {
-      hapoalim: 'Bank Hapoalim',
-      leumi: 'Bank Leumi',
-      discount: 'Discount Bank',
-      mercantile: 'Mercantile Bank',
-      mizrahi: 'Mizrahi Bank',
-      otsarHahayal: 'Bank Otsar Hahayal',
-      visaCal: 'Visa Cal',
-      max: 'Max (Leumi Card)',
-      isracard: 'Isracard',
-      amex: 'Amex',
-      union: 'Union Bank',
-      beinleumi: 'Beinleumi',
-      massad: 'Massad',
-      yahav: 'Yahav',
-      beyahadBishvilha: 'Beyhad Bishvilha',
-      oneZero: 'OneZero',
-      behatsdaa: 'Behatsdaa',
-    };
-
-    return displayNames[this.type] || this.type;
   }
 }
