@@ -1,8 +1,8 @@
-import { ScraperService } from '@bank-assistant/scraper';
 import {
+  ScraperService,
   analyzeMerchantSpending,
   getSpendingByMerchant,
-} from '@bank-assistant/scraper/src/analyzers/merchantAnalyzer';
+} from '@bank-assistant/scraper';
 import { logger } from '../utils/logger.js';
 import type { MerchantAnalysisArgs, SpendingByMerchantArgs } from '../types.js';
 
