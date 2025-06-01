@@ -1,146 +1,72 @@
 # Israeli Bank Scraper MCP Server
 
-A powerful Model Context Protocol (MCP) server that provides financial data access through automated Israeli bank and credit card data scraping. Supports all major Israeli financial institutions dynamically based on your configuration.
-
-## 🚀 What Makes This Special
-
-This is a comprehensive financial data platform that:
-
-- 🏦 **Scrapes data from ANY Israeli bank or credit card** - automatically detects configured providers
-- 💳 **Analyzes monthly credit card spending** with detailed summaries across all your cards
-- 🔄 **Detects recurring charges** to help identify subscriptions
-- 💾 **Stores data locally** in a secure SQLite database
-- 🎯 **Zero configuration** - just set credentials for the providers you use
+A Model Context Protocol (MCP) server that provides access to Israeli bank and credit card data through automated scraping. Supports major Israeli financial institutions based on configured credentials.
 
 ## Features
 
-### Core Banking Features
+### Core Functionality
 
-- 🏦 **Universal Support**: Works with all major Israeli banks and credit card companies
-- 🔍 **Dynamic Provider Detection**: Automatically detects which providers you've configured
-- 🔄 **Parallel Scraping**: Scrapes multiple providers simultaneously for efficiency
-- 💾 **Local SQLite database** for secure data persistence
-- 🐳 **Docker support** for easy deployment
+- Automated data scraping from Israeli banks and credit card companies
+- Dynamic provider detection based on configured credentials
+- Parallel scraping for multiple providers
+- Local SQLite database for data persistence
+- Docker support for containerized deployment
 
 ### Supported Providers
 
-#### Banks
-
-- Bank Hapoalim
-- Bank Leumi
-- Discount Bank
-- Mercantile Bank
-- Mizrahi Bank
-- Bank Otsar Hahayal
-- Union Bank
-- Beinleumi
-- Yahav
-
-#### Credit Cards
-
-- Visa Cal
-- Max (Leumi Card)
-- Isracard
-- American Express
-
-#### Other Providers
-
-- Massad
-- Beyhad Bishvilha
-- OneZero (Experimental)
-- Behatsdaa
-- Pagi
+For a complete list of supported banks, credit cards, and other financial providers, see the [israeli-bank-scrapers documentation](https://github.com/eshaham/israeli-bank-scrapers?tab=readme-ov-file#whats-here).
 
 ### MCP Server Capabilities
 
-- 🤖 **Server Instructions**: Automatic context about the server's purpose and capabilities
-- 📝 **Pre-defined Prompts**: Structured templates for common financial analysis workflows
-- 🛠️ **Tools**: Direct access to real-time bank data and analysis functions
-- 🔄 **Dynamic Context**: Prompts automatically incorporate current financial data
-
-### Financial Data Tools
-
-- 💳 **Monthly Credit Card Summaries** - Track spending across all your cards
-- 🔄 **Recurring Charge Detection** - Identify subscriptions and regular payments
+- Server instructions for financial advisor context
+- Pre-defined prompts for common financial analysis workflows
+- Direct access to bank data and analysis functions
+- Dynamic context incorporation in prompts
 
 ## Available MCP Tools
 
 ### Banking Tools
 
-- **`get_transactions`**: Get bank and credit card transactions for a specific time period
-- **`get_financial_summary`**: Get comprehensive financial analysis including trends, income, and expenses
-- **`get_accounts`**: List all bank accounts and credit cards with balances
-- **`get_account_balance_history`**: Get balance history for a specific account
+- **`get_transactions`**: Retrieve bank and credit card transactions for a specific time period
+- **`get_financial_summary`**: Generate comprehensive financial analysis including trends, income, and expenses
+- **`get_accounts`**: List all bank accounts and credit cards with current balances
+- **`get_account_balance_history`**: Retrieve balance history for a specific account
 - **`refresh_all_data`**: Force refresh data from all configured services
 - **`refresh_service_data`**: Force refresh data from a specific service
-- **`get_scrape_status`**: Get the current scrape status and last scrape times
+- **`get_scrape_status`**: Check current scrape status and last scrape times
 
 ### Financial Analysis Tools
 
-- **`get_monthly_credit_summary`**: Detailed credit card spending analysis by month
-- **`get_recurring_charges`**: Automatically detect and analyze subscriptions
+- **`get_monthly_credit_summary`**: Analyze credit card spending by month
+- **`get_recurring_charges`**: Detect and analyze recurring transactions
 
 ## Available MCP Prompts
 
-The server provides intelligent prompts that structure financial conversations:
+The server provides structured prompts for financial analysis:
 
-- **`financial_advisor_context`**: Activates the full financial advisor persona with comprehensive capabilities
+- **`financial_advisor_context`**: Full financial advisor persona with comprehensive capabilities
 - **`financial_review`**: Monthly comprehensive financial analysis
-- **`budget_planning`**: Personalized budget creation based on your data
-- **`subscription_audit`**: Detect and analyze all recurring charges
-- **`spending_optimization`**: Find ways to reduce expenses
-- **`fraud_detection`**: Scan for suspicious transactions
-- **`tax_preparation`**: Generate tax-relevant summaries
-- **`emergency_fund_analysis`**: Assess savings adequacy
-- **`debt_optimization`**: Credit card usage analysis and debt reduction
-
-## How Instructions and Prompts Work Together
-
-- **Server Instructions**: Automatically loaded when connecting to the MCP server, providing Claude with context about being a financial advisor
-- **Prompts**: User-triggered templates for specific financial analysis tasks
-- **Tools**: Direct access to fetch and analyze your bank data
-
-The server instructions ensure Claude always understands its role as a financial advisor, while prompts provide structured workflows for specific tasks.
-
-## Example Use Cases
-
-### With AI Assistants
-
-Ask your AI assistant questions like:
-
-- "How much did I spend on each credit card this month?"
-- "What subscriptions am I paying for?"
-- "Show me my spending trends from the financial summary"
-- "What's my current balance across all accounts?"
-- "When was the last time my data was updated?"
-
-### Using Prompts for Structured Analysis
-
-The pre-defined prompts ensure comprehensive analysis:
-
-```
-# Trigger a complete financial review
-/financial_review month=2024-11
-
-# Audit your subscriptions
-/subscription_audit
-
-# Plan a budget with savings goals
-/budget_planning savings_goal_percentage=25
-```
-
-### Automation Ideas
-
-- Set up monthly financial review summaries
-- Get alerts when new recurring charges are detected
-- Track spending patterns over time
+- **`budget_planning`**: Budget creation based on transaction data
+- **`subscription_audit`**: Detection and analysis of recurring charges
+- **`spending_optimization`**: Expense reduction recommendations
+- **`fraud_detection`**: Suspicious transaction scanning
+- **`tax_preparation`**: Tax-relevant transaction summaries
+- **`emergency_fund_analysis`**: Savings adequacy assessment
+- **`debt_optimization`**: Credit card usage analysis and debt reduction strategies
 
 ## Architecture
 
-The project is organized as a monorepo with two main packages:
+The project is structured as a monorepo with two main packages:
 
 - **`packages/scraper`**: Backend service for scraping bank and credit card data
 - **`packages/mcp-server`**: MCP server exposing the scraping functionality as tools
+
+### How It Works
+
+1. The scraper service connects to configured financial institutions using credentials
+2. Transaction data is fetched and stored in a local SQLite database
+3. The MCP server exposes this data through standardized tools
+4. AI assistants can query and analyze the financial data using these tools
 
 ## Getting Started
 
@@ -148,7 +74,7 @@ The project is organized as a monorepo with two main packages:
 
 - Node.js 18+
 - Yarn (for workspace management)
-- Chrome/Chromium (will be installed automatically by puppeteer)
+- Chrome/Chromium (installed automatically by puppeteer)
 
 ### Installation
 
@@ -165,17 +91,15 @@ cd il-bank-mcp
 yarn install
 ```
 
-3. Set up environment variables:
+3. Configure environment variables:
 
 ```bash
 cp env.example .env
 ```
 
-Edit `.env` and add credentials for the providers you use. The system will automatically detect which providers to scrape based on the credentials you provide:
+Edit `.env` and add credentials for the providers you use. The system automatically detects which providers to scrape based on provided credentials:
 
 ```env
-# Example: Configure only the providers you use
-
 # Bank Leumi
 LEUMI_USERNAME=your_username
 LEUMI_PASSWORD=your_password
@@ -189,7 +113,7 @@ ISRACARD_ID=your_id
 ISRACARD_CARD6DIGITS=last_6_digits
 ISRACARD_PASSWORD=your_password
 
-# See env.example for all available providers and their required fields
+# See env.example for all available providers
 ```
 
 4. Install Chrome for puppeteer:
@@ -199,7 +123,7 @@ cd packages/scraper
 npx puppeteer browsers install chrome
 ```
 
-### Using with Claude Desktop
+### Claude Desktop Configuration
 
 1. Build the project:
 
@@ -207,7 +131,7 @@ npx puppeteer browsers install chrome
 yarn build
 ```
 
-2. Add to your Claude Desktop configuration:
+2. Add to Claude Desktop configuration:
 
 ```json
 {
@@ -216,7 +140,6 @@ yarn build
       "command": "node",
       "args": ["/path/to/il-bank-mcp/packages/mcp-server/dist/index.js"],
       "env": {
-        // Add only the providers you use
         "LEUMI_USERNAME": "your_username",
         "LEUMI_PASSWORD": "your_password",
         "VISA_CAL_USERNAME": "your_username",
@@ -224,14 +147,13 @@ yarn build
         "ISRACARD_ID": "your_id",
         "ISRACARD_CARD6DIGITS": "last_6_digits",
         "ISRACARD_PASSWORD": "your_password"
-        // Add more providers as needed
       }
     }
   }
 }
 ```
 
-## Docker Support
+## Docker Deployment
 
 Build and run with Docker:
 
@@ -239,7 +161,7 @@ Build and run with Docker:
 # Build the image
 docker build -t israeli-bank-scraper .
 
-# Run the container (example with multiple providers)
+# Run the container
 docker run -d \
   -e LEUMI_USERNAME=your_username \
   -e LEUMI_PASSWORD=your_password \
@@ -261,27 +183,40 @@ docker run -d \
 ```
 il-bank-mcp/
 ├── packages/
-│   ├── scraper/             # Bank scraping service
+│   ├── scraper/
 │   │   ├── src/
-│   │   │   ├── scrapers/    # Generic scraper implementation
-│   │   │   ├── utils/       # Provider detection & configuration
-│   │   │   ├── services/    # Business logic
-│   │   │   ├── database/    # Data persistence
-│   │   │   └── analyzers/   # Financial analysis
+│   │   │   ├── scrapers/
+│   │   │   ├── utils/
+│   │   │   ├── services/
+│   │   │   ├── database/
+│   │   │   └── analyzers/
 │   │   └── package.json
-│   └── mcp-server/          # MCP server
+│   └── mcp-server/
 │       ├── src/
 │       └── package.json
 ├── docker-compose.yml
 ├── Dockerfile
-└── package.json             # Root workspace config
+└── package.json
+```
+
+### Running in Development
+
+```bash
+# Run both services in development mode
+yarn dev
+
+# Run only the scraper
+yarn workspace @il-bank-mcp/scraper dev
+
+# Run only the MCP server
+yarn workspace @il-bank-mcp/mcp-server dev
 ```
 
 ## License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+MIT License
 
 ## Acknowledgments
 
-- [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers) for the core scraping functionality
-- [Model Context Protocol](https://modelcontextprotocol.io/) for the MCP framework
+- [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers) - Core scraping functionality
+- [Model Context Protocol](https://modelcontextprotocol.io/) - MCP framework
