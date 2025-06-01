@@ -12,11 +12,11 @@
   "dependencies": {
     "@bank-assistant/scraper": "workspace:*",
     "@modelcontextprotocol/sdk": "^1.12.1",
-    "dotenv": "^16.4.7"
+    "dotenv": "^16.5.0"
   },
   "devDependencies": {
-    "@types/node": "^22.12.3",
-    "tsx": "^4.19.2",
+    "@types/node": "^22.15.29",
+    "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
 }

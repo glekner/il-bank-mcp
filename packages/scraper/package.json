@@ -17,19 +17,19 @@
     "test:ignored": "tsx src/test-ignored-accounts.ts"
   },
   "dependencies": {
-    "better-sqlite3": "^11.6.0",
-    "dotenv": "^16.4.7",
+    "better-sqlite3": "^11.10.0",
+    "dotenv": "^16.5.0",
     "israeli-bank-scrapers": "^6.1.2",
-    "node-cron": "^3.0.3",
+    "node-cron": "^4.1.0",
     "puppeteer": "^24.9.0",
     "winston": "^3.17.0",
-    "zod": "^3.25.42"
+    "zod": "^3.25.45"
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
-    "@types/node": "^22.12.3",
-    "eslint": "^9.27.0",
-    "tsx": "^4.19.2",
+    "@types/node": "^22.15.29",
+    "eslint": "^9.28.0",
+    "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   },
   "packageManager": "yarn@4.9.1"

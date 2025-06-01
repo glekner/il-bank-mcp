@@ -5,7 +5,7 @@ export const TOOLS = [
   {
     name: "get_transactions",
     description:
-      "Get bank and credit card transactions for a specific time period from all configured services",
+      "Get bank and credit card transactions for a specific time period from all configured services. When filtering by account, ALWAYS call get_accounts first to get the actual account IDs.",
     inputSchema: {
       type: "object",
       properties: {
@@ -20,7 +20,7 @@ export const TOOLS = [
         accountId: {
           type: "string",
           description:
-            "Optional account ID to filter by (e.g., 'leumi-123456', 'visacal-7890', 'max-4567')",
+            "Optional account ID to filter by. Must be an actual account ID obtained from get_accounts (not a guessed value like 'visacal')",
         },
       },
     },
@@ -53,14 +53,15 @@ export const TOOLS = [
   },
   {
     name: "get_account_balance_history",
-    description: "Get balance history for a specific account",
+    description:
+      "Get balance history for a specific account. ALWAYS call get_accounts first to get the actual account ID.",
     inputSchema: {
       type: "object",
       properties: {
         accountId: {
           type: "string",
           description:
-            "Account ID (e.g., 'leumi-123456', 'visacal-7890', 'max-4567')",
+            "Account ID obtained from get_accounts (not a guessed value)",
         },
         days: {
           type: "number",
