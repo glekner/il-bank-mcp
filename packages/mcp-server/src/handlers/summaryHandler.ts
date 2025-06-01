@@ -12,16 +12,13 @@ export class SummaryHandler extends BaseHandler {
       endDate
     );
 
-    // If summary is empty, trigger a scrape and retry
+    // If summary is empty, trigger an async scrape
     if (this.isSummaryEmpty(summary)) {
-      logger.info("Financial summary is empty, triggering scrape...");
-      await this.scraperService.forceScrape();
+      logger.info("Financial summary is empty, triggering async scrape...");
+      await this.scraperService.startAsyncScrapeAll();
 
-      // Retry getting the summary after scraping
-      summary = await this.scraperService.getFinancialSummary(
-        startDate,
-        endDate
-      );
+      // Don't retry immediately since scraping is async
+      // The user will be notified that scraping is in progress
     }
 
     let response: SummaryResponse = {

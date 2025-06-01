@@ -8,20 +8,21 @@ import { logger } from "../utils/logger.js";
 
 export class RefreshHandler extends BaseHandler {
   async refreshAllData() {
-    logger.info("Starting force scrape of all data...");
+    logger.info("Starting async scrape of all data...");
 
     try {
-      await this.scraperService.forceScrape();
+      await this.scraperService.startAsyncScrapeAll();
 
       const response: RefreshResponse = {
         success: true,
-        message: "All bank and credit card data refreshed successfully",
+        message:
+          "Scraping of all bank and credit card data has been initiated. The process is running in the background.",
         timestamp: new Date().toISOString(),
       };
 
       return this.formatResponse(response);
     } catch (error) {
-      logger.error("Force scrape failed", {
+      logger.error("Failed to start async scrape", {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;
@@ -39,20 +40,20 @@ export class RefreshHandler extends BaseHandler {
       );
     }
 
-    logger.info(`Starting force scrape of ${args.service} data...`);
+    logger.info(`Starting async scrape of ${args.service} data...`);
 
     try {
-      await this.scraperService.forceScrapeService(args.service as any);
+      await this.scraperService.startAsyncScrapeService(args.service as any);
 
       const response: RefreshResponse = {
         success: true,
-        message: `${args.service} data refreshed successfully`,
+        message: `Scraping of ${args.service} data has been initiated. The process is running in the background.`,
         timestamp: new Date().toISOString(),
       };
 
       return this.formatResponse(response);
     } catch (error) {
-      logger.error(`Force scrape of ${args.service} failed`, {
+      logger.error(`Failed to start async scrape of ${args.service}`, {
         error: error instanceof Error ? error.message : String(error),
       });
       throw error;

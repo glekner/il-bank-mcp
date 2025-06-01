@@ -11,13 +11,13 @@ export class AccountHandler extends BaseHandler {
   async getAccounts() {
     let accounts = await this.scraperService.getAccounts();
 
-    // If no accounts found, trigger a scrape and retry
+    // If no accounts found, trigger an async scrape
     if (accounts.length === 0) {
-      logger.info("No accounts found, triggering scrape...");
-      await this.scraperService.forceScrape();
+      logger.info("No accounts found, triggering async scrape...");
+      await this.scraperService.startAsyncScrapeAll();
 
-      // Retry getting accounts after scraping
-      accounts = await this.scraperService.getAccounts();
+      // Don't retry immediately since scraping is async
+      // The user will be notified that scraping is in progress
     }
 
     let response: AccountsResponse = {

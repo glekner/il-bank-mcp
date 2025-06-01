@@ -65,6 +65,11 @@ export interface ScrapeStatusResponse extends ToolResponse {
   transactionsCount?: number;
   accountsCount?: number;
   error?: string;
+  activeScrapes?: Array<{
+    service: string;
+    startedAt: string;
+    status: string;
+  }>;
 }
 
 export const DEFAULT_BALANCE_HISTORY_DAYS = 30;

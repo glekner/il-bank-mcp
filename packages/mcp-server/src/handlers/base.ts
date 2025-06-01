@@ -10,11 +10,23 @@ export abstract class BaseHandler {
   protected async addScrapeStatusIfRunning<T extends { message?: string }>(
     response: T
   ): Promise<T> {
-    const isRunning = this.scraperService.isScrapeRunning();
-    if (isRunning && response.message) {
-      response.message = `${response.message} (Note: A scrape is currently in progress...)`;
-    } else if (isRunning) {
-      response.message = "A scrape is currently in progress...";
+    const scrapeStatus = this.scraperService.getScrapeStatus();
+
+    if (
+      scrapeStatus.isAnyScrapeRunning &&
+      scrapeStatus.activeScrapes?.length > 0
+    ) {
+      const runningServices = scrapeStatus.activeScrapes
+        .map((s) => s.service)
+        .join(", ");
+
+      const warningMessage = `Note: Data scraping is currently in progress for: ${runningServices}. The data shown may be stale.`;
+
+      if (response.message) {
+        response.message = `${response.message}\n\n⚠️ ${warningMessage}`;
+      } else {
+        response.message = `⚠️ ${warningMessage}`;
+      }
     }
     return response;
   }

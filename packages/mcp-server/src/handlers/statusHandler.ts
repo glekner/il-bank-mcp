@@ -3,17 +3,22 @@ import { ScrapeStatusResponse } from "../types.js";
 
 export class StatusHandler extends BaseHandler {
   async getScrapeStatus() {
-    const info = await this.scraperService.getLastScrapeInfo();
+    const status = this.scraperService.getScrapeStatus();
 
     const response: ScrapeStatusResponse = {
       success: true,
-      isRunning: info.isRunning,
-      lastScrapeAt: info.lastScrapeAt?.toISOString(),
-      status: info.status,
-      duration: info.duration,
-      transactionsCount: info.transactionsCount,
-      accountsCount: info.accountsCount,
-      error: info.error,
+      isRunning: status.isAnyScrapeRunning,
+      lastScrapeAt: status.lastScrapeAt?.toISOString(),
+      status: status.status,
+      duration: status.duration,
+      transactionsCount: status.transactionsCount,
+      accountsCount: status.accountsCount,
+      error: status.error,
+      activeScrapes: status.activeScrapes?.map((s) => ({
+        service: s.service,
+        startedAt: s.startedAt.toISOString(),
+        status: s.status,
+      })),
     };
 
     return this.formatResponse(response);

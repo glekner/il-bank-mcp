@@ -8,12 +8,14 @@ import { FinancialSummary, ServiceType, Transaction } from "../types";
 import { createComponentLogger, createTimer } from "../utils/logger";
 import { getCacheService, CacheKeys } from "./cacheService";
 import { validateScrapedData } from "../validation/schemas";
+import { ScrapeStatusManager } from "./scrapeStatusManager";
 
 const logger = createComponentLogger("ScraperService");
 
 export class ScraperService {
   private repository: BankDataRepository;
   private cache = getCacheService();
+  private scrapeStatusManager = ScrapeStatusManager.getInstance();
 
   constructor() {
     logger.info("Initializing ScraperService");
@@ -461,8 +463,15 @@ export class ScraperService {
    * Check if a scrape is currently running
    */
   isScrapeRunning(): boolean {
-    const isRunning = this.repository.isScrapeRunning();
-    logger.debug("Checked scrape running status", { isRunning });
+    // Check both database and in-memory status
+    const dbRunning = this.repository.isScrapeRunning();
+    const memoryRunning = this.scrapeStatusManager.isAnyScrapeRunning();
+    const isRunning = dbRunning || memoryRunning;
+    logger.debug("Checked scrape running status", {
+      isRunning,
+      dbRunning,
+      memoryRunning,
+    });
     return isRunning;
   }
 
@@ -476,6 +485,74 @@ export class ScraperService {
       isRunning: info?.isRunning,
     });
     return info;
+  }
+
+  /**
+   * Start an async scrape of all services
+   * Returns immediately after starting the scrape
+   */
+  async startAsyncScrapeAll(): Promise<void> {
+    logger.info("Starting async scrape of all services");
+
+    // Check if already scraping
+    if (this.scrapeStatusManager.isServiceScraping("all")) {
+      logger.warn("Scrape already in progress for all services");
+      return;
+    }
+
+    this.scrapeStatusManager.startScrape("all");
+
+    // Start the scrape in the background
+    this.forceScrape()
+      .then(() => {
+        logger.info("Async scrape of all services completed successfully");
+        this.scrapeStatusManager.completeScrape("all");
+      })
+      .catch((error) => {
+        logger.error("Async scrape of all services failed", { error });
+        this.scrapeStatusManager.completeScrape("all", error);
+      });
+  }
+
+  /**
+   * Start an async scrape of a specific service
+   * Returns immediately after starting the scrape
+   */
+  async startAsyncScrapeService(service: ServiceType): Promise<void> {
+    logger.info(`Starting async scrape of ${service}`);
+
+    // Check if already scraping this service
+    if (this.scrapeStatusManager.isServiceScraping(service)) {
+      logger.warn(`Scrape already in progress for ${service}`);
+      return;
+    }
+
+    this.scrapeStatusManager.startScrape(service);
+
+    // Start the scrape in the background
+    this.forceScrapeService(service)
+      .then(() => {
+        logger.info(`Async scrape of ${service} completed successfully`);
+        this.scrapeStatusManager.completeScrape(service);
+      })
+      .catch((error) => {
+        logger.error(`Async scrape of ${service} failed`, { error });
+        this.scrapeStatusManager.completeScrape(service, error);
+      });
+  }
+
+  /**
+   * Get current scraping status
+   */
+  getScrapeStatus() {
+    const dbInfo = this.getLastScrapeInfo();
+    const runningScrapes = this.scrapeStatusManager.getRunningScrapes();
+
+    return {
+      ...dbInfo,
+      activeScrapes: runningScrapes,
+      isAnyScrapeRunning: this.isScrapeRunning(),
+    };
   }
 
   /**

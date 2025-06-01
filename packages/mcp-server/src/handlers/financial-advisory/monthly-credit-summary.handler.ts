@@ -1,11 +1,9 @@
-import { ScraperService } from "@bank-assistant/scraper";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { CreditCardSummary, MonthlyCreditSummaryArgs } from "../../types.js";
 import { logger } from "../../utils/logger.js";
+import { BaseHandler } from "../base.js";
 
-export class MonthlyCreditSummaryHandler {
-  constructor(private scraperService: ScraperService) {}
-
+export class MonthlyCreditSummaryHandler extends BaseHandler {
   async getMonthlyCreditSummary(
     args: MonthlyCreditSummaryArgs
   ): Promise<CallToolResult> {
@@ -119,26 +117,38 @@ export class MonthlyCreditSummaryHandler {
       ];
       const monthName = `${monthNames[month - 1]} ${year}`;
 
+      const response = {
+        success: true,
+        month: monthName,
+        creditCards: summaries,
+        summary: {
+          totalCards: summaries.length,
+          grandTotal,
+          totalTransactions,
+          averagePerCard:
+            summaries.length > 0 ? grandTotal / summaries.length : 0,
+        },
+      };
+
+      // Check if scraping is in progress and add warning
+      const scrapeStatus = this.scraperService.getScrapeStatus();
+      if (
+        scrapeStatus.isAnyScrapeRunning &&
+        scrapeStatus.activeScrapes?.length > 0
+      ) {
+        const runningServices = scrapeStatus.activeScrapes
+          .map((s) => s.service)
+          .join(", ");
+
+        (response as any)._warning =
+          `Data scraping is currently in progress for: ${runningServices}. The data shown may be stale.`;
+      }
+
       return {
         content: [
           {
             type: "text",
-            text: JSON.stringify(
-              {
-                success: true,
-                month: monthName,
-                creditCards: summaries,
-                summary: {
-                  totalCards: summaries.length,
-                  grandTotal,
-                  totalTransactions,
-                  averagePerCard:
-                    summaries.length > 0 ? grandTotal / summaries.length : 0,
-                },
-              },
-              null,
-              2
-            ),
+            text: JSON.stringify(response, null, 2),
           },
         ],
       };

@@ -1,7 +1,8 @@
-import { ScraperService, Transaction } from "@bank-assistant/scraper";
+import { Transaction } from "@bank-assistant/scraper";
 import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { RecurringChargesArgs, RecurringCharge } from "../../types.js";
 import { logger } from "../../utils/logger.js";
+import { BaseHandler } from "../base.js";
 
 interface TransactionPattern {
   merchantName: string;
@@ -10,9 +11,7 @@ interface TransactionPattern {
   transactions: Transaction[];
 }
 
-export class RecurringChargesHandler {
-  constructor(private scraperService: ScraperService) {}
-
+export class RecurringChargesHandler extends BaseHandler {
   async getRecurringCharges(
     args: RecurringChargesArgs
   ): Promise<CallToolResult> {
@@ -79,25 +78,37 @@ export class RecurringChargesHandler {
         return sum + charge.averageAmount * multiplier;
       }, 0);
 
+      const response = {
+        success: true,
+        recurringCharges,
+        summary: {
+          totalRecurring: recurringCharges.length,
+          monthlyRecurringCost: totalRecurringMonthly,
+          annualRecurringCost: totalRecurringAnnual,
+          categories: this.categorizeRecurringCharges(recurringCharges),
+        },
+        insights: this.generateRecurringInsights(recurringCharges),
+      };
+
+      // Check if scraping is in progress and add warning
+      const scrapeStatus = this.scraperService.getScrapeStatus();
+      if (
+        scrapeStatus.isAnyScrapeRunning &&
+        scrapeStatus.activeScrapes?.length > 0
+      ) {
+        const runningServices = scrapeStatus.activeScrapes
+          .map((s) => s.service)
+          .join(", ");
+
+        (response as any)._warning =
+          `Data scraping is currently in progress for: ${runningServices}. The data shown may be stale.`;
+      }
+
       return {
         content: [
           {
             type: "text",
-            text: JSON.stringify(
-              {
-                success: true,
-                recurringCharges,
-                summary: {
-                  totalRecurring: recurringCharges.length,
-                  monthlyRecurringCost: totalRecurringMonthly,
-                  annualRecurringCost: totalRecurringAnnual,
-                  categories: this.categorizeRecurringCharges(recurringCharges),
-                },
-                insights: this.generateRecurringInsights(recurringCharges),
-              },
-              null,
-              2
-            ),
+            text: JSON.stringify(response, null, 2),
           },
         ],
       };
