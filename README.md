@@ -1,17 +1,15 @@
 # Israeli Bank Scraper MCP Server
 
-A powerful Model Context Protocol (MCP) server that provides intelligent financial advisory tools powered by automated Israeli bank and credit card data scraping.
+A powerful Model Context Protocol (MCP) server that provides financial data access through automated Israeli bank and credit card data scraping.
 
 ## 🚀 What Makes This Special
 
-This isn't just another transaction scraper. It's a comprehensive financial intelligence platform that:
+This is a comprehensive financial data platform that:
 
-- 🧠 **Analyzes your spending patterns** to provide actionable insights
-- 💰 **Detects recurring charges** and helps identify unused subscriptions
-- 📊 **Provides financial health scoring** with personalized improvement recommendations
-- 🎯 **Creates custom budgets** based on your income and spending habits
-- 🔔 **Alerts you to anomalies** and potential fraudulent transactions
-- 📈 **Forecasts cash flow** to help you plan ahead
+- 🏦 **Scrapes your bank and credit card data** automatically
+- 💳 **Analyzes monthly credit card spending** with detailed summaries
+- 🔄 **Detects recurring charges** to help identify subscriptions
+- 💾 **Stores data locally** in a secure SQLite database
 
 ## Features
 
@@ -29,20 +27,82 @@ This isn't just another transaction scraper. It's a comprehensive financial inte
 - 🛠️ **Tools**: Direct access to real-time bank data and analysis functions
 - 🔄 **Dynamic Context**: Prompts automatically incorporate current financial data
 
-### Advanced Financial Advisory Tools
+### Financial Data Tools
 
 - 💳 **Monthly Credit Card Summaries** - Track spending across all your cards
-- 🔄 **Recurring Charge Detection** - Never miss a subscription again
-- 💡 **AI-Powered Spending Insights** - Get personalized financial advice
-- 📊 **Cash Flow Analysis & Forecasting** - Predict future balances
-- 📈 **Period Comparison** - Compare spending across different time periods
-- 🏪 **Merchant Analysis** - Identify your top spending destinations
-- 💰 **Budget Recommendations** - Get personalized budget plans
-- 🚨 **Anomaly Detection** - Catch unusual transactions early
-- 📋 **Tax Summary Generation** - Simplify tax preparation
-- ❤️ **Financial Health Score** - Get a comprehensive wellness check
+- 🔄 **Recurring Charge Detection** - Identify subscriptions and regular payments
 
-[View detailed documentation for financial advisory tools →](docs/financial-advisory-tools.md)
+## Available MCP Tools
+
+### Banking Tools
+
+- **`get_transactions`**: Get bank and credit card transactions for a specific time period
+- **`get_financial_summary`**: Get comprehensive financial analysis including trends, income, and expenses
+- **`get_accounts`**: List all bank accounts and credit cards with balances
+- **`get_account_balance_history`**: Get balance history for a specific account
+- **`refresh_all_data`**: Force refresh data from all configured services
+- **`refresh_service_data`**: Force refresh data from a specific service
+- **`get_scrape_status`**: Get the current scrape status and last scrape times
+
+### Financial Analysis Tools
+
+- **`get_monthly_credit_summary`**: Detailed credit card spending analysis by month
+- **`get_recurring_charges`**: Automatically detect and analyze subscriptions
+
+## Available MCP Prompts
+
+The server provides intelligent prompts that structure financial conversations:
+
+- **`financial_advisor_context`**: Activates the full financial advisor persona with comprehensive capabilities
+- **`financial_review`**: Monthly comprehensive financial analysis
+- **`budget_planning`**: Personalized budget creation based on your data
+- **`subscription_audit`**: Detect and analyze all recurring charges
+- **`spending_optimization`**: Find ways to reduce expenses
+- **`fraud_detection`**: Scan for suspicious transactions
+- **`tax_preparation`**: Generate tax-relevant summaries
+- **`emergency_fund_analysis`**: Assess savings adequacy
+- **`debt_optimization`**: Credit card usage analysis and debt reduction
+
+## How Instructions and Prompts Work Together
+
+- **Server Instructions**: Automatically loaded when connecting to the MCP server, providing Claude with context about being a financial advisor
+- **Prompts**: User-triggered templates for specific financial analysis tasks
+- **Tools**: Direct access to fetch and analyze your bank data
+
+The server instructions ensure Claude always understands its role as a financial advisor, while prompts provide structured workflows for specific tasks.
+
+## Example Use Cases
+
+### With AI Assistants
+
+Ask your AI assistant questions like:
+
+- "How much did I spend on each credit card this month?"
+- "What subscriptions am I paying for?"
+- "Show me my spending trends from the financial summary"
+- "What's my current balance across all accounts?"
+- "When was the last time my data was updated?"
+
+### Using Prompts for Structured Analysis
+
+The pre-defined prompts ensure comprehensive analysis:
+
+```
+# Trigger a complete financial review
+/financial_review month=2024-11
+
+# Audit your subscriptions
+/subscription_audit
+
+# Plan a budget with savings goals
+/budget_planning savings_goal_percentage=25
+```
+
+### Automation Ideas
+
+- Set up monthly financial review summaries
+- Get alerts when new recurring charges are detected
+- Track spending patterns over time
 
 ## Architecture
 
@@ -165,91 +225,6 @@ yarn build
   }
 }
 ```
-
-## Available MCP Tools
-
-### Basic Banking Tools
-
-- **`get_transactions`**: Get bank and credit card transactions for a specific time period
-- **`get_financial_summary`**: Get comprehensive financial analysis including trends, income, and expenses
-- **`get_accounts`**: List all bank accounts and credit cards with balances
-- **`get_account_balance_history`**: Get balance history for a specific account
-- **`refresh_all_data`**: Force refresh data from all configured services
-- **`refresh_service_data`**: Force refresh data from a specific service
-
-### Financial Advisory Tools
-
-- **`get_monthly_credit_summary`**: Detailed credit card spending analysis by month
-- **`get_recurring_charges`**: Automatically detect and analyze subscriptions
-- **`get_spending_insights`**: AI-powered insights about spending patterns
-- **`get_cashflow_analysis`**: Analyze and forecast cash flow patterns
-- **`compare_spending_periods`**: Compare spending between time periods
-- **`get_merchant_analysis`**: Analyze spending by merchant
-- **`get_budget_recommendations`**: Get personalized budget recommendations
-- **`get_anomaly_alerts`**: Detect unusual transactions and potential fraud
-- **`get_tax_summary`**: Generate tax-relevant transaction summaries
-- **`get_financial_health_score`**: Comprehensive financial wellness assessment
-
-## Available MCP Prompts
-
-The server provides intelligent prompts that structure financial conversations:
-
-- **`financial_advisor_context`**: Activates the full financial advisor persona with comprehensive capabilities
-- **`financial_review`**: Monthly comprehensive financial analysis
-- **`budget_planning`**: Personalized budget creation based on your data
-- **`subscription_audit`**: Detect and analyze all recurring charges
-- **`spending_optimization`**: Find ways to reduce expenses
-- **`fraud_detection`**: Scan for suspicious transactions
-- **`tax_preparation`**: Generate tax-relevant summaries
-- **`emergency_fund_analysis`**: Assess savings adequacy
-- **`debt_optimization`**: Credit card usage analysis and debt reduction
-
-## How Instructions and Prompts Work Together
-
-- **Server Instructions**: Automatically loaded when connecting to the MCP server, providing Claude with context about being a financial advisor
-- **Prompts**: User-triggered templates for specific financial analysis tasks
-- **Tools**: Direct access to fetch and analyze your bank data
-
-The server instructions ensure Claude always understands its role as a financial advisor, while prompts provide structured workflows for specific tasks.
-
-## Example Use Cases
-
-### With AI Assistants
-
-Ask your AI assistant questions like:
-
-- "How much did I spend on each credit card this month?"
-- "What subscriptions am I paying for and can I cancel any?"
-- "Show me my spending trends and give me advice on how to save money"
-- "Alert me to any suspicious transactions in the last week"
-- "Help me create a budget that lets me save 30% of my income"
-- "Compare my spending this month vs last month"
-- "What's my financial health score and how can I improve it?"
-
-### Using Prompts for Structured Analysis
-
-The pre-defined prompts ensure comprehensive analysis:
-
-```
-# Trigger a complete financial review
-/financial_review month=2024-11
-
-# Create a budget with 25% savings goal
-/budget_planning savings_goal_percentage=25 focus_categories=dining,entertainment
-
-# Run a high-sensitivity fraud scan
-/fraud_detection sensitivity=high
-
-# Prepare for tax season
-/tax_preparation tax_year=2024
-```
-
-### Automation Ideas
-
-- Set up monthly financial review summaries
-- Get alerts when new recurring charges are detected
-- Weekly spending anomaly reports
-- Automated budget vs actual spending comparisons
 
 ## Docker Support
 
