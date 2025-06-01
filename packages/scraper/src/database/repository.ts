@@ -167,7 +167,7 @@ export class BankDataRepository {
     accountId?: string
   ): Transaction[] {
     let query = 'SELECT * FROM transactions WHERE 1=1';
-    const params: any[] = [];
+    const params: SqlParams = [];
 
     if (startDate) {
       query += ' AND date >= ?';
@@ -196,15 +196,15 @@ export class BankDataRepository {
     query += ' ORDER BY date DESC';
 
     const stmt = this.db.prepare(query);
-    const rows = stmt.all(...params);
+    const rows = stmt.all(...params) as TransactionRow[];
 
-    return rows.map((row: any) => ({
+    return rows.map((row: TransactionRow) => ({
       id: row.id,
       accountId: row.account_id,
       date: new Date(row.date),
       description: row.description,
       amount: row.amount,
-      category: row.category,
+      category: row.category || 'uncategorized',
       reference: row.reference,
       memo: row.memo,
     }));
@@ -224,7 +224,7 @@ export class BankDataRepository {
       ) b ON a.id = b.account_id AND b.rn = 1
     `;
 
-    const params: any[] = [];
+    const params: SqlParams = [];
 
     // Add filter for ignored accounts
     if (this.ignoredAccountIds.size > 0) {
@@ -236,9 +236,9 @@ export class BankDataRepository {
     }
 
     const stmt = this.db.prepare(query);
-    const rows = stmt.all(...params);
+    const rows = stmt.all(...params) as AccountRow[];
 
-    return rows.map((row: any) => ({
+    return rows.map((row: AccountRow) => ({
       id: row.id,
       name: row.name,
       type: row.type,
@@ -269,9 +269,9 @@ export class BankDataRepository {
       ORDER BY recorded_at DESC
     `);
 
-    const rows = stmt.all(accountId, days);
+    const rows = stmt.all(accountId, days) as AccountBalanceRow[];
 
-    return rows.map((row: any) => ({
+    return rows.map((row: AccountBalanceRow) => ({
       date: new Date(row.recorded_at),
       balance: row.balance,
     }));
@@ -289,9 +289,11 @@ export class BankDataRepository {
       LIMIT 1
     `);
 
-    const lastRun = stmt.get() as any;
+    const lastRun = stmt.get() as
+      | Pick<ScrapeRunRow, 'completed_at'>
+      | undefined;
 
-    if (!lastRun) {
+    if (!lastRun || !lastRun.completed_at) {
       return true; // No successful runs yet
     }
 
@@ -313,7 +315,7 @@ export class BankDataRepository {
         AND datetime(started_at) >= datetime('now', '-1 hour')
     `);
 
-    const result = stmt.get() as any;
+    const result = stmt.get() as CountRow;
     return result.count > 0;
   }
 
@@ -341,23 +343,23 @@ export class BankDataRepository {
       LIMIT 1
     `);
 
-    const lastRun = stmt.get() as any;
+    const lastRun = stmt.get() as ScrapeRunRow | undefined;
 
-    if (!lastRun) {
+    if (!lastRun || !lastRun.completed_at) {
       return { isRunning };
     }
 
     const startedAt = new Date(lastRun.started_at);
-    const completedAt = new Date(lastRun.completed_at);
+    const completedAt = new Date(lastRun.completed_at as string);
     const duration = (completedAt.getTime() - startedAt.getTime()) / 1000; // in seconds
 
     return {
       lastScrapeAt: completedAt,
       status: lastRun.status,
       duration,
-      transactionsCount: lastRun.transactions_count,
-      accountsCount: lastRun.accounts_count,
-      error: lastRun.error_message,
+      transactionsCount: lastRun.transactions_count || 0,
+      accountsCount: lastRun.accounts_count || 0,
+      error: lastRun.error_message || undefined,
       isRunning,
     };
   }
@@ -366,3 +368,45 @@ export class BankDataRepository {
     this.db.close();
   }
 }
+
+// Database row interfaces
+interface TransactionRow {
+  id: string;
+  account_id: string;
+  date: string;
+  description: string;
+  amount: number;
+  category: string | null;
+  reference: string | null;
+  memo: string | null;
+}
+
+interface AccountRow {
+  id: string;
+  name: string;
+  type: string;
+  balance?: number;
+}
+
+interface AccountBalanceRow {
+  recorded_at: string;
+  balance: number;
+}
+
+interface ScrapeRunRow {
+  id: number;
+  started_at: string;
+  completed_at: string | null;
+  status: 'running' | 'completed' | 'failed';
+  error_message: string | null;
+  transactions_count: number | null;
+  accounts_count: number | null;
+}
+
+interface CountRow {
+  count: number;
+}
+
+// SQL parameter types
+type SqlValue = string | number | null | undefined;
+type SqlParams = SqlValue[];

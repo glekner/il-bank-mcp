@@ -4,7 +4,7 @@ import { analyzeFinancialTrends } from '../analyzers/trendAnalyzer';
 import { BankDataRepository } from '../database/repository';
 import { processTransactions } from '../processors/transactionProcessor';
 import { scrapeAllBankData, scrapeSingleProvider } from '../scraper';
-import { FinancialSummary, Transaction } from '../types';
+import { FinancialSummary, Transaction, type Account } from '../types';
 import { createComponentLogger, createTimer } from '../utils/logger';
 import { getCacheService, CacheKeys } from './cacheService';
 import { validateScrapedData } from '../validation/schemas';
@@ -388,7 +388,7 @@ export class ScraperService {
     try {
       // Check cache first
       const cacheKey = CacheKeys.accounts();
-      const cached = this.cache.get<any[]>(cacheKey);
+      const cached = this.cache.get<Account[]>(cacheKey);
 
       if (cached) {
         logger.info('Returning cached accounts', {

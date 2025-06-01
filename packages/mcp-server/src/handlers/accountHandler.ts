@@ -9,7 +9,7 @@ import { logger } from '../utils/logger.js';
 
 export class AccountHandler extends BaseHandler {
   async getAccounts() {
-    let accounts = await this.scraperService.getAccounts();
+    const accounts = await this.scraperService.getAccounts();
 
     // If no accounts found, trigger an async scrape
     if (accounts.length === 0) {

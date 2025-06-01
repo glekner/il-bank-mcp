@@ -51,10 +51,10 @@ export async function scrapeAllBankData(): Promise<ScrapedAccountData> {
     // Execute all scrapes in parallel with Promise.allSettled
     const scrapeResults = await Promise.allSettled(scrapePromises);
 
-    const allAccounts: any[] = [];
-    const allTransactions: any[] = [];
-    const allRawData: any[] = [];
-    const errors: { provider: string; error: any }[] = [];
+    const allAccounts: ScrapedAccountData['accounts'] = [];
+    const allTransactions: ScrapedAccountData['transactions'] = [];
+    const allRawData: ScrapedAccountData['rawData'] = [];
+    const errors: { provider: string; error: unknown }[] = [];
 
     // Process results
     scrapeResults.forEach((result, index) => {
@@ -65,7 +65,7 @@ export async function scrapeAllBankData(): Promise<ScrapedAccountData> {
           allTransactions.push(...scrapedData.transactions);
           allRawData.push({ provider, data: scrapedData.rawData });
         } else if ('error' in result.value) {
-          errors.push(result.value as { provider: string; error: any });
+          errors.push(result.value as { provider: string; error: unknown });
         }
       } else if (result.status === 'rejected') {
         logger.error(`Promise rejected for provider ${providers[index]}`, {
@@ -122,7 +122,7 @@ export async function scrapeSingleProvider(
 
     const allCredentials: MultiProviderCredentials = {
       [provider]: credentials,
-    } as MultiProviderCredentials;
+    };
 
     const scraper = createScraperInstance(provider, allCredentials);
     if (!scraper) {

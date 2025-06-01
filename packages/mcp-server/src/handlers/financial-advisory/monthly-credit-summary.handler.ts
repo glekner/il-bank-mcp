@@ -140,7 +140,7 @@ export class MonthlyCreditSummaryHandler extends BaseHandler {
           .map(s => s.provider)
           .join(', ');
 
-        (response as any)._warning =
+        (response as Record<string, unknown>)._warning =
           `Data scraping is currently in progress for: ${runningServices}. The data shown may be stale.`;
       }
 

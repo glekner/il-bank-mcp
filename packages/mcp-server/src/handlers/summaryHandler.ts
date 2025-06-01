@@ -1,13 +1,14 @@
 import { BaseHandler } from './base.js';
 import { SummaryArgs, SummaryResponse } from '../types.js';
 import { logger } from '../utils/logger.js';
+import type { FinancialSummary } from '@bank-assistant/scraper';
 
 export class SummaryHandler extends BaseHandler {
   async getFinancialSummary(args: SummaryArgs) {
     const startDate = this.parseDate(args.startDate);
     const endDate = this.parseDate(args.endDate);
 
-    let summary = await this.scraperService.getFinancialSummary(
+    const summary = await this.scraperService.getFinancialSummary(
       startDate,
       endDate
     );
@@ -32,7 +33,7 @@ export class SummaryHandler extends BaseHandler {
     return this.formatResponse(response);
   }
 
-  private isSummaryEmpty(summary: any): boolean {
+  private isSummaryEmpty(summary: FinancialSummary): boolean {
     return (
       !summary ||
       summary.transactions.length === 0 ||

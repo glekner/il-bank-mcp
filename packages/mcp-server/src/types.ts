@@ -48,7 +48,7 @@ export interface SummaryResponse extends ToolResponse {
 
 export interface BalanceHistoryResponse extends ToolResponse {
   accountId?: string;
-  history?: any;
+  history?: { date: Date; balance: number }[];
 }
 
 export interface RefreshResponse extends ToolResponse {

@@ -69,29 +69,37 @@ export const logger = winston.createLogger({
 // Create a custom logger for specific components with enhanced context
 export function createComponentLogger(component: string) {
   return {
-    info: (message: string, meta?: any) =>
+    info: (message: string, meta?: Record<string, unknown>) =>
       logger.info(message, { component, ...meta }),
-    error: (message: string, meta?: any) =>
+    error: (message: string, meta?: Record<string, unknown>) =>
       logger.error(message, { component, ...meta }),
-    warn: (message: string, meta?: any) =>
+    warn: (message: string, meta?: Record<string, unknown>) =>
       logger.warn(message, { component, ...meta }),
-    debug: (message: string, meta?: any) =>
+    debug: (message: string, meta?: Record<string, unknown>) =>
       logger.debug(message, { component, ...meta }),
     // Add operation tracking helpers
-    startOperation: (operation: string, meta?: any) =>
+    startOperation: (operation: string, meta?: Record<string, unknown>) =>
       logger.info(`Starting ${operation}`, {
         component,
         operation: 'start',
         ...meta,
       }),
-    endOperation: (operation: string, duration?: number, meta?: any) =>
+    endOperation: (
+      operation: string,
+      duration?: number,
+      meta?: Record<string, unknown>
+    ) =>
       logger.info(`Completed ${operation}`, {
         component,
         operation: 'complete',
         duration_ms: duration,
         ...meta,
       }),
-    errorOperation: (operation: string, error: Error | string, meta?: any) =>
+    errorOperation: (
+      operation: string,
+      error: Error | string,
+      meta?: Record<string, unknown>
+    ) =>
       logger.error(`Failed ${operation}`, {
         component,
         operation: 'error',
@@ -107,7 +115,11 @@ export function createTimer() {
   const start = Date.now();
   return {
     elapsed: () => Date.now() - start,
-    end: (message: string, component?: string, meta?: any) => {
+    end: (
+      message: string,
+      component?: string,
+      meta?: Record<string, unknown>
+    ) => {
       const duration = Date.now() - start;
       logger.info(message, {
         component,

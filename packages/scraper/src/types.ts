@@ -7,7 +7,7 @@ export type { ProviderKey } from './utils/providers';
 export interface ScraperCredentials {
   username: string;
   password: string;
-  [key: string]: any; // Allow additional fields for specific providers
+  [key: string]: unknown; // Allow additional fields for specific providers
 }
 
 // Extended credential types for different services
@@ -87,7 +87,7 @@ export interface Account {
 export interface ScrapedAccountData {
   accounts: Account[];
   transactions: Transaction[];
-  rawData: any[]; // Original scraped data
+  rawData: unknown[]; // Original scraped data
   scrapedAt: Date;
 }
 

@@ -8,7 +8,7 @@ interface CacheItem<T> {
 }
 
 export class CacheService {
-  private cache = new Map<string, CacheItem<any>>();
+  private cache = new Map<string, CacheItem<unknown>>();
   private cleanupInterval: NodeJS.Timeout;
 
   constructor(private defaultTTL: number = 5 * 60 * 1000) {

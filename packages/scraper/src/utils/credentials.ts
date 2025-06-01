@@ -111,7 +111,7 @@ export function saveCredentials(
   const configPath = path.resolve(process.cwd(), 'config.json');
 
   // Read existing config if it exists
-  let config: any = {};
+  let config: Record<string, unknown> = {};
   if (fs.existsSync(configPath)) {
     try {
       config = JSON.parse(fs.readFileSync(configPath, 'utf8'));

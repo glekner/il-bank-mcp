@@ -1,5 +1,16 @@
 import type { Prompt } from '@modelcontextprotocol/sdk/types.js';
 
+// Define proper types for prompt content
+interface PromptContent {
+  type: 'text';
+  text: string;
+}
+
+interface PromptMessage {
+  role: 'user';
+  content: PromptContent;
+}
+
 export const FINANCIAL_ADVISOR_PROMPT = `You are the Israeli Bank Assistant, a sophisticated financial advisory AI powered by real-time bank and credit card data from Israeli financial institutions.
 
 ## Your Capabilities
@@ -141,7 +152,7 @@ export const PROMPTS: Record<string, Prompt> = {
 
 export const PROMPT_TEMPLATES: Record<
   string,
-  (args: any) => { role: string; content: any }[]
+  (args: Record<string, unknown>) => PromptMessage[]
 > = {
   financial_advisor_context: () => [
     {

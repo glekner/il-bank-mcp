@@ -4,6 +4,7 @@ import { logger } from '../utils/logger';
 import { BaseScraper } from './base';
 import { getChromeExecutablePath } from '../utils/chrome';
 import type { ProviderKey } from '../utils/providers';
+import type { TransactionsAccount } from 'israeli-bank-scrapers/lib/transactions';
 
 /**
  * Generic scraper that can handle any Israeli bank provider
@@ -100,7 +101,9 @@ export class GenericScraper implements BaseScraper {
     }
   }
 
-  private formatScrapedData(accounts: any[]): ScrapedAccountData {
+  private formatScrapedData(
+    accounts: TransactionsAccount[]
+  ): ScrapedAccountData {
     logger.info(`Formatting ${this.type} scraped data`);
 
     // Extract all transactions from all accounts
@@ -110,20 +113,22 @@ export class GenericScraper implements BaseScraper {
       });
 
       return (
-        account.txns?.map((txn: any) => {
+        account.txns?.map(txn => {
           // Log transaction details for debugging
-          if (txn.amount === null || txn.amount === undefined) {
-            logger.warn(`${this.type} transaction with null/undefined amount`, {
-              date: txn.date,
-              description: txn.description,
-              originalAmount: txn.originalAmount,
-              chargedAmount: txn.chargedAmount,
-            });
+          if (txn.chargedAmount === null || txn.chargedAmount === undefined) {
+            logger.warn(
+              `${this.type} transaction with null/undefined chargedAmount`,
+              {
+                date: txn.date,
+                description: txn.description,
+                originalAmount: txn.originalAmount,
+                chargedAmount: txn.chargedAmount,
+              }
+            );
           }
 
-          // Use chargedAmount or originalAmount if amount is not available
-          const amount =
-            txn.amount ?? txn.chargedAmount ?? txn.originalAmount ?? 0;
+          // Use chargedAmount or originalAmount if chargedAmount is not available
+          const amount = txn.chargedAmount ?? txn.originalAmount ?? 0;
 
           return {
             id: `${this.type}-${txn.identifier || txn.date}-${txn.description}-${amount}`,
@@ -132,7 +137,7 @@ export class GenericScraper implements BaseScraper {
             amount: amount,
             category: txn.category || 'Uncategorized',
             accountId: `${this.type}-${account.accountNumber}`,
-            reference: txn.reference || null,
+            reference: null, // Reference field doesn't exist in israeli-bank-scrapers
             memo: txn.memo || null,
           };
         }) || []
@@ -163,7 +168,7 @@ export class GenericScraper implements BaseScraper {
     const accountsInfo = accounts.map(account => ({
       id: `${this.type}-${account.accountNumber}`,
       balance: account.balance ?? 0,
-      type: account.type || this.getAccountTypeForProvider(),
+      type: this.getAccountTypeForProvider(), // account.type doesn't exist in israeli-bank-scrapers
       name: `${this.getProviderDisplayName()} - ${account.accountNumber}`,
     }));
 

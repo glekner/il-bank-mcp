@@ -20,7 +20,7 @@ async function main() {
         console.log('Scraping completed successfully!');
         break;
 
-      case 'summary':
+      case 'summary': {
         console.log('Fetching financial summary...');
         const summary = await service.getFinancialSummary();
         console.log('\n=== Financial Summary ===');
@@ -36,8 +36,9 @@ async function main() {
           );
         });
         break;
+      }
 
-      case 'accounts':
+      case 'accounts': {
         console.log('Fetching accounts...');
         const accounts = await service.getAccounts();
         console.log('\n=== Bank Accounts ===');
@@ -45,14 +46,16 @@ async function main() {
           console.log(`${account.name}: ₪${account.balance.toFixed(2)}`);
         });
         break;
+      }
 
-      default:
+      default: {
         console.log('Usage: yarn scrape [command]');
         console.log('Commands:');
         console.log('  scrape   - Force scrape bank data');
         console.log('  summary  - Show financial summary');
         console.log('  accounts - List all accounts');
         process.exit(1);
+      }
     }
   } catch (error) {
     logger.error('CLI command failed', { error });

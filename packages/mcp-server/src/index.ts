@@ -225,6 +225,7 @@ Remember: You're not just accessing a database - you're providing intelligent fi
         // underlying SDK expects a `ServerResult` shape, which each handler
         // already fulfils, but the generic mapping above does not capture
         // that detail.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         return (await executeTool(name, rawArgs)) as any;
       } catch (error) {
         logger.error(`Tool ${name} failed`, {
