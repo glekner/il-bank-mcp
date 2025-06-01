@@ -224,6 +224,52 @@ Analyze credit card usage and create debt reduction strategies.
 - Debt snowball vs avalanche comparison
 - Credit score improvement tactics
 
+## Handling Hebrew Categories
+
+The MCP server includes intelligent category matching to handle Hebrew categories in your bank transactions. Since most Israeli bank transactions are categorized in Hebrew, the server provides a workflow to match user queries (often in English) to the actual Hebrew categories in the database.
+
+### Category Matching Workflow
+
+When using tools that filter by category (`search_transactions`, `get_category_comparison`, `get_monthly_credit_summary`), follow this workflow:
+
+1. **First, get available categories**: Use the `get_available_categories` tool to fetch all unique categories from your transactions for the relevant time period.
+
+   ```
+   Example: get_available_categories for last 3 months
+   ```
+
+2. **Review the categories**: The tool will return a list of actual categories from your database (likely in Hebrew), such as:
+
+   - "מסעדות"
+   - "סופרמרקט"
+   - "דלק"
+   - "בריאות"
+   - etc.
+
+3. **Use the actual categories**: When calling tools with category filters, use the exact category names from the database. The AI assistant will help match your intent to the correct Hebrew categories.
+
+### Example Usage
+
+```
+User: "Show me restaurant expenses from last month"
+
+AI Assistant will:
+1. Call get_available_categories for last month
+2. Identify "מסעדות" as the restaurant category
+3. Call search_transactions with categories: ["מסעדות"]
+```
+
+### Category-Aware Tools
+
+The following tools support intelligent category matching:
+
+- `get_available_categories` - Get all unique categories for a time period
+- `search_transactions` - Search with category filters
+- `get_category_comparison` - Compare spending across categories
+- `get_monthly_credit_summary` - Get credit card summary with category breakdown
+
+If you try to use a category that doesn't exist in your database, the tool will return the available categories and ask you to select from the actual list.
+
 ## Development
 
 ### Building

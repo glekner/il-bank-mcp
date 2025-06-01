@@ -3,6 +3,28 @@ import { Tool } from '@modelcontextprotocol/sdk/types.js';
 
 export const TOOLS = [
   {
+    name: 'get_available_categories',
+    description:
+      'Get all unique transaction categories from the database for a specific time period. Use this tool BEFORE using category filters in other tools to ensure you have the correct category names (which may be in Hebrew).',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        startDate: {
+          type: 'string',
+          description: 'Start date in ISO format (YYYY-MM-DD)',
+        },
+        endDate: {
+          type: 'string',
+          description: 'End date in ISO format (YYYY-MM-DD)',
+        },
+        accountId: {
+          type: 'string',
+          description: 'Optional account ID to filter by',
+        },
+      },
+    },
+  },
+  {
     name: 'get_transactions',
     description:
       'Get bank and credit card transactions for a specific time period from all configured services. When filtering by account, ALWAYS call get_accounts first to get the actual account IDs. Note: For timeframes over 90 days or datasets with 500+ transactions, only the most recent 500 transactions will be returned to prevent response size issues.',

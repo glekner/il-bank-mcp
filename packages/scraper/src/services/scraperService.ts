@@ -580,7 +580,48 @@ export class ScraperService {
   }
 
   /**
-   * Clean up resources
+   * Get unique categories from transactions within a date range
+   */
+  async getUniqueCategories(options?: {
+    startDate?: Date;
+    endDate?: Date;
+    accountId?: string;
+  }): Promise<string[]> {
+    const timer = createTimer();
+    const operationId = `get-unique-categories-${Date.now()}`;
+
+    logger.startOperation('fetching unique categories', {
+      startDate: options?.startDate?.toISOString(),
+      endDate: options?.endDate?.toISOString(),
+      accountId: options?.accountId,
+      operationId,
+    });
+
+    try {
+      const categories = this.repository.getUniqueCategories(
+        options?.startDate,
+        options?.endDate,
+        options?.accountId
+      );
+
+      const duration = timer.elapsed();
+      logger.endOperation('fetching unique categories', duration, {
+        categoryCount: categories.length,
+        operationId,
+      });
+
+      return categories;
+    } catch (error) {
+      logger.errorOperation('fetching unique categories', error as Error, {
+        operationId,
+        duration_ms: timer.elapsed(),
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Close the database connection
    */
   async close(): Promise<void> {
     logger.info('Closing ScraperService and cleaning up resources');

@@ -364,6 +364,51 @@ export class BankDataRepository {
     };
   }
 
+  /**
+   * Get unique categories from transactions within a date range
+   */
+  getUniqueCategories(
+    startDate?: Date,
+    endDate?: Date,
+    accountId?: string
+  ): string[] {
+    let query = 'SELECT DISTINCT category FROM transactions WHERE 1=1';
+    const params: SqlParams = [];
+
+    if (startDate) {
+      query += ' AND date >= ?';
+      params.push(startDate.toISOString());
+    }
+
+    if (endDate) {
+      query += ' AND date <= ?';
+      params.push(endDate.toISOString());
+    }
+
+    if (accountId) {
+      query += ' AND account_id = ?';
+      params.push(accountId);
+    }
+
+    // Add filter for ignored accounts
+    if (this.ignoredAccountIds.size > 0) {
+      const placeholders = Array.from(this.ignoredAccountIds)
+        .map(() => '?')
+        .join(',');
+      query += ` AND account_id NOT IN (${placeholders})`;
+      params.push(...Array.from(this.ignoredAccountIds));
+    }
+
+    query += ' AND category IS NOT NULL ORDER BY category';
+
+    const stmt = this.db.prepare(query);
+    const rows = stmt.all(...params) as { category: string }[];
+
+    return rows
+      .map(row => row.category)
+      .filter(category => category && category.trim() !== '');
+  }
+
   close(): void {
     this.db.close();
   }

@@ -163,3 +163,9 @@ export interface SearchTransactionsArgs {
   startDate?: string;
   endDate?: string;
 }
+
+export interface AvailableCategoriesArgs {
+  startDate?: string;
+  endDate?: string;
+  accountId?: string;
+}

@@ -9,3 +9,4 @@ export { RecurringChargesHandler } from './financial-advisory/recurring-charges.
 export { RecurringIncomeHandler } from './financial-advisory/recurring-income.handler.js';
 export { MerchantAnalysisHandler } from './merchant-analysis.handler.js';
 export { CategoryAnalysisHandler } from './category-analysis.handler.js';
+export { CategoryAwareHandler } from './category-aware.handler.js';

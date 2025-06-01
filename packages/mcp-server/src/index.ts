@@ -21,11 +21,10 @@ import {
   RefreshHandler,
   StatusHandler,
   MerchantAnalysisHandler,
-  CategoryAnalysisHandler,
 } from './handlers/index.js';
-import { MonthlyCreditSummaryHandler } from './handlers/financial-advisory/monthly-credit-summary.handler.js';
 import { RecurringChargesHandler } from './handlers/financial-advisory/recurring-charges.handler.js';
 import { RecurringIncomeHandler } from './handlers/financial-advisory/recurring-income.handler.js';
+import { CategoryAwareHandler } from './handlers/category-aware.handler.js';
 import { logger } from './utils/logger.js';
 import type {
   TransactionArgs,
@@ -39,6 +38,7 @@ import type {
   SpendingByMerchantArgs,
   CategoryComparisonArgs,
   SearchTransactionsArgs,
+  AvailableCategoriesArgs,
 } from './types.js';
 
 // Load environment variables from a local .env file only if it exists. This
@@ -55,6 +55,7 @@ if (fs.existsSync(rootEnvPath)) {
 }
 
 type ToolArgsSpec = {
+  get_available_categories: AvailableCategoriesArgs;
   get_transactions: TransactionArgs;
   get_financial_summary: SummaryArgs;
   get_accounts: void;
@@ -79,11 +80,10 @@ class IsraeliBankMCPServer {
   private accountHandler!: AccountHandler;
   private refreshHandler!: RefreshHandler;
   private statusHandler!: StatusHandler;
-  private monthlyCreditSummaryHandler!: MonthlyCreditSummaryHandler;
   private recurringChargesHandler!: RecurringChargesHandler;
   private recurringIncomeHandler!: RecurringIncomeHandler;
   private merchantAnalysisHandler!: MerchantAnalysisHandler;
-  private categoryAnalysisHandler!: CategoryAnalysisHandler;
+  private categoryAwareHandler!: CategoryAwareHandler;
 
   constructor() {
     this.server = new Server(
@@ -147,9 +147,6 @@ Remember: You're not just accessing a database - you're providing intelligent fi
     this.accountHandler = new AccountHandler(this.scraperService);
     this.refreshHandler = new RefreshHandler(this.scraperService);
     this.statusHandler = new StatusHandler(this.scraperService);
-    this.monthlyCreditSummaryHandler = new MonthlyCreditSummaryHandler(
-      this.scraperService
-    );
     this.recurringChargesHandler = new RecurringChargesHandler(
       this.scraperService
     );
@@ -159,9 +156,7 @@ Remember: You're not just accessing a database - you're providing intelligent fi
     this.merchantAnalysisHandler = new MerchantAnalysisHandler(
       this.scraperService
     );
-    this.categoryAnalysisHandler = new CategoryAnalysisHandler(
-      this.scraperService
-    );
+    this.categoryAwareHandler = new CategoryAwareHandler(this.scraperService);
   }
 
   private setupRequestHandlers() {
@@ -203,6 +198,13 @@ Remember: You're not just accessing a database - you're providing intelligent fi
 
     // 3. Instantiate the handlers – the compiler will enforce the signatures
     const toolHandlers: ToolHandlers = {
+      get_available_categories: args =>
+        this.categoryAwareHandler.getAvailableCategories({
+          startDate: args.startDate ? new Date(args.startDate) : undefined,
+          endDate: args.endDate ? new Date(args.endDate) : undefined,
+          accountId: args.accountId,
+        }),
+
       get_transactions: args => this.transactionHandler.getTransactions(args),
 
       get_financial_summary: args =>
@@ -221,7 +223,7 @@ Remember: You're not just accessing a database - you're providing intelligent fi
       get_scrape_status: () => this.statusHandler.getScrapeStatus(),
 
       get_monthly_credit_summary: args =>
-        this.monthlyCreditSummaryHandler.getMonthlyCreditSummary(args),
+        this.categoryAwareHandler.getMonthlyCreditSummary(args),
 
       get_recurring_charges: args =>
         this.recurringChargesHandler.getRecurringCharges(args),
@@ -236,10 +238,10 @@ Remember: You're not just accessing a database - you're providing intelligent fi
         this.merchantAnalysisHandler.getSpendingByMerchant(args),
 
       get_category_comparison: args =>
-        this.categoryAnalysisHandler.getCategoryComparison(args),
+        this.categoryAwareHandler.getCategoryComparison(args),
 
       search_transactions: args =>
-        this.categoryAnalysisHandler.searchTransactions(args),
+        this.categoryAwareHandler.searchTransactions(args),
     };
 
     // 4. Generic helper to execute a tool
