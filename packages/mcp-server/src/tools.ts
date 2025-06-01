@@ -172,6 +172,130 @@ export const TOOLS = [
       },
     },
   },
+  {
+    name: 'analyze_merchant_spending',
+    description:
+      'Analyze spending patterns for specific merchants, including average transaction amounts, frequency, and anomaly detection',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        merchantName: {
+          type: 'string',
+          description: 'Merchant name or partial name to search for',
+        },
+        lookbackMonths: {
+          type: 'number',
+          description: 'Number of months to analyze (default: 6)',
+          minimum: 1,
+          maximum: 24,
+        },
+        includeAnomalies: {
+          type: 'boolean',
+          description:
+            'Include transactions that are significantly higher than average',
+        },
+      },
+      required: ['merchantName'],
+    },
+  },
+  {
+    name: 'get_spending_by_merchant',
+    description:
+      'Get total spending grouped by merchant for a specific time period',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        startDate: {
+          type: 'string',
+          description: 'Start date in ISO format (YYYY-MM-DD)',
+        },
+        endDate: {
+          type: 'string',
+          description: 'End date in ISO format (YYYY-MM-DD)',
+        },
+        minAmount: {
+          type: 'number',
+          description: 'Minimum total amount to include merchant',
+        },
+        topN: {
+          type: 'number',
+          description: 'Return only top N merchants by spending',
+        },
+      },
+    },
+  },
+  {
+    name: 'get_category_comparison',
+    description:
+      'Compare spending across different categories and sub-categories over time periods',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        categories: {
+          type: 'array',
+          items: {
+            type: 'string',
+          },
+          description:
+            'Categories to compare (e.g., ["Food", "Transportation"])',
+        },
+        period1Start: {
+          type: 'string',
+          description: 'Start date of first period (ISO format)',
+        },
+        period1End: {
+          type: 'string',
+          description: 'End date of first period (ISO format)',
+        },
+        period2Start: {
+          type: 'string',
+          description: 'Start date of second period (ISO format)',
+        },
+        period2End: {
+          type: 'string',
+          description: 'End date of second period (ISO format)',
+        },
+      },
+      required: ['period1Start', 'period1End', 'period2Start', 'period2End'],
+    },
+  },
+  {
+    name: 'search_transactions',
+    description:
+      'Search transactions by multiple criteria including description, amount range, and category',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        searchTerm: {
+          type: 'string',
+          description: 'Text to search in transaction descriptions',
+        },
+        minAmount: {
+          type: 'number',
+          description: 'Minimum transaction amount',
+        },
+        maxAmount: {
+          type: 'number',
+          description: 'Maximum transaction amount',
+        },
+        categories: {
+          type: 'array',
+          items: {
+            type: 'string',
+          },
+          description: 'Filter by specific categories',
+        },
+        startDate: {
+          type: 'string',
+          description: 'Start date in ISO format (YYYY-MM-DD)',
+        },
+        endDate: {
+          type: 'string',
+          description: 'End date in ISO format (YYYY-MM-DD)',
+        },
+      },
+    },
+  },
 ] as const satisfies Tool[];
 
 export type ToolName = (typeof TOOLS)[number]['name'];

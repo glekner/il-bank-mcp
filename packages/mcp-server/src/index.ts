@@ -20,6 +20,8 @@ import {
   AccountHandler,
   RefreshHandler,
   StatusHandler,
+  MerchantAnalysisHandler,
+  CategoryAnalysisHandler,
 } from './handlers/index.js';
 import { MonthlyCreditSummaryHandler } from './handlers/financial-advisory/monthly-credit-summary.handler.js';
 import { RecurringChargesHandler } from './handlers/financial-advisory/recurring-charges.handler.js';
@@ -33,6 +35,10 @@ import type {
   MonthlyCreditSummaryArgs,
   RecurringChargesArgs,
   RecurringIncomeArgs,
+  MerchantAnalysisArgs,
+  SpendingByMerchantArgs,
+  CategoryComparisonArgs,
+  SearchTransactionsArgs,
 } from './types.js';
 
 // Load environment variables from a local .env file only if it exists. This
@@ -59,6 +65,10 @@ type ToolArgsSpec = {
   get_monthly_credit_summary: MonthlyCreditSummaryArgs;
   get_recurring_charges: RecurringChargesArgs;
   get_recurring_income: RecurringIncomeArgs;
+  analyze_merchant_spending: MerchantAnalysisArgs;
+  get_spending_by_merchant: SpendingByMerchantArgs;
+  get_category_comparison: CategoryComparisonArgs;
+  search_transactions: SearchTransactionsArgs;
 };
 
 class IsraeliBankMCPServer {
@@ -72,6 +82,8 @@ class IsraeliBankMCPServer {
   private monthlyCreditSummaryHandler!: MonthlyCreditSummaryHandler;
   private recurringChargesHandler!: RecurringChargesHandler;
   private recurringIncomeHandler!: RecurringIncomeHandler;
+  private merchantAnalysisHandler!: MerchantAnalysisHandler;
+  private categoryAnalysisHandler!: CategoryAnalysisHandler;
 
   constructor() {
     this.server = new Server(
@@ -144,6 +156,12 @@ Remember: You're not just accessing a database - you're providing intelligent fi
     this.recurringIncomeHandler = new RecurringIncomeHandler(
       this.scraperService
     );
+    this.merchantAnalysisHandler = new MerchantAnalysisHandler(
+      this.scraperService
+    );
+    this.categoryAnalysisHandler = new CategoryAnalysisHandler(
+      this.scraperService
+    );
   }
 
   private setupRequestHandlers() {
@@ -210,6 +228,18 @@ Remember: You're not just accessing a database - you're providing intelligent fi
 
       get_recurring_income: args =>
         this.recurringIncomeHandler.getRecurringIncome(args),
+
+      analyze_merchant_spending: args =>
+        this.merchantAnalysisHandler.analyzeMerchantSpending(args),
+
+      get_spending_by_merchant: args =>
+        this.merchantAnalysisHandler.getSpendingByMerchant(args),
+
+      get_category_comparison: args =>
+        this.categoryAnalysisHandler.getCategoryComparison(args),
+
+      search_transactions: args =>
+        this.categoryAnalysisHandler.searchTransactions(args),
     };
 
     // 4. Generic helper to execute a tool

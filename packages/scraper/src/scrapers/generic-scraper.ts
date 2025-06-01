@@ -33,7 +33,7 @@ export class GenericScraper implements BaseScraper {
       logger.info(`Starting ${this.type} scraper`);
 
       // Get months to scrape from environment variable
-      const monthsBack = parseInt(process.env.SCRAPE_MONTHS_BACK || '3', 10);
+      const monthsBack = parseInt(process.env.SCRAPE_MONTHS_BACK || '6', 10);
 
       // Get the path to Chrome executable
       const executablePath = getChromeExecutablePath();

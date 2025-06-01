@@ -131,3 +131,34 @@ export interface RecurringIncome {
   totalReceived: number;
   incomeType?: string; // "salary", "dividend", "interest", etc.
 }
+
+// Add these new types for merchant and category analysis
+export interface MerchantAnalysisArgs {
+  merchantName: string;
+  lookbackMonths?: number;
+  includeAnomalies?: boolean;
+}
+
+export interface SpendingByMerchantArgs {
+  startDate?: string;
+  endDate?: string;
+  minAmount?: number;
+  topN?: number;
+}
+
+export interface CategoryComparisonArgs {
+  categories?: string[];
+  period1Start: string;
+  period1End: string;
+  period2Start: string;
+  period2End: string;
+}
+
+export interface SearchTransactionsArgs {
+  searchTerm?: string;
+  minAmount?: number;
+  maxAmount?: number;
+  categories?: string[];
+  startDate?: string;
+  endDate?: string;
+}

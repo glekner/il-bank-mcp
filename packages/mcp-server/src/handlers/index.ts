@@ -7,3 +7,5 @@ export { BaseHandler } from './base.js';
 export { MonthlyCreditSummaryHandler } from './financial-advisory/monthly-credit-summary.handler.js';
 export { RecurringChargesHandler } from './financial-advisory/recurring-charges.handler.js';
 export { RecurringIncomeHandler } from './financial-advisory/recurring-income.handler.js';
+export { MerchantAnalysisHandler } from './merchant-analysis.handler.js';
+export { CategoryAnalysisHandler } from './category-analysis.handler.js';
