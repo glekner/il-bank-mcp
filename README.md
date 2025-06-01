@@ -199,31 +199,6 @@ cd packages/scraper
 npx puppeteer browsers install chrome
 ```
 
-### Running the Services
-
-#### Development Mode
-
-```bash
-# Run both scraper and MCP server in development mode
-yarn dev
-
-# Run only the scraper
-yarn workspace @bank-assistant/scraper dev
-
-# Run only the MCP server
-yarn workspace @bank-assistant/mcp-server dev
-```
-
-#### Production Mode
-
-```bash
-# Build all packages
-yarn build
-
-# Run the MCP server
-yarn workspace @bank-assistant/mcp-server start
-```
-
 ### Using with Claude Desktop
 
 1. Build the project:
@@ -279,27 +254,6 @@ docker run -d \
   israeli-bank-scraper
 ```
 
-## Dynamic Provider Configuration
-
-The system automatically detects which providers to use based on environment variables. Each provider has a specific pattern:
-
-### Banks
-
-- **Bank Hapoalim**: `HAPOALIM_USERCODE`, `HAPOALIM_PASSWORD`
-- **Bank Leumi**: `LEUMI_USERNAME`, `LEUMI_PASSWORD`
-- **Discount**: `DISCOUNT_ID`, `DISCOUNT_PASSWORD`, `DISCOUNT_NUM`
-- **Mizrahi**: `MIZRAHI_USERNAME`, `MIZRAHI_PASSWORD`
-- And more...
-
-### Credit Cards
-
-- **Visa Cal**: `VISA_CAL_USERNAME`, `VISA_CAL_PASSWORD`
-- **Max**: `MAX_USERNAME`, `MAX_PASSWORD`
-- **Isracard**: `ISRACARD_ID`, `ISRACARD_CARD6DIGITS`, `ISRACARD_PASSWORD`
-- **Amex**: `AMEX_USERNAME`, `AMEX_CARD6DIGITS`, `AMEX_PASSWORD`
-
-See `env.example` for the complete list of supported providers and their required credentials.
-
 ## Development
 
 ### Project Structure
@@ -322,93 +276,6 @@ il-bank-mcp/
 ├── Dockerfile
 └── package.json             # Root workspace config
 ```
-
-### Adding New Providers
-
-The system uses the [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers) library. When new providers are added to that library, you can easily add support by:
-
-1. Adding the provider configuration to `PROVIDER_CONFIG` in `packages/scraper/src/utils/providers.ts`
-2. Adding appropriate TypeScript types if the provider needs special credentials
-3. Updating the documentation
-
-The system will automatically detect and use the new provider when its environment variables are set.
-
-## Troubleshooting
-
-### Chrome/Puppeteer Issues
-
-If you encounter Chrome-related errors:
-
-```bash
-# Install Chrome manually
-cd packages/scraper
-npx puppeteer browsers install chrome
-
-# Or use system Chrome by setting PUPPETEER_EXECUTABLE_PATH
-export PUPPETEER_EXECUTABLE_PATH=/usr/bin/google-chrome
-```
-
-### Permission Issues
-
-If running in Docker, ensure the data directory has proper permissions:
-
-```bash
-chmod -R 777 ./data
-```
-
-### Provider Detection
-
-To see which providers are detected:
-
-- Check the logs when starting the scraper
-- The system will log: "Detected configured provider: [Provider Name]"
-
-## Configuration Options
-
-### Ignoring Accounts in Queries
-
-You can configure the system to ignore specific bank accounts when querying data (this does not affect the scraping process itself). This is useful when you want to exclude certain accounts from analysis or reports.
-
-Set the `IGNORED_ACCOUNT_IDS` environment variable with a comma-separated list of account IDs:
-
-```bash
-IGNORED_ACCOUNT_IDS=account123,account456,account789
-```
-
-When accounts are ignored:
-
-- They won't appear in `get_accounts` results
-- Their transactions won't be included in `get_transactions` queries
-- Balance history requests for ignored accounts will return empty results
-- All financial analysis tools will automatically exclude these accounts
-
-To find account IDs, first run the scraper without any ignored accounts and check the account IDs in the results.
-
-### Scraping Configuration
-
-```bash
-# Number of months to scrape backward (default: 3)
-SCRAPE_MONTHS_BACK=3
-
-# Cron schedule for automatic scraping (default: every 6 hours)
-SCRAPE_CRON_SCHEDULE=0 */6 * * *
-```
-
-## Security Notes
-
-- Credentials are stored in environment variables or a local config file
-- The SQLite database is stored locally in the `data/` directory
-- Never commit credentials to version control
-- Use strong, unique passwords for your bank accounts
-- The system only scrapes providers you explicitly configure
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
 
 ## License
 

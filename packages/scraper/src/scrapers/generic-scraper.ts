@@ -1,4 +1,8 @@
-import { CompanyTypes, createScraper } from 'israeli-bank-scrapers';
+import {
+  CompanyTypes,
+  createScraper,
+  type ScraperOptions,
+} from 'israeli-bank-scrapers';
 import { ScrapedAccountData, ProviderCredentials } from '../types';
 import { logger } from '../utils/logger';
 import { BaseScraper } from './base';
@@ -55,16 +59,18 @@ export class GenericScraper implements BaseScraper {
       const chromeArgs = envArgs.length > 0 ? envArgs : defaultArgs;
 
       logger.info(`Initializing ${this.type} scraper`);
+
       const options = {
         companyId: this.companyType,
         startDate: new Date(
           new Date().setMonth(new Date().getMonth() - monthsBack)
         ),
         verbose: false,
-        headless: true,
         executablePath,
         args: chromeArgs,
-      };
+        navigationRetryCount: 3,
+        additionalTransactionInformation: true,
+      } satisfies ScraperOptions;
 
       const scraper = createScraper(options);
 
