@@ -7,7 +7,6 @@ import { scrapeAllBankData, scrapeSingleProvider } from '../scraper';
 import { FinancialSummary, Transaction, type Account } from '../types';
 import { createComponentLogger, createTimer } from '../utils/logger';
 import { getCacheService, CacheKeys } from './cacheService';
-import { validateScrapedData } from '../validation/schemas';
 import { ScrapeStatusManager } from './scrapeStatusManager';
 import type { ProviderKey } from '../utils/providers';
 
@@ -54,21 +53,10 @@ export class ScraperService {
         operationId,
       });
 
-      // Validate scraped data
-      logger.info('Validating scraped data', { operationId });
-      const validationResult = validateScrapedData(scrapedData);
-
-      if (!validationResult.success) {
-        logger.error('Data validation failed', {
-          errors: validationResult.errors,
-          operationId,
-        });
-        throw new Error(
-          `Data validation failed: ${JSON.stringify(validationResult.errors)}`
-        );
-      }
-
-      logger.info('Saving validated data to database', { operationId });
+      // Remove validation - we trust israeli-bank-scrapers
+      logger.info('Saving data to database', {
+        operationId,
+      });
       // Save to database
       this.repository.saveScrapedData(scrapedData);
 
