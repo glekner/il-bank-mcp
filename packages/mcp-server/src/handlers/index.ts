@@ -4,3 +4,6 @@ export { AccountHandler } from './accountHandler.js';
 export { RefreshHandler } from './refreshHandler.js';
 export { StatusHandler } from './statusHandler.js';
 export { BaseHandler } from './base.js';
+export { MonthlyCreditSummaryHandler } from './financial-advisory/monthly-credit-summary.handler.js';
+export { RecurringChargesHandler } from './financial-advisory/recurring-charges.handler.js';
+export { RecurringIncomeHandler } from './financial-advisory/recurring-income.handler.js';

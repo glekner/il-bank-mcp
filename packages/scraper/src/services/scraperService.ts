@@ -9,6 +9,7 @@ import { createComponentLogger, createTimer } from '../utils/logger';
 import { getCacheService, CacheKeys } from './cacheService';
 import { ScrapeStatusManager } from './scrapeStatusManager';
 import type { ProviderKey } from '../utils/providers';
+import { TransferDetector } from '../utils/transfer-detector';
 
 const logger = createComponentLogger('ScraperService');
 
@@ -257,7 +258,24 @@ export class ScraperService {
 
       logger.info('Fetching transactions from database', { operationId });
       // Get transactions from database
-      const transactions = this.repository.getTransactions(startDate, endDate);
+      let transactions = this.repository.getTransactions(startDate, endDate);
+
+      // Get all accounts to detect internal transfers
+      const accounts = await this.getAccounts();
+
+      // Process transactions through transfer detector
+      if (accounts.length > 0) {
+        const transferDetector = new TransferDetector(accounts);
+        transactions = transferDetector.processTransactions(transactions);
+
+        const stats = transferDetector.getTransferStats(transactions);
+        logger.info('Transfer detection completed for financial summary', {
+          totalTransactions: transactions.length,
+          internalTransfers: stats.totalInternalTransfers,
+          internalTransferAmount: stats.totalInternalAmount,
+          operationId,
+        });
+      }
 
       logger.info('Processing transactions', {
         transactionCount: transactions.length,
@@ -339,11 +357,28 @@ export class ScraperService {
       }
 
       // Not in cache, fetch from database
-      const transactions = this.repository.getTransactions(
+      let transactions = this.repository.getTransactions(
         options?.startDate,
         options?.endDate,
         options?.accountId
       );
+
+      // Get all accounts to detect internal transfers
+      const accounts = await this.getAccounts();
+
+      // Process transactions through transfer detector
+      if (accounts.length > 0) {
+        const transferDetector = new TransferDetector(accounts);
+        transactions = transferDetector.processTransactions(transactions);
+
+        const stats = transferDetector.getTransferStats(transactions);
+        logger.info('Transfer detection completed', {
+          totalTransactions: transactions.length,
+          internalTransfers: stats.totalInternalTransfers,
+          internalTransferAmount: stats.totalInternalAmount,
+          operationId,
+        });
+      }
 
       // Cache the results
       this.cache.set(cacheKey, transactions, 5 * 60 * 1000); // 5 minutes

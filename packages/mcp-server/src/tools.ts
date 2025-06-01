@@ -150,6 +150,28 @@ export const TOOLS = [
       },
     },
   },
+  {
+    name: 'get_recurring_income',
+    description:
+      'Identify and analyze recurring income like salary, dividends, interest, and other regular income sources across all accounts',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        minOccurrences: {
+          type: 'number',
+          description:
+            'Minimum number of occurrences to consider as recurring (default: 2)',
+          minimum: 2,
+        },
+        lookbackMonths: {
+          type: 'number',
+          description: 'Number of months to analyze (default: 6)',
+          minimum: 1,
+          maximum: 12,
+        },
+      },
+    },
+  },
 ] as const satisfies Tool[];
 
 export type ToolName = (typeof TOOLS)[number]['name'];

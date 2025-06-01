@@ -11,8 +11,15 @@ export function categorizeExpenses(
 ): CategoryBreakdown {
   logger.info('Categorizing expense transactions');
 
-  // Filter to only include expense transactions
-  const expenseTransactions = transactions.filter(t => t.isExpense);
+  // Filter to only include expense transactions, excluding internal transfers
+  const expenseTransactions = transactions.filter(t => {
+    if (!t.isExpense) return false;
+
+    // Exclude internal transfers
+    if ('isInternalTransfer' in t && t.isInternalTransfer) return false;
+
+    return true;
+  });
 
   // Group by category
   const expensesByCategory: CategoryBreakdown = {};

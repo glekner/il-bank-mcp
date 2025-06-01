@@ -115,3 +115,19 @@ export interface RecurringCharge {
   nextExpectedCharge?: string;
   totalSpent: number;
 }
+
+export interface RecurringIncomeArgs {
+  minOccurrences?: number;
+  lookbackMonths?: number;
+}
+
+export interface RecurringIncome {
+  sourceName: string;
+  averageAmount: number;
+  frequency: string; // "weekly", "monthly", "quarterly", etc.
+  occurrences: number;
+  lastIncome: string;
+  nextExpectedIncome?: string;
+  totalReceived: number;
+  incomeType?: string; // "salary", "dividend", "interest", etc.
+}

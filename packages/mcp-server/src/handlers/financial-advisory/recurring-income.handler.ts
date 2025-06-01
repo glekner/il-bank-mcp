@@ -1,18 +1,18 @@
 import { Transaction } from '@bank-assistant/scraper';
 import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { RecurringChargesArgs, RecurringCharge } from '../../types.js';
+import { RecurringIncomeArgs, RecurringIncome } from '../../types.js';
 import { logger } from '../../utils/logger.js';
 import { BaseHandler } from '../base.js';
 
-interface TransactionPattern {
-  merchantName: string;
+interface IncomePattern {
+  sourceName: string;
   amounts: number[];
   dates: Date[];
   transactions: Transaction[];
 }
 
-export class RecurringChargesHandler extends BaseHandler {
-  // Income-related keywords to exclude (in Hebrew and English)
+export class RecurringIncomeHandler extends BaseHandler {
+  // Income-related keywords (in Hebrew and English)
   private readonly incomeKeywords = [
     'משכורת',
     'salary',
@@ -32,12 +32,14 @@ export class RecurringChargesHandler extends BaseHandler {
     'בונוס',
     'תשלום מ',
     'payment from',
-    'מקס איט',
+    'קצבה',
+    'pension',
+    'allowance',
+    'grant',
+    'מענק',
   ];
 
-  async getRecurringCharges(
-    args: RecurringChargesArgs
-  ): Promise<CallToolResult> {
+  async getRecurringIncome(args: RecurringIncomeArgs): Promise<CallToolResult> {
     try {
       const minOccurrences = args.minOccurrences || 2;
       const lookbackMonths = args.lookbackMonths || 6;
@@ -47,7 +49,7 @@ export class RecurringChargesHandler extends BaseHandler {
       const startDate = new Date();
       startDate.setMonth(startDate.getMonth() - lookbackMonths);
 
-      logger.info('Detecting recurring charges', {
+      logger.info('Detecting recurring income', {
         minOccurrences,
         lookbackMonths,
         startDate: startDate.toISOString(),
@@ -64,75 +66,75 @@ export class RecurringChargesHandler extends BaseHandler {
         throw new Error('No transactions found for analysis');
       }
 
-      // Filter out income transactions (positive amounts and income keywords) AND internal transfers
-      const expenseTransactions = transactions.filter(txn => {
-        // Exclude positive amounts (income)
-        if (txn.amount > 0) return false;
+      // Filter for income transactions (positive amounts) excluding internal transfers
+      const incomeTransactions = transactions.filter(txn => {
+        // Include only positive amounts (income)
+        if (txn.amount <= 0) return false;
 
         // Exclude internal transfers
         if ('isInternalTransfer' in txn && txn.isInternalTransfer) return false;
 
-        // Exclude transactions with income-related keywords
-        const descLower = txn.description.toLowerCase();
-        return !this.incomeKeywords.some(keyword =>
-          descLower.includes(keyword.toLowerCase())
-        );
+        return true;
       });
 
-      logger.info('Filtered transactions', {
+      logger.info('Filtered income transactions', {
         totalTransactions: transactions.length,
-        expenseTransactions: expenseTransactions.length,
-        filteredOut: transactions.length - expenseTransactions.length,
+        incomeTransactions: incomeTransactions.length,
+        internalTransfersExcluded: transactions.filter(
+          t => 'isInternalTransfer' in t && t.isInternalTransfer
+        ).length,
       });
 
-      // Group transactions by merchant
-      const merchantGroups =
-        this.groupTransactionsByMerchant(expenseTransactions);
+      // Group transactions by source
+      const sourceGroups = this.groupTransactionsBySource(incomeTransactions);
 
-      // Analyze patterns for recurring charges
-      const recurringCharges: RecurringCharge[] = [];
+      // Analyze patterns for recurring income
+      const recurringIncome: RecurringIncome[] = [];
 
-      for (const [merchant, pattern] of merchantGroups.entries()) {
+      for (const [source, pattern] of sourceGroups.entries()) {
         if (pattern.transactions.length < minOccurrences) continue;
 
         const analysis = this.analyzeRecurrencePattern(pattern);
 
         if (analysis.isRecurring) {
-          recurringCharges.push({
-            merchantName: merchant,
+          const incomeType = this.determineIncomeType(source);
+
+          recurringIncome.push({
+            sourceName: source,
             averageAmount: analysis.averageAmount,
             frequency: analysis.frequency,
             occurrences: pattern.transactions.length,
-            lastCharge: pattern.dates[pattern.dates.length - 1].toISOString(),
-            nextExpectedCharge: analysis.nextExpectedDate?.toISOString(),
-            totalSpent: pattern.amounts.reduce((sum, amt) => sum + amt, 0),
+            lastIncome: pattern.dates[pattern.dates.length - 1].toISOString(),
+            nextExpectedIncome: analysis.nextExpectedDate?.toISOString(),
+            totalReceived: pattern.amounts.reduce((sum, amt) => sum + amt, 0),
+            incomeType,
           });
         }
       }
 
-      // Sort by total spent (descending)
-      recurringCharges.sort((a, b) => b.totalSpent - a.totalSpent);
+      // Sort by total received (descending)
+      recurringIncome.sort((a, b) => b.totalReceived - a.totalReceived);
 
       // Calculate summary statistics
-      const totalRecurringMonthly = recurringCharges
-        .filter(charge => charge.frequency === 'monthly')
-        .reduce((sum, charge) => sum + charge.averageAmount, 0);
+      const totalMonthlyIncome = recurringIncome
+        .filter(income => income.frequency === 'monthly')
+        .reduce((sum, income) => sum + income.averageAmount, 0);
 
-      const totalRecurringAnnual = recurringCharges.reduce((sum, charge) => {
-        const multiplier = this.getAnnualMultiplier(charge.frequency);
-        return sum + charge.averageAmount * multiplier;
+      const totalAnnualIncome = recurringIncome.reduce((sum, income) => {
+        const multiplier = this.getAnnualMultiplier(income.frequency);
+        return sum + income.averageAmount * multiplier;
       }, 0);
 
       const response = {
         success: true,
-        recurringCharges,
+        recurringIncome,
         summary: {
-          totalRecurring: recurringCharges.length,
-          monthlyRecurringCost: totalRecurringMonthly,
-          annualRecurringCost: totalRecurringAnnual,
-          categories: this.categorizeRecurringCharges(recurringCharges),
+          totalSources: recurringIncome.length,
+          monthlyIncome: totalMonthlyIncome,
+          annualIncome: totalAnnualIncome,
+          categories: this.categorizeIncome(recurringIncome),
         },
-        insights: this.generateRecurringInsights(recurringCharges),
+        insights: this.generateIncomeInsights(recurringIncome),
       };
 
       // Check if scraping is in progress and add warning
@@ -158,7 +160,7 @@ export class RecurringChargesHandler extends BaseHandler {
         ],
       };
     } catch (error) {
-      logger.error('Failed to detect recurring charges', {
+      logger.error('Failed to detect recurring income', {
         error: error instanceof Error ? error.message : String(error),
         args,
       });
@@ -181,27 +183,26 @@ export class RecurringChargesHandler extends BaseHandler {
     }
   }
 
-  private groupTransactionsByMerchant(
+  private groupTransactionsBySource(
     transactions: Transaction[]
-  ): Map<string, TransactionPattern> {
-    const groups = new Map<string, TransactionPattern>();
+  ): Map<string, IncomePattern> {
+    const groups = new Map<string, IncomePattern>();
 
     transactions.forEach(txn => {
-      // Normalize merchant name
-      const merchant = this.normalizeMerchantName(txn.description);
+      // Normalize source name
+      const source = this.normalizeSourceName(txn.description);
 
-      if (!groups.has(merchant)) {
-        groups.set(merchant, {
-          merchantName: merchant,
+      if (!groups.has(source)) {
+        groups.set(source, {
+          sourceName: source,
           amounts: [],
           dates: [],
           transactions: [],
         });
       }
 
-      const pattern = groups.get(merchant)!;
-      // Use the actual negative amount for expenses
-      pattern.amounts.push(Math.abs(txn.amount)); // Convert to positive for calculations
+      const pattern = groups.get(source)!;
+      pattern.amounts.push(txn.amount); // Keep positive amounts
       pattern.dates.push(new Date(txn.date));
       pattern.transactions.push(txn);
     });
@@ -209,8 +210,8 @@ export class RecurringChargesHandler extends BaseHandler {
     return groups;
   }
 
-  private normalizeMerchantName(description: string): string {
-    // Remove common variations in merchant names
+  private normalizeSourceName(description: string): string {
+    // Remove common variations in source names
     return description
       .toLowerCase()
       .replace(/\s+/g, ' ')
@@ -219,7 +220,7 @@ export class RecurringChargesHandler extends BaseHandler {
       .trim();
   }
 
-  private analyzeRecurrencePattern(pattern: TransactionPattern): {
+  private analyzeRecurrencePattern(pattern: IncomePattern): {
     isRecurring: boolean;
     frequency: string;
     averageAmount: number;
@@ -303,37 +304,55 @@ export class RecurringChargesHandler extends BaseHandler {
     return multipliers[frequency] || 12;
   }
 
-  private categorizeRecurringCharges(
-    charges: RecurringCharge[]
-  ): Record<string, number> {
+  private determineIncomeType(source: string): string {
+    const lowerSource = source.toLowerCase();
+
+    // Check for salary/wage patterns
+    if (
+      this.incomeKeywords
+        .slice(0, 5)
+        .some(keyword => lowerSource.includes(keyword.toLowerCase()))
+    ) {
+      return 'salary';
+    }
+
+    // Check for dividend patterns
+    if (lowerSource.includes('dividend') || lowerSource.includes('דיבידנד')) {
+      return 'dividend';
+    }
+
+    // Check for interest patterns
+    if (lowerSource.includes('interest') || lowerSource.includes('ריבית')) {
+      return 'interest';
+    }
+
+    // Check for pension patterns
+    if (lowerSource.includes('pension') || lowerSource.includes('קצבה')) {
+      return 'pension';
+    }
+
+    // Check for refund patterns
+    if (lowerSource.includes('refund') || lowerSource.includes('החזר')) {
+      return 'refund';
+    }
+
+    return 'other';
+  }
+
+  private categorizeIncome(income: RecurringIncome[]): Record<string, number> {
     const categories: Record<string, number> = {
-      subscriptions: 0,
-      utilities: 0,
-      insurance: 0,
+      salary: 0,
+      dividend: 0,
+      interest: 0,
+      pension: 0,
+      refund: 0,
       other: 0,
     };
 
-    charges.forEach(charge => {
-      const lowerName = charge.merchantName.toLowerCase();
-      if (
-        lowerName.includes('netflix') ||
-        lowerName.includes('spotify') ||
-        lowerName.includes('youtube') ||
-        lowerName.includes('subscription')
-      ) {
-        categories.subscriptions++;
-      } else if (
-        lowerName.includes('electric') ||
-        lowerName.includes('water') ||
-        lowerName.includes('gas') ||
-        lowerName.includes('internet')
-      ) {
-        categories.utilities++;
-      } else if (
-        lowerName.includes('insurance') ||
-        lowerName.includes('ביטוח')
-      ) {
-        categories.insurance++;
+    income.forEach(inc => {
+      const type = inc.incomeType || 'other';
+      if (type in categories) {
+        categories[type]++;
       } else {
         categories.other++;
       }
@@ -342,30 +361,52 @@ export class RecurringChargesHandler extends BaseHandler {
     return categories;
   }
 
-  private generateRecurringInsights(charges: RecurringCharge[]): string[] {
+  private generateIncomeInsights(income: RecurringIncome[]): string[] {
     const insights: string[] = [];
 
-    // High cost subscriptions
-    const highCostMonthly = charges.filter(
-      c => c.frequency === 'monthly' && c.averageAmount > 100
-    );
-    if (highCostMonthly.length > 0) {
+    // Multiple income sources
+    if (income.length > 1) {
       insights.push(
-        `You have ${highCostMonthly.length} monthly subscriptions over ₪100. Consider reviewing these for potential savings.`
+        `You have ${income.length} recurring income sources. Diversified income provides financial stability.`
       );
     }
 
-    // Unused subscriptions (no recent charges)
-    const now = new Date();
-    const staleCharges = charges.filter(c => {
-      const lastCharge = new Date(c.lastCharge);
-      const daysSince =
-        (now.getTime() - lastCharge.getTime()) / (1000 * 60 * 60 * 24);
-      return c.frequency === 'monthly' && daysSince > 45;
-    });
-    if (staleCharges.length > 0) {
+    // Salary insights
+    const salaryIncome = income.filter(inc => inc.incomeType === 'salary');
+    if (salaryIncome.length > 0) {
+      const totalSalary = salaryIncome.reduce(
+        (sum, inc) => sum + inc.averageAmount,
+        0
+      );
       insights.push(
-        `${staleCharges.length} recurring charges haven't appeared recently. They might be cancelled or on hold.`
+        `Your total monthly salary income is ₪${totalSalary.toFixed(2)}.`
+      );
+    }
+
+    // Passive income
+    const passiveIncome = income.filter(inc =>
+      ['dividend', 'interest', 'pension'].includes(inc.incomeType || '')
+    );
+    if (passiveIncome.length > 0) {
+      const totalPassive = passiveIncome.reduce(
+        (sum, inc) => sum + inc.averageAmount,
+        0
+      );
+      insights.push(
+        `You have ${passiveIncome.length} passive income sources generating ₪${totalPassive.toFixed(2)} per month.`
+      );
+    }
+
+    // Irregular income
+    const now = new Date();
+    const delayedIncome = income.filter(inc => {
+      if (!inc.nextExpectedIncome) return false;
+      const expectedDate = new Date(inc.nextExpectedIncome);
+      return expectedDate < now;
+    });
+    if (delayedIncome.length > 0) {
+      insights.push(
+        `${delayedIncome.length} expected income sources appear to be delayed.`
       );
     }
 

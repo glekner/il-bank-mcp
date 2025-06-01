@@ -75,6 +75,13 @@ export interface Transaction {
   accountId: string;
   reference: string | null;
   memo: string | null;
+  isInternalTransfer?: boolean;
+  isPotentialTransfer?: boolean;
+  transferDetails?: {
+    targetAccountId?: string;
+    targetAccountName?: string;
+    direction: 'from' | 'to';
+  };
 }
 
 export interface Account {

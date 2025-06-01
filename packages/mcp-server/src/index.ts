@@ -23,6 +23,7 @@ import {
 } from './handlers/index.js';
 import { MonthlyCreditSummaryHandler } from './handlers/financial-advisory/monthly-credit-summary.handler.js';
 import { RecurringChargesHandler } from './handlers/financial-advisory/recurring-charges.handler.js';
+import { RecurringIncomeHandler } from './handlers/financial-advisory/recurring-income.handler.js';
 import { logger } from './utils/logger.js';
 import type {
   TransactionArgs,
@@ -31,6 +32,7 @@ import type {
   RefreshProviderArgs,
   MonthlyCreditSummaryArgs,
   RecurringChargesArgs,
+  RecurringIncomeArgs,
 } from './types.js';
 
 // Load environment variables from a local .env file only if it exists. This
@@ -56,6 +58,7 @@ type ToolArgsSpec = {
   get_scrape_status: void;
   get_monthly_credit_summary: MonthlyCreditSummaryArgs;
   get_recurring_charges: RecurringChargesArgs;
+  get_recurring_income: RecurringIncomeArgs;
 };
 
 class IsraeliBankMCPServer {
@@ -68,6 +71,7 @@ class IsraeliBankMCPServer {
   private statusHandler!: StatusHandler;
   private monthlyCreditSummaryHandler!: MonthlyCreditSummaryHandler;
   private recurringChargesHandler!: RecurringChargesHandler;
+  private recurringIncomeHandler!: RecurringIncomeHandler;
 
   constructor() {
     this.server = new Server(
@@ -137,6 +141,9 @@ Remember: You're not just accessing a database - you're providing intelligent fi
     this.recurringChargesHandler = new RecurringChargesHandler(
       this.scraperService
     );
+    this.recurringIncomeHandler = new RecurringIncomeHandler(
+      this.scraperService
+    );
   }
 
   private setupRequestHandlers() {
@@ -200,6 +207,9 @@ Remember: You're not just accessing a database - you're providing intelligent fi
 
       get_recurring_charges: args =>
         this.recurringChargesHandler.getRecurringCharges(args),
+
+      get_recurring_income: args =>
+        this.recurringIncomeHandler.getRecurringIncome(args),
     };
 
     // 4. Generic helper to execute a tool

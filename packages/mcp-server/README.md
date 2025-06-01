@@ -71,7 +71,7 @@ Force a fresh scrape of data from a specific service.
 
 **Parameters:**
 
-- `service` (required): Service to refresh ('leumi', 'visaCal', or 'max')
+- `service` (required): Service to refresh ('leumi', 'visaCal', 'max', etc...)
 
 ### 7. `get_scrape_status`
 

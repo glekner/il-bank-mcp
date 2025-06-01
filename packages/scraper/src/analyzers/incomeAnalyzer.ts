@@ -11,8 +11,15 @@ export function categorizeIncome(
 ): CategoryBreakdown {
   logger.info('Categorizing income transactions');
 
-  // Filter to only include income transactions
-  const incomeTransactions = transactions.filter(t => t.isIncome);
+  // Filter to only include income transactions, excluding internal transfers
+  const incomeTransactions = transactions.filter(t => {
+    if (!t.isIncome) return false;
+
+    // Exclude internal transfers
+    if ('isInternalTransfer' in t && t.isInternalTransfer) return false;
+
+    return true;
+  });
 
   // Group by category
   const incomeByCategory: CategoryBreakdown = {};
