@@ -1,7 +1,7 @@
-import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { CreditCardSummary, MonthlyCreditSummaryArgs } from "../../types.js";
-import { logger } from "../../utils/logger.js";
-import { BaseHandler } from "../base.js";
+import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import { CreditCardSummary, MonthlyCreditSummaryArgs } from '../../types.js';
+import { logger } from '../../utils/logger.js';
+import { BaseHandler } from '../base.js';
 
 export class MonthlyCreditSummaryHandler extends BaseHandler {
   async getMonthlyCreditSummary(
@@ -18,7 +18,7 @@ export class MonthlyCreditSummaryHandler extends BaseHandler {
       const startDate = new Date(year, month - 1, 1);
       const endDate = new Date(year, month, 0, 23, 59, 59, 999);
 
-      logger.info("Getting monthly credit summary", {
+      logger.info('Getting monthly credit summary', {
         month,
         year,
         startDate: startDate.toISOString(),
@@ -32,18 +32,18 @@ export class MonthlyCreditSummaryHandler extends BaseHandler {
       });
 
       if (!transactions || transactions.length === 0) {
-        throw new Error("No transactions found for this period");
+        throw new Error('No transactions found for this period');
       }
 
       // Get all accounts to identify credit cards
       const accounts = await this.scraperService.getAccounts();
       if (!accounts || accounts.length === 0) {
-        throw new Error("No accounts found");
+        throw new Error('No accounts found');
       }
 
       // Filter for credit card accounts (non-leumi accounts are credit cards)
       const creditCards = accounts.filter(
-        (account) => account.type === "Credit Card"
+        account => account.type === 'Credit Card'
       );
 
       // Process transactions by credit card
@@ -51,7 +51,7 @@ export class MonthlyCreditSummaryHandler extends BaseHandler {
 
       for (const card of creditCards) {
         const cardTransactions = transactions.filter(
-          (txn) => txn.accountId === card.id
+          txn => txn.accountId === card.id
         );
 
         if (cardTransactions.length === 0) continue;
@@ -78,8 +78,8 @@ export class MonthlyCreditSummaryHandler extends BaseHandler {
         if (args.includeCategories) {
           const categoryBreakdown: Record<string, number> = {};
 
-          cardTransactions.forEach((txn) => {
-            const category = txn.category || "Uncategorized";
+          cardTransactions.forEach(txn => {
+            const category = txn.category || 'Uncategorized';
             categoryBreakdown[category] =
               (categoryBreakdown[category] || 0) + Math.abs(txn.amount);
           });
@@ -102,18 +102,18 @@ export class MonthlyCreditSummaryHandler extends BaseHandler {
 
       // Format month name
       const monthNames = [
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
+        'January',
+        'February',
+        'March',
+        'April',
+        'May',
+        'June',
+        'July',
+        'August',
+        'September',
+        'October',
+        'November',
+        'December',
       ];
       const monthName = `${monthNames[month - 1]} ${year}`;
 
@@ -137,8 +137,8 @@ export class MonthlyCreditSummaryHandler extends BaseHandler {
         scrapeStatus.activeScrapes?.length > 0
       ) {
         const runningServices = scrapeStatus.activeScrapes
-          .map((s) => s.service)
-          .join(", ");
+          .map(s => s.provider)
+          .join(', ');
 
         (response as any)._warning =
           `Data scraping is currently in progress for: ${runningServices}. The data shown may be stale.`;
@@ -147,13 +147,13 @@ export class MonthlyCreditSummaryHandler extends BaseHandler {
       return {
         content: [
           {
-            type: "text",
+            type: 'text',
             text: JSON.stringify(response, null, 2),
           },
         ],
       };
     } catch (error) {
-      logger.error("Failed to get monthly credit summary", {
+      logger.error('Failed to get monthly credit summary', {
         error: error instanceof Error ? error.message : String(error),
         args,
       });
@@ -161,11 +161,11 @@ export class MonthlyCreditSummaryHandler extends BaseHandler {
       return {
         content: [
           {
-            type: "text",
+            type: 'text',
             text: JSON.stringify(
               {
                 success: false,
-                error: error instanceof Error ? error.message : "Unknown error",
+                error: error instanceof Error ? error.message : 'Unknown error',
               },
               null,
               2

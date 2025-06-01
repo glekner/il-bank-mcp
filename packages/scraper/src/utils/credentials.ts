@@ -1,133 +1,99 @@
-import dotenv from "dotenv";
-import fs from "fs";
-import path from "path";
+import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
+import { ScraperCredentials, MultiProviderCredentials } from '../types';
+import { logger } from './logger';
 import {
-  ScraperCredentials,
-  MultiServiceCredentials,
-  ServiceType,
-  LeumiCredentials,
-  VisaCalCredentials,
-  MaxCredentials,
-} from "../types";
-import { logger } from "./logger";
+  detectConfiguredProviders,
+  getProviderCredentials,
+  ProviderKey,
+} from './providers';
 
 // Load environment variables
 dotenv.config();
 
 /**
- * Loads credentials for all configured services
- * @returns MultiServiceCredentials object
+ * Loads credentials for all configured providers dynamically
+ * @returns MultiProviderCredentials object
  */
-export function loadAllCredentials(): MultiServiceCredentials {
-  logger.info("Loading credentials for all services");
+export function loadAllCredentials(): MultiProviderCredentials {
+  logger.info('Loading credentials for all providers');
 
-  const credentials: MultiServiceCredentials = {};
+  const credentials: MultiProviderCredentials = {};
 
-  // Load Bank Leumi credentials
-  const leumiCreds = loadServiceCredentials("leumi");
-  if (leumiCreds) {
-    credentials.leumi = leumiCreds as LeumiCredentials;
-  }
+  // Detect which providers have credentials configured
+  const configuredProviders = detectConfiguredProviders();
 
-  // Load Visa Cal credentials
-  const visaCalCreds = loadServiceCredentials("visaCal");
-  if (visaCalCreds) {
-    credentials.visaCal = visaCalCreds as VisaCalCredentials;
-  }
-
-  // Load Max credentials
-  const maxCreds = loadServiceCredentials("max");
-  if (maxCreds) {
-    credentials.max = maxCreds as MaxCredentials;
-  }
-
-  if (Object.keys(credentials).length === 0) {
-    logger.error("No credentials found for any service");
+  if (configuredProviders.length === 0) {
+    logger.error('No credentials found for any provider');
     throw new Error(
-      "No credentials found. Please configure at least one service."
+      'No credentials found. Please configure at least one provider.'
     );
   }
 
+  // Load credentials for each configured provider
+  for (const provider of configuredProviders) {
+    const providerCreds = getProviderCredentials(provider);
+    if (providerCreds) {
+      credentials[provider] = providerCreds as ScraperCredentials;
+    }
+  }
+
   logger.info(
-    `Loaded credentials for ${Object.keys(credentials).length} services`
+    `Loaded credentials for ${Object.keys(credentials).length} providers: ${configuredProviders.join(', ')}`
   );
   return credentials;
 }
 
 /**
- * Loads credentials for a specific service
- * @param service The service to load credentials for
+ * Loads credentials for a specific provider
+ * @param provider The provider to load credentials for
  * @returns Credentials object or null if not found
  */
-export function loadServiceCredentials(
-  service: ServiceType
+export function loadProviderCredentials(
+  provider: ProviderKey
 ): ScraperCredentials | null {
-  logger.info(`Loading credentials for ${service}`);
-
-  // Environment variable mapping
-  const envMapping = {
-    leumi: {
-      username: "BANK_LEUMI_USERNAME",
-      password: "BANK_LEUMI_PASSWORD",
-    },
-    visaCal: {
-      username: "VISA_CAL_USERNAME",
-      password: "VISA_CAL_PASSWORD",
-    },
-    max: {
-      username: "MAX_USERNAME",
-      password: "MAX_PASSWORD",
-    },
-  };
+  logger.info(`Loading credentials for ${provider}`);
 
   // Try to load from environment variables first
-  const envKeys = envMapping[service];
-  const username = process.env[envKeys.username];
-  const password = process.env[envKeys.password];
-
-  if (username && password) {
-    logger.info(`Using ${service} credentials from environment variables`);
-    return { username, password };
+  const providerCreds = getProviderCredentials(provider as ProviderKey);
+  if (providerCreds) {
+    logger.info(`Using ${provider} credentials from environment variables`);
+    return providerCreds as ScraperCredentials;
   }
 
   // If not in environment variables, try loading from config file
-  const configPath = path.resolve(process.cwd(), "config.json");
+  const configPath = path.resolve(process.cwd(), 'config.json');
 
   if (fs.existsSync(configPath)) {
     try {
-      const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+      const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
 
-      if (
-        config[service] &&
-        config[service].username &&
-        config[service].password
-      ) {
-        logger.info(`Using ${service} credentials from config file`);
-        return {
-          username: config[service].username,
-          password: config[service].password,
-        };
+      if (config[provider]) {
+        logger.info(`Using ${provider} credentials from config file`);
+        // Return the entire credential object from config
+        return config[provider];
       }
     } catch (error) {
-      logger.error(`Error reading config file for ${service}`, { error });
+      logger.error(`Error reading config file for ${provider}`, { error });
     }
   }
 
-  logger.warn(`No credentials found for ${service}`);
+  logger.warn(`No credentials found for ${provider}`);
   return null;
 }
 
 /**
  * Loads Bank Leumi credentials from environment variables or config file
  * @returns ScraperCredentials object
- * @deprecated Use loadServiceCredentials('leumi') instead
+ * @deprecated Use loadProviderCredentials('leumi') instead
  */
 export function loadCredentials(): ScraperCredentials {
-  const creds = loadServiceCredentials("leumi");
+  const creds = loadProviderCredentials('leumi');
   if (!creds) {
     throw new Error(
-      "Bank Leumi credentials not found. Please set BANK_LEUMI_USERNAME and BANK_LEUMI_PASSWORD " +
-        "environment variables or create a config.json file with leumi credentials."
+      'Bank Leumi credentials not found. Please set LEUMI_USERNAME and LEUMI_PASSWORD ' +
+        'environment variables or create a config.json file with leumi credentials.'
     );
   }
   return creds;
@@ -136,42 +102,39 @@ export function loadCredentials(): ScraperCredentials {
 /**
  * Saves credentials to a config file
  * @param credentials The credentials to save
- * @param service The service to save credentials for (defaults to 'leumi' for backward compatibility)
+ * @param provider The provider to save credentials for (defaults to 'leumi' for backward compatibility)
  */
 export function saveCredentials(
   credentials: ScraperCredentials,
-  service: ServiceType = "leumi"
+  provider: ProviderKey = 'leumi'
 ): void {
-  const configPath = path.resolve(process.cwd(), "config.json");
+  const configPath = path.resolve(process.cwd(), 'config.json');
 
   // Read existing config if it exists
   let config: any = {};
   if (fs.existsSync(configPath)) {
     try {
-      config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+      config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
     } catch (error) {
-      logger.warn("Error reading existing config file, creating new one", {
+      logger.warn('Error reading existing config file, creating new one', {
         error,
       });
     }
   }
 
   // Update with new credentials
-  config[service] = {
-    username: credentials.username,
-    password: credentials.password,
-  };
+  config[provider] = credentials;
 
   // Write back to file
   try {
-    fs.writeFileSync(configPath, JSON.stringify(config, null, 2), "utf8");
-    logger.info(`Credentials saved to config file for ${service}`);
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2), 'utf8');
+    logger.info(`Credentials saved to config file for ${provider}`);
   } catch (error) {
-    logger.error(`Error saving credentials to config file for ${service}`, {
+    logger.error(`Error saving credentials to config file for ${provider}`, {
       error,
     });
     throw new Error(
-      "Failed to save credentials: " +
+      'Failed to save credentials: ' +
         (error instanceof Error ? error.message : String(error))
     );
   }

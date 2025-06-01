@@ -1,12 +1,12 @@
-import { ServiceType } from "../types";
-import { createComponentLogger } from "../utils/logger";
+import { createComponentLogger } from '../utils/logger';
+import type { ProviderKey } from '../utils/providers';
 
-const logger = createComponentLogger("ScrapeStatusManager");
+const logger = createComponentLogger('ScrapeStatusManager');
 
 export interface ScrapeStatus {
-  service: ServiceType | "all";
+  provider: ProviderKey | 'all';
   startedAt: Date;
-  status: "running" | "completed" | "failed";
+  status: 'running' | 'completed' | 'failed';
   completedAt?: Date;
   error?: string;
 }
@@ -24,25 +24,25 @@ export class ScrapeStatusManager {
     return ScrapeStatusManager.instance;
   }
 
-  startScrape(service: ServiceType | "all"): void {
-    const key = service;
+  startScrape(provider: ProviderKey | 'all'): void {
+    const key = provider;
     this.scrapeStatuses.set(key, {
-      service,
+      provider,
       startedAt: new Date(),
-      status: "running",
+      status: 'running',
     });
-    logger.info(`Started tracking scrape for ${service}`);
+    logger.info(`Started tracking scrape for ${provider}`);
   }
 
-  completeScrape(service: ServiceType | "all", error?: Error): void {
-    const key = service;
+  completeScrape(provider: ProviderKey | 'all', error?: Error): void {
+    const key = provider;
     const status = this.scrapeStatuses.get(key);
 
     if (status) {
-      status.status = error ? "failed" : "completed";
+      status.status = error ? 'failed' : 'completed';
       status.completedAt = new Date();
       status.error = error?.message;
-      logger.info(`Completed tracking scrape for ${service}`, {
+      logger.info(`Completed tracking scrape for ${provider}`, {
         status: status.status,
         duration: status.completedAt.getTime() - status.startedAt.getTime(),
       });
@@ -51,18 +51,18 @@ export class ScrapeStatusManager {
 
   isAnyScrapeRunning(): boolean {
     return Array.from(this.scrapeStatuses.values()).some(
-      (status) => status.status === "running"
+      status => status.status === 'running'
     );
   }
 
-  isServiceScraping(service: ServiceType | "all"): boolean {
-    const status = this.scrapeStatuses.get(service);
-    return status?.status === "running" || false;
+  isProviderScraping(provider: ProviderKey | 'all'): boolean {
+    const status = this.scrapeStatuses.get(provider);
+    return status?.status === 'running' || false;
   }
 
   getRunningScrapes(): ScrapeStatus[] {
     return Array.from(this.scrapeStatuses.values()).filter(
-      (status) => status.status === "running"
+      status => status.status === 'running'
     );
   }
 
@@ -76,7 +76,7 @@ export class ScrapeStatusManager {
 
     for (const [key, status] of this.scrapeStatuses.entries()) {
       if (
-        status.status !== "running" &&
+        status.status !== 'running' &&
         status.completedAt &&
         status.completedAt < cutoffTime
       ) {

@@ -6,32 +6,36 @@ import { logger } from '../utils/logger';
  * @param transactions Raw transactions from the scraper
  * @returns Processed transactions with additional metadata
  */
-export function processTransactions(transactions: Transaction[]): ProcessedTransaction[] {
+export function processTransactions(
+  transactions: Transaction[]
+): ProcessedTransaction[] {
   logger.info('Processing transactions', { count: transactions.length });
-  
-  return transactions.map(transaction => {
-    // Determine if transaction is income or expense based on amount
-    const isExpense = transaction.amount < 0;
-    const isIncome = transaction.amount > 0;
-    
-    // Extract month for trend analysis (format: YYYY-MM)
-    const month = `${transaction.date.getFullYear()}-${String(transaction.date.getMonth() + 1).padStart(2, '0')}`;
-    
-    return {
-      ...transaction,
-      isExpense,
-      isIncome,
-      month
-    };
-  }).sort((a, b) => b.date.getTime() - a.date.getTime()); // Sort by date descending
+
+  return transactions
+    .map(transaction => {
+      // Determine if transaction is income or expense based on amount
+      const isExpense = transaction.amount < 0;
+      const isIncome = transaction.amount > 0;
+
+      // Extract month for trend analysis (format: YYYY-MM)
+      const month = `${transaction.date.getFullYear()}-${String(transaction.date.getMonth() + 1).padStart(2, '0')}`;
+
+      return {
+        ...transaction,
+        isExpense,
+        isIncome,
+        month,
+      };
+    })
+    .sort((a, b) => b.date.getTime() - a.date.getTime()); // Sort by date descending
 }
 
 /**
  * Filters transactions by date range
  */
 export function filterTransactionsByDateRange(
-  transactions: ProcessedTransaction[], 
-  startDate: Date, 
+  transactions: ProcessedTransaction[],
+  startDate: Date,
   endDate: Date
 ): ProcessedTransaction[] {
   return transactions.filter(transaction => {
@@ -48,10 +52,10 @@ export function groupTransactionsByPeriod(
   period: 'day' | 'week' | 'month' = 'month'
 ): Record<string, ProcessedTransaction[]> {
   const grouped: Record<string, ProcessedTransaction[]> = {};
-  
+
   transactions.forEach(transaction => {
     let key: string;
-    
+
     if (period === 'day') {
       key = transaction.date.toISOString().split('T')[0]; // YYYY-MM-DD
     } else if (period === 'week') {
@@ -64,13 +68,13 @@ export function groupTransactionsByPeriod(
       // Default to month
       key = transaction.month;
     }
-    
+
     if (!grouped[key]) {
       grouped[key] = [];
     }
-    
+
     grouped[key].push(transaction);
   });
-  
+
   return grouped;
 }

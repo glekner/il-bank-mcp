@@ -1,7 +1,13 @@
+import type { ProviderKey } from './utils/providers';
+
+// Re-export ProviderKey
+export type { ProviderKey } from './utils/providers';
+
 // Scraper types
 export interface ScraperCredentials {
   username: string;
   password: string;
+  [key: string]: any; // Allow additional fields for specific providers
 }
 
 // Extended credential types for different services
@@ -10,24 +16,55 @@ export interface BaseCredentials {
   password: string;
 }
 
-export interface LeumiCredentials extends BaseCredentials {}
-
-export interface VisaCalCredentials extends BaseCredentials {}
-
-export interface MaxCredentials extends BaseCredentials {}
-
-export type ServiceCredentials =
-  | { type: "leumi"; credentials: LeumiCredentials }
-  | { type: "visaCal"; credentials: VisaCalCredentials }
-  | { type: "max"; credentials: MaxCredentials };
-
-export interface MultiServiceCredentials {
-  leumi?: LeumiCredentials;
-  visaCal?: VisaCalCredentials;
-  max?: MaxCredentials;
+// Specific credential types for providers that need extra fields
+export interface HapoalimCredentials extends BaseCredentials {
+  userCode?: string;
 }
 
-export type ServiceType = "leumi" | "visaCal" | "max";
+export interface DiscountCredentials extends BaseCredentials {
+  id?: string;
+  num?: string;
+}
+
+export interface MercantileCredentials extends BaseCredentials {
+  id?: string;
+  num?: string;
+}
+
+export interface IsracardCredentials {
+  id: string;
+  card6Digits: string;
+  password: string;
+}
+
+export interface AmexCredentials {
+  username: string;
+  card6Digits: string;
+  password: string;
+}
+
+export interface YahavCredentials extends BaseCredentials {
+  nationalID: string;
+}
+
+export interface BeyhadCredentials {
+  id: string;
+  password: string;
+}
+
+export type ProviderCredentials =
+  | BaseCredentials
+  | HapoalimCredentials
+  | DiscountCredentials
+  | MercantileCredentials
+  | IsracardCredentials
+  | AmexCredentials
+  | YahavCredentials
+  | BeyhadCredentials;
+
+export type MultiProviderCredentials = Partial<
+  Record<ProviderKey, ProviderCredentials>
+>;
 
 export interface Transaction {
   id: string;

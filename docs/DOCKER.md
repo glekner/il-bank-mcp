@@ -208,7 +208,7 @@ docker-compose up -d
        deploy:
          resources:
            limits:
-             cpus: "1.0"
+             cpus: '1.0'
              memory: 2G
            reservations:
              memory: 1G

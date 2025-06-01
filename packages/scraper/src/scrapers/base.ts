@@ -1,6 +1,7 @@
-import { ScrapedAccountData, ServiceType } from "../types";
+import { ScrapedAccountData } from '../types';
+import type { ProviderKey } from '../utils/providers';
 
 export interface BaseScraper {
-  type: ServiceType;
+  type: ProviderKey;
   scrape(): Promise<ScrapedAccountData>;
 }

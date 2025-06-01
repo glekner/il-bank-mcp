@@ -1,4 +1,4 @@
-declare module "node-cron" {
+declare module 'node-cron' {
   export interface ScheduledTask {
     start(): void;
     stop(): void;

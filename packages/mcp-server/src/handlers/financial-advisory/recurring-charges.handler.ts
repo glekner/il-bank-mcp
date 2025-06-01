@@ -1,8 +1,8 @@
-import { Transaction } from "@bank-assistant/scraper";
-import { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import { RecurringChargesArgs, RecurringCharge } from "../../types.js";
-import { logger } from "../../utils/logger.js";
-import { BaseHandler } from "../base.js";
+import { Transaction } from '@bank-assistant/scraper';
+import { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
+import { RecurringChargesArgs, RecurringCharge } from '../../types.js';
+import { logger } from '../../utils/logger.js';
+import { BaseHandler } from '../base.js';
 
 interface TransactionPattern {
   merchantName: string;
@@ -24,7 +24,7 @@ export class RecurringChargesHandler extends BaseHandler {
       const startDate = new Date();
       startDate.setMonth(startDate.getMonth() - lookbackMonths);
 
-      logger.info("Detecting recurring charges", {
+      logger.info('Detecting recurring charges', {
         minOccurrences,
         lookbackMonths,
         startDate: startDate.toISOString(),
@@ -38,7 +38,7 @@ export class RecurringChargesHandler extends BaseHandler {
       });
 
       if (!transactions || transactions.length === 0) {
-        throw new Error("No transactions found for analysis");
+        throw new Error('No transactions found for analysis');
       }
 
       // Group transactions by merchant
@@ -70,7 +70,7 @@ export class RecurringChargesHandler extends BaseHandler {
 
       // Calculate summary statistics
       const totalRecurringMonthly = recurringCharges
-        .filter((charge) => charge.frequency === "monthly")
+        .filter(charge => charge.frequency === 'monthly')
         .reduce((sum, charge) => sum + charge.averageAmount, 0);
 
       const totalRecurringAnnual = recurringCharges.reduce((sum, charge) => {
@@ -97,8 +97,8 @@ export class RecurringChargesHandler extends BaseHandler {
         scrapeStatus.activeScrapes?.length > 0
       ) {
         const runningServices = scrapeStatus.activeScrapes
-          .map((s) => s.service)
-          .join(", ");
+          .map(s => s.provider)
+          .join(', ');
 
         (response as any)._warning =
           `Data scraping is currently in progress for: ${runningServices}. The data shown may be stale.`;
@@ -107,13 +107,13 @@ export class RecurringChargesHandler extends BaseHandler {
       return {
         content: [
           {
-            type: "text",
+            type: 'text',
             text: JSON.stringify(response, null, 2),
           },
         ],
       };
     } catch (error) {
-      logger.error("Failed to detect recurring charges", {
+      logger.error('Failed to detect recurring charges', {
         error: error instanceof Error ? error.message : String(error),
         args,
       });
@@ -121,11 +121,11 @@ export class RecurringChargesHandler extends BaseHandler {
       return {
         content: [
           {
-            type: "text",
+            type: 'text',
             text: JSON.stringify(
               {
                 success: false,
-                error: error instanceof Error ? error.message : "Unknown error",
+                error: error instanceof Error ? error.message : 'Unknown error',
               },
               null,
               2
@@ -141,7 +141,7 @@ export class RecurringChargesHandler extends BaseHandler {
   ): Map<string, TransactionPattern> {
     const groups = new Map<string, TransactionPattern>();
 
-    transactions.forEach((txn) => {
+    transactions.forEach(txn => {
       // Normalize merchant name
       const merchant = this.normalizeMerchantName(txn.description);
 
@@ -167,9 +167,9 @@ export class RecurringChargesHandler extends BaseHandler {
     // Remove common variations in merchant names
     return description
       .toLowerCase()
-      .replace(/\s+/g, " ")
-      .replace(/[0-9]{4,}/g, "") // Remove long numbers (transaction IDs, etc.)
-      .replace(/\*{2,}/g, "") // Remove multiple asterisks
+      .replace(/\s+/g, ' ')
+      .replace(/[0-9]{4,}/g, '') // Remove long numbers (transaction IDs, etc.)
+      .replace(/\*{2,}/g, '') // Remove multiple asterisks
       .trim();
   }
 
@@ -201,20 +201,20 @@ export class RecurringChargesHandler extends BaseHandler {
     // Check if pattern is consistent (low standard deviation)
     const isRecurring = stdDev < avgInterval * 0.3; // 30% tolerance
 
-    let frequency = "unknown";
+    let frequency = 'unknown';
     let nextExpectedDate: Date | undefined;
 
     if (isRecurring) {
       if (avgInterval <= 7) {
-        frequency = "weekly";
+        frequency = 'weekly';
       } else if (avgInterval <= 31) {
-        frequency = "monthly";
+        frequency = 'monthly';
       } else if (avgInterval <= 93) {
-        frequency = "quarterly";
+        frequency = 'quarterly';
       } else if (avgInterval <= 186) {
-        frequency = "semi-annual";
+        frequency = 'semi-annual';
       } else if (avgInterval <= 366) {
-        frequency = "annual";
+        frequency = 'annual';
       }
 
       // Calculate next expected date
@@ -239,7 +239,7 @@ export class RecurringChargesHandler extends BaseHandler {
 
   private calculateStdDev(values: number[]): number {
     const avg = values.reduce((sum, val) => sum + val, 0) / values.length;
-    const squareDiffs = values.map((val) => Math.pow(val - avg, 2));
+    const squareDiffs = values.map(val => Math.pow(val - avg, 2));
     const avgSquareDiff =
       squareDiffs.reduce((sum, val) => sum + val, 0) / values.length;
     return Math.sqrt(avgSquareDiff);
@@ -250,7 +250,7 @@ export class RecurringChargesHandler extends BaseHandler {
       weekly: 52,
       monthly: 12,
       quarterly: 4,
-      "semi-annual": 2,
+      'semi-annual': 2,
       annual: 1,
       unknown: 12, // Assume monthly if unknown
     };
@@ -267,25 +267,25 @@ export class RecurringChargesHandler extends BaseHandler {
       other: 0,
     };
 
-    charges.forEach((charge) => {
+    charges.forEach(charge => {
       const lowerName = charge.merchantName.toLowerCase();
       if (
-        lowerName.includes("netflix") ||
-        lowerName.includes("spotify") ||
-        lowerName.includes("youtube") ||
-        lowerName.includes("subscription")
+        lowerName.includes('netflix') ||
+        lowerName.includes('spotify') ||
+        lowerName.includes('youtube') ||
+        lowerName.includes('subscription')
       ) {
         categories.subscriptions++;
       } else if (
-        lowerName.includes("electric") ||
-        lowerName.includes("water") ||
-        lowerName.includes("gas") ||
-        lowerName.includes("internet")
+        lowerName.includes('electric') ||
+        lowerName.includes('water') ||
+        lowerName.includes('gas') ||
+        lowerName.includes('internet')
       ) {
         categories.utilities++;
       } else if (
-        lowerName.includes("insurance") ||
-        lowerName.includes("ביטוח")
+        lowerName.includes('insurance') ||
+        lowerName.includes('ביטוח')
       ) {
         categories.insurance++;
       } else {
@@ -301,7 +301,7 @@ export class RecurringChargesHandler extends BaseHandler {
 
     // High cost subscriptions
     const highCostMonthly = charges.filter(
-      (c) => c.frequency === "monthly" && c.averageAmount > 100
+      c => c.frequency === 'monthly' && c.averageAmount > 100
     );
     if (highCostMonthly.length > 0) {
       insights.push(
@@ -311,11 +311,11 @@ export class RecurringChargesHandler extends BaseHandler {
 
     // Unused subscriptions (no recent charges)
     const now = new Date();
-    const staleCharges = charges.filter((c) => {
+    const staleCharges = charges.filter(c => {
       const lastCharge = new Date(c.lastCharge);
       const daysSince =
         (now.getTime() - lastCharge.getTime()) / (1000 * 60 * 60 * 24);
-      return c.frequency === "monthly" && daysSince > 45;
+      return c.frequency === 'monthly' && daysSince > 45;
     });
     if (staleCharges.length > 0) {
       insights.push(

@@ -1,43 +1,43 @@
-import { Server } from "@modelcontextprotocol/sdk/server/index.js";
-import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+import { Server } from '@modelcontextprotocol/sdk/server/index.js';
+import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
   ListToolsRequestSchema,
   CallToolRequestSchema,
   ListPromptsRequestSchema,
   GetPromptRequestSchema,
-} from "@modelcontextprotocol/sdk/types.js";
-import { ScraperService } from "@bank-assistant/scraper";
-import * as dotenv from "dotenv";
-import * as path from "path";
-import * as fs from "fs";
+} from '@modelcontextprotocol/sdk/types.js';
+import { ScraperService } from '@bank-assistant/scraper';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+import * as fs from 'fs';
 
-import { TOOLS } from "./tools.js";
-import type { ToolName } from "./tools.js";
-import { PROMPTS, PROMPT_TEMPLATES } from "./prompts.js";
+import { TOOLS } from './tools.js';
+import type { ToolName } from './tools.js';
+import { PROMPTS, PROMPT_TEMPLATES } from './prompts.js';
 import {
   TransactionHandler,
   SummaryHandler,
   AccountHandler,
   RefreshHandler,
   StatusHandler,
-} from "./handlers/index.js";
-import { MonthlyCreditSummaryHandler } from "./handlers/financial-advisory/monthly-credit-summary.handler.js";
-import { RecurringChargesHandler } from "./handlers/financial-advisory/recurring-charges.handler.js";
-import { logger } from "./utils/logger.js";
+} from './handlers/index.js';
+import { MonthlyCreditSummaryHandler } from './handlers/financial-advisory/monthly-credit-summary.handler.js';
+import { RecurringChargesHandler } from './handlers/financial-advisory/recurring-charges.handler.js';
+import { logger } from './utils/logger.js';
 import type {
   TransactionArgs,
   SummaryArgs,
   BalanceHistoryArgs,
-  RefreshServiceArgs,
+  RefreshProviderArgs,
   MonthlyCreditSummaryArgs,
   RecurringChargesArgs,
-} from "./types.js";
+} from './types.js';
 
 // Load environment variables from a local .env file only if it exists. This
 // allows containerised deployments (where credentials are provided via real
 // environment variables or secrets) to start without requiring a file baked
 // into the image.
-const rootEnvPath = path.resolve(__dirname, "../../../.env");
+const rootEnvPath = path.resolve(__dirname, '../../../.env');
 if (fs.existsSync(rootEnvPath)) {
   dotenv.config({ path: rootEnvPath });
 } else {
@@ -52,7 +52,7 @@ type ToolArgsSpec = {
   get_accounts: void;
   get_account_balance_history: BalanceHistoryArgs;
   refresh_all_data: void;
-  refresh_service_data: RefreshServiceArgs;
+  refresh_service_data: RefreshProviderArgs;
   get_scrape_status: void;
   get_monthly_credit_summary: MonthlyCreditSummaryArgs;
   get_recurring_charges: RecurringChargesArgs;
@@ -72,8 +72,8 @@ class IsraeliBankMCPServer {
   constructor() {
     this.server = new Server(
       {
-        name: "israeli-bank-assistant",
-        version: "2.0.0",
+        name: 'israeli-bank-assistant',
+        version: '2.0.0',
         instructions: `You are connected to the Israeli Bank Assistant MCP server, which provides real-time access to bank and credit card data from Israeli financial institutions (Bank Leumi, Visa Cal, and Max).
 
 ## How to Use This Server
@@ -151,7 +151,7 @@ Remember: You're not just accessing a database - you're providing intelligent fi
     }));
 
     // Handle get prompt request
-    this.server.setRequestHandler(GetPromptRequestSchema, async (request) => {
+    this.server.setRequestHandler(GetPromptRequestSchema, async request => {
       const promptName = request.params.name;
       const promptArgs = request.params.arguments || {};
 
@@ -178,27 +178,27 @@ Remember: You're not just accessing a database - you're providing intelligent fi
 
     // 3. Instantiate the handlers – the compiler will enforce the signatures
     const toolHandlers: ToolHandlers = {
-      get_transactions: (args) => this.transactionHandler.getTransactions(args),
+      get_transactions: args => this.transactionHandler.getTransactions(args),
 
-      get_financial_summary: (args) =>
+      get_financial_summary: args =>
         this.summaryHandler.getFinancialSummary(args),
 
       get_accounts: () => this.accountHandler.getAccounts(),
 
-      get_account_balance_history: (args) =>
+      get_account_balance_history: args =>
         this.accountHandler.getAccountBalanceHistory(args),
 
       refresh_all_data: () => this.refreshHandler.refreshAllData(),
 
-      refresh_service_data: (args) =>
-        this.refreshHandler.refreshServiceData(args),
+      refresh_service_data: args =>
+        this.refreshHandler.refreshProviderData(args),
 
       get_scrape_status: () => this.statusHandler.getScrapeStatus(),
 
-      get_monthly_credit_summary: (args) =>
+      get_monthly_credit_summary: args =>
         this.monthlyCreditSummaryHandler.getMonthlyCreditSummary(args),
 
-      get_recurring_charges: (args) =>
+      get_recurring_charges: args =>
         this.recurringChargesHandler.getRecurringCharges(args),
     };
 
@@ -214,7 +214,7 @@ Remember: You're not just accessing a database - you're providing intelligent fi
     };
 
     // 5. Register the request handler that delegates to the generic executor
-    this.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    this.server.setRequestHandler(CallToolRequestSchema, async request => {
       const { name, arguments: rawArgs } = request.params as {
         name: keyof ToolArgsMap;
         arguments?: unknown;
@@ -235,12 +235,12 @@ Remember: You're not just accessing a database - you're providing intelligent fi
         return {
           content: [
             {
-              type: "text",
+              type: 'text',
               text: JSON.stringify(
                 {
                   success: false,
                   error:
-                    error instanceof Error ? error.message : "Unknown error",
+                    error instanceof Error ? error.message : 'Unknown error',
                 },
                 null,
                 2
@@ -255,12 +255,12 @@ Remember: You're not just accessing a database - you're providing intelligent fi
   async start() {
     const transport = new StdioServerTransport();
     await this.server.connect(transport);
-    logger.info("Israeli Bank MCP Server started");
+    logger.info('Israeli Bank MCP Server started');
   }
 
   async stop() {
     this.scraperService.close();
-    logger.info("Israeli Bank MCP Server stopped");
+    logger.info('Israeli Bank MCP Server stopped');
   }
 }
 
@@ -269,14 +269,14 @@ async function main() {
   const server = new IsraeliBankMCPServer();
 
   // Handle graceful shutdown
-  process.on("SIGINT", async () => {
-    logger.info("Received SIGINT, shutting down gracefully...");
+  process.on('SIGINT', async () => {
+    logger.info('Received SIGINT, shutting down gracefully...');
     await server.stop();
     process.exit(0);
   });
 
-  process.on("SIGTERM", async () => {
-    logger.info("Received SIGTERM, shutting down gracefully...");
+  process.on('SIGTERM', async () => {
+    logger.info('Received SIGTERM, shutting down gracefully...');
     await server.stop();
     process.exit(0);
   });
@@ -284,7 +284,7 @@ async function main() {
   try {
     await server.start();
   } catch (error) {
-    logger.error("Failed to start server", {
+    logger.error('Failed to start server', {
       error: error instanceof Error ? error.message : String(error),
     });
     process.exit(1);

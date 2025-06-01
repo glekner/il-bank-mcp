@@ -241,7 +241,7 @@ Calculate a comprehensive financial health score with actionable feedback.
 
 ```javascript
 // Example: Getting monthly summary via AI assistant
-const result = await assistant.callTool("get_monthly_credit_summary", {
+const result = await assistant.callTool('get_monthly_credit_summary', {
   month: 10,
   year: 2024,
   includeCategories: true,

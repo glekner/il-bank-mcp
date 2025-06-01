@@ -1,16 +1,17 @@
-import { categorizeExpenses } from "../analyzers/expenseAnalyzer";
-import { categorizeIncome } from "../analyzers/incomeAnalyzer";
-import { analyzeFinancialTrends } from "../analyzers/trendAnalyzer";
-import { BankDataRepository } from "../database/repository";
-import { processTransactions } from "../processors/transactionProcessor";
-import { scrapeAllBankData, scrapeSingleService } from "../scraper";
-import { FinancialSummary, ServiceType, Transaction } from "../types";
-import { createComponentLogger, createTimer } from "../utils/logger";
-import { getCacheService, CacheKeys } from "./cacheService";
-import { validateScrapedData } from "../validation/schemas";
-import { ScrapeStatusManager } from "./scrapeStatusManager";
+import { categorizeExpenses } from '../analyzers/expenseAnalyzer';
+import { categorizeIncome } from '../analyzers/incomeAnalyzer';
+import { analyzeFinancialTrends } from '../analyzers/trendAnalyzer';
+import { BankDataRepository } from '../database/repository';
+import { processTransactions } from '../processors/transactionProcessor';
+import { scrapeAllBankData, scrapeSingleProvider } from '../scraper';
+import { FinancialSummary, Transaction } from '../types';
+import { createComponentLogger, createTimer } from '../utils/logger';
+import { getCacheService, CacheKeys } from './cacheService';
+import { validateScrapedData } from '../validation/schemas';
+import { ScrapeStatusManager } from './scrapeStatusManager';
+import type { ProviderKey } from '../utils/providers';
 
-const logger = createComponentLogger("ScraperService");
+const logger = createComponentLogger('ScraperService');
 
 export class ScraperService {
   private repository: BankDataRepository;
@@ -18,9 +19,9 @@ export class ScraperService {
   private scrapeStatusManager = ScrapeStatusManager.getInstance();
 
   constructor() {
-    logger.info("Initializing ScraperService");
+    logger.info('Initializing ScraperService');
     this.repository = new BankDataRepository();
-    logger.info("ScraperService initialized successfully");
+    logger.info('ScraperService initialized successfully');
   }
 
   /**
@@ -31,34 +32,34 @@ export class ScraperService {
     const operationId = `scrape-all-${Date.now()}`;
 
     try {
-      logger.startOperation("multi-service data scraping", { operationId });
+      logger.startOperation('multi-provider data scraping', { operationId });
 
       // Check if we should scrape
       if (!this.repository.shouldScrape()) {
         const lastScrapeInfo = this.repository.getLastScrapeInfo();
-        logger.info("Skipping scrape - data is still fresh", {
+        logger.info('Skipping scrape - data is still fresh', {
           lastScrapeAt: lastScrapeInfo?.lastScrapeAt,
           operationId,
         });
         return;
       }
 
-      logger.info("Starting bank data scraping", { operationId });
-      // Scrape data from all services
+      logger.info('Starting bank data scraping', { operationId });
+      // Scrape data from all providers
       const scrapedData = await scrapeAllBankData();
 
-      logger.info("Bank data scraped successfully", {
+      logger.info('Bank data scraped successfully', {
         transactionCount: scrapedData.transactions?.length || 0,
         accountCount: scrapedData.accounts?.length || 0,
         operationId,
       });
 
       // Validate scraped data
-      logger.info("Validating scraped data", { operationId });
+      logger.info('Validating scraped data', { operationId });
       const validationResult = validateScrapedData(scrapedData);
 
       if (!validationResult.success) {
-        logger.error("Data validation failed", {
+        logger.error('Data validation failed', {
           errors: validationResult.errors,
           operationId,
         });
@@ -67,22 +68,22 @@ export class ScraperService {
         );
       }
 
-      logger.info("Saving validated data to database", { operationId });
+      logger.info('Saving validated data to database', { operationId });
       // Save to database
       this.repository.saveScrapedData(scrapedData);
 
       // Clear cache after successful scrape
       this.cache.clear();
-      logger.info("Cache cleared after successful scrape", { operationId });
+      logger.info('Cache cleared after successful scrape', { operationId });
 
       const duration = timer.elapsed();
-      logger.endOperation("multi-service data scraping", duration, {
+      logger.endOperation('multi-provider data scraping', duration, {
         transactionCount: scrapedData.transactions?.length || 0,
         accountCount: scrapedData.accounts?.length || 0,
         operationId,
       });
     } catch (error) {
-      logger.errorOperation("multi-service data scraping", error as Error, {
+      logger.errorOperation('multi-provider data scraping', error as Error, {
         operationId,
         duration_ms: timer.elapsed(),
       });
@@ -91,49 +92,49 @@ export class ScraperService {
   }
 
   /**
-   * Scrape data from a specific service
+   * Scrape data from a specific provider
    */
-  async scrapeSingleServiceAndSave(service: ServiceType): Promise<void> {
+  async scrapeSingleProviderAndSave(provider: ProviderKey): Promise<void> {
     const timer = createTimer();
-    const operationId = `scrape-${service}-${Date.now()}`;
+    const operationId = `scrape-${provider}-${Date.now()}`;
 
     try {
-      logger.startOperation(`${service} data scraping`, {
-        service,
+      logger.startOperation(`${provider} data scraping`, {
+        provider,
         operationId,
       });
 
-      logger.info("Starting single service data scraping", {
-        service,
+      logger.info('Starting single provider data scraping', {
+        provider,
         operationId,
       });
-      // Scrape data from specific service
-      const scrapedData = await scrapeSingleService(service);
+      // Scrape data from specific provider
+      const scrapedData = await scrapeSingleProvider(provider);
 
-      logger.info("Single service data scraped", {
-        service,
+      logger.info('Single provider data scraped', {
+        provider,
         transactionCount: scrapedData.transactions?.length || 0,
         accountCount: scrapedData.accounts?.length || 0,
         operationId,
       });
 
-      logger.info("Saving single service data to database", {
-        service,
+      logger.info('Saving single provider data to database', {
+        provider,
         operationId,
       });
       // Save to database
       this.repository.saveScrapedData(scrapedData);
 
       const duration = timer.elapsed();
-      logger.endOperation(`${service} data scraping`, duration, {
-        service,
+      logger.endOperation(`${provider} data scraping`, duration, {
+        provider,
         transactionCount: scrapedData.transactions?.length || 0,
         accountCount: scrapedData.accounts?.length || 0,
         operationId,
       });
     } catch (error) {
-      logger.errorOperation(`${service} data scraping`, error as Error, {
-        service,
+      logger.errorOperation(`${provider} data scraping`, error as Error, {
+        provider,
         operationId,
         duration_ms: timer.elapsed(),
       });
@@ -142,40 +143,40 @@ export class ScraperService {
   }
 
   /**
-   * Force a fresh scrape of all services regardless of last scrape time
+   * Force a fresh scrape of all providers regardless of last scrape time
    */
   async forceScrape(): Promise<void> {
     const timer = createTimer();
     const operationId = `force-scrape-all-${Date.now()}`;
 
     try {
-      logger.startOperation("force scraping multi-service data", {
+      logger.startOperation('force scraping multi-provider data', {
         operationId,
       });
 
-      logger.info("Starting forced bank data scraping", { operationId });
-      // Scrape data from all services
+      logger.info('Starting forced bank data scraping', { operationId });
+      // Scrape data from all providers
       const scrapedData = await scrapeAllBankData();
 
-      logger.info("Forced bank data scraped successfully", {
+      logger.info('Forced bank data scraped successfully', {
         transactionCount: scrapedData.transactions?.length || 0,
         accountCount: scrapedData.accounts?.length || 0,
         operationId,
       });
 
-      logger.info("Saving forced scrape data to database", { operationId });
+      logger.info('Saving forced scrape data to database', { operationId });
       // Save to database
       this.repository.saveScrapedData(scrapedData);
 
       const duration = timer.elapsed();
-      logger.endOperation("force scraping multi-service data", duration, {
+      logger.endOperation('force scraping multi-provider data', duration, {
         transactionCount: scrapedData.transactions?.length || 0,
         accountCount: scrapedData.accounts?.length || 0,
         operationId,
       });
     } catch (error) {
       logger.errorOperation(
-        "force scraping multi-service data",
+        'force scraping multi-provider data',
         error as Error,
         {
           operationId,
@@ -187,49 +188,49 @@ export class ScraperService {
   }
 
   /**
-   * Force scrape a specific service
+   * Force scrape a specific provider
    */
-  async forceScrapeService(service: ServiceType): Promise<void> {
+  async forceScrapeProvider(provider: ProviderKey): Promise<void> {
     const timer = createTimer();
-    const operationId = `force-scrape-${service}-${Date.now()}`;
+    const operationId = `force-scrape-${provider}-${Date.now()}`;
 
     try {
-      logger.startOperation(`force scraping ${service} data`, {
-        service,
+      logger.startOperation(`force scraping ${provider} data`, {
+        provider,
         operationId,
       });
 
-      logger.info("Starting forced single service scraping", {
-        service,
+      logger.info('Starting forced single provider scraping', {
+        provider,
         operationId,
       });
-      // Scrape data from specific service
-      const scrapedData = await scrapeSingleService(service);
+      // Scrape data from specific provider
+      const scrapedData = await scrapeSingleProvider(provider);
 
-      logger.info("Forced single service data scraped", {
-        service,
+      logger.info('Forced single provider data scraped', {
+        provider,
         transactionCount: scrapedData.transactions?.length || 0,
         accountCount: scrapedData.accounts?.length || 0,
         operationId,
       });
 
-      logger.info("Saving forced single service data", {
-        service,
+      logger.info('Saving forced single provider data', {
+        provider,
         operationId,
       });
       // Save to database
       this.repository.saveScrapedData(scrapedData);
 
       const duration = timer.elapsed();
-      logger.endOperation(`force scraping ${service} data`, duration, {
-        service,
+      logger.endOperation(`force scraping ${provider} data`, duration, {
+        provider,
         transactionCount: scrapedData.transactions?.length || 0,
         accountCount: scrapedData.accounts?.length || 0,
         operationId,
       });
     } catch (error) {
-      logger.errorOperation(`force scraping ${service} data`, error as Error, {
-        service,
+      logger.errorOperation(`force scraping ${provider} data`, error as Error, {
+        provider,
         operationId,
         duration_ms: timer.elapsed(),
       });
@@ -248,7 +249,7 @@ export class ScraperService {
     const operationId = `financial-summary-${Date.now()}`;
 
     try {
-      logger.startOperation("generating financial summary", {
+      logger.startOperation('generating financial summary', {
         startDate: startDate?.toISOString(),
         endDate: endDate?.toISOString(),
         operationId,
@@ -259,29 +260,29 @@ export class ScraperService {
       const cached = this.cache.get<FinancialSummary>(cacheKey);
 
       if (cached) {
-        logger.info("Returning cached financial summary", {
+        logger.info('Returning cached financial summary', {
           transactionCount: cached.transactions.length,
           operationId,
         });
         return cached;
       }
 
-      logger.info("Fetching transactions from database", { operationId });
+      logger.info('Fetching transactions from database', { operationId });
       // Get transactions from database
       const transactions = this.repository.getTransactions(startDate, endDate);
 
-      logger.info("Processing transactions", {
+      logger.info('Processing transactions', {
         transactionCount: transactions.length,
         operationId,
       });
 
       // Process and analyze
       const processedTransactions = processTransactions(transactions);
-      logger.info("Analyzing financial trends", { operationId });
+      logger.info('Analyzing financial trends', { operationId });
       const trends = analyzeFinancialTrends(processedTransactions);
-      logger.info("Categorizing income", { operationId });
+      logger.info('Categorizing income', { operationId });
       const income = categorizeIncome(processedTransactions);
-      logger.info("Categorizing expenses", { operationId });
+      logger.info('Categorizing expenses', { operationId });
       const expenses = categorizeExpenses(processedTransactions);
 
       const summary: FinancialSummary = {
@@ -295,7 +296,7 @@ export class ScraperService {
       this.cache.set(cacheKey, summary, 10 * 60 * 1000); // 10 minutes
 
       const duration = timer.elapsed();
-      logger.endOperation("generating financial summary", duration, {
+      logger.endOperation('generating financial summary', duration, {
         transactionCount: processedTransactions.length,
         incomeCategories: Object.keys(income).length,
         expenseCategories: Object.keys(expenses).length,
@@ -304,7 +305,7 @@ export class ScraperService {
 
       return summary;
     } catch (error) {
-      logger.errorOperation("generating financial summary", error as Error, {
+      logger.errorOperation('generating financial summary', error as Error, {
         startDate: startDate?.toISOString(),
         endDate: endDate?.toISOString(),
         operationId,
@@ -325,7 +326,7 @@ export class ScraperService {
     const timer = createTimer();
     const operationId = `get-transactions-${Date.now()}`;
 
-    logger.startOperation("fetching transactions", {
+    logger.startOperation('fetching transactions', {
       startDate: options?.startDate?.toISOString(),
       endDate: options?.endDate?.toISOString(),
       accountId: options?.accountId,
@@ -342,7 +343,7 @@ export class ScraperService {
       const cached = this.cache.get<Transaction[]>(cacheKey);
 
       if (cached) {
-        logger.info("Returning cached transactions", {
+        logger.info('Returning cached transactions', {
           transactionCount: cached.length,
           operationId,
         });
@@ -360,14 +361,14 @@ export class ScraperService {
       this.cache.set(cacheKey, transactions, 5 * 60 * 1000); // 5 minutes
 
       const duration = timer.elapsed();
-      logger.endOperation("fetching transactions", duration, {
+      logger.endOperation('fetching transactions', duration, {
         transactionCount: transactions.length,
         operationId,
       });
 
       return transactions;
     } catch (error) {
-      logger.errorOperation("fetching transactions", error as Error, {
+      logger.errorOperation('fetching transactions', error as Error, {
         operationId,
         duration_ms: timer.elapsed(),
       });
@@ -382,7 +383,7 @@ export class ScraperService {
     const timer = createTimer();
     const operationId = `get-accounts-${Date.now()}`;
 
-    logger.startOperation("fetching accounts", { operationId });
+    logger.startOperation('fetching accounts', { operationId });
 
     try {
       // Check cache first
@@ -390,7 +391,7 @@ export class ScraperService {
       const cached = this.cache.get<any[]>(cacheKey);
 
       if (cached) {
-        logger.info("Returning cached accounts", {
+        logger.info('Returning cached accounts', {
           accountCount: cached.length,
           operationId,
         });
@@ -404,14 +405,14 @@ export class ScraperService {
       this.cache.set(cacheKey, accounts, 10 * 60 * 1000); // 10 minutes
 
       const duration = timer.elapsed();
-      logger.endOperation("fetching accounts", duration, {
+      logger.endOperation('fetching accounts', duration, {
         accountCount: accounts.length,
         operationId,
       });
 
       return accounts;
     } catch (error) {
-      logger.errorOperation("fetching accounts", error as Error, {
+      logger.errorOperation('fetching accounts', error as Error, {
         operationId,
         duration_ms: timer.elapsed(),
       });
@@ -426,7 +427,7 @@ export class ScraperService {
     const timer = createTimer();
     const operationId = `get-balance-history-${Date.now()}`;
 
-    logger.startOperation("fetching account balance history", {
+    logger.startOperation('fetching account balance history', {
       accountId,
       days,
       operationId,
@@ -436,7 +437,7 @@ export class ScraperService {
       const history = this.repository.getAccountBalanceHistory(accountId, days);
 
       const duration = timer.elapsed();
-      logger.endOperation("fetching account balance history", duration, {
+      logger.endOperation('fetching account balance history', duration, {
         accountId,
         days,
         historyPoints: history.length,
@@ -446,7 +447,7 @@ export class ScraperService {
       return history;
     } catch (error) {
       logger.errorOperation(
-        "fetching account balance history",
+        'fetching account balance history',
         error as Error,
         {
           accountId,
@@ -467,7 +468,7 @@ export class ScraperService {
     const dbRunning = this.repository.isScrapeRunning();
     const memoryRunning = this.scrapeStatusManager.isAnyScrapeRunning();
     const isRunning = dbRunning || memoryRunning;
-    logger.debug("Checked scrape running status", {
+    logger.debug('Checked scrape running status', {
       isRunning,
       dbRunning,
       memoryRunning,
@@ -480,7 +481,7 @@ export class ScraperService {
    */
   getLastScrapeInfo() {
     const info = this.repository.getLastScrapeInfo();
-    logger.debug("Retrieved last scrape info", {
+    logger.debug('Retrieved last scrape info', {
       lastScrapeAt: info?.lastScrapeAt,
       isRunning: info?.isRunning,
     });
@@ -488,56 +489,56 @@ export class ScraperService {
   }
 
   /**
-   * Start an async scrape of all services
+   * Start an async scrape of all providers
    * Returns immediately after starting the scrape
    */
   async startAsyncScrapeAll(): Promise<void> {
-    logger.info("Starting async scrape of all services");
+    logger.info('Starting async scrape of all providers');
 
     // Check if already scraping
-    if (this.scrapeStatusManager.isServiceScraping("all")) {
-      logger.warn("Scrape already in progress for all services");
+    if (this.scrapeStatusManager.isProviderScraping('all')) {
+      logger.warn('Scrape already in progress for all providers');
       return;
     }
 
-    this.scrapeStatusManager.startScrape("all");
+    this.scrapeStatusManager.startScrape('all');
 
     // Start the scrape in the background
     this.forceScrape()
       .then(() => {
-        logger.info("Async scrape of all services completed successfully");
-        this.scrapeStatusManager.completeScrape("all");
+        logger.info('Async scrape of all providers completed successfully');
+        this.scrapeStatusManager.completeScrape('all');
       })
-      .catch((error) => {
-        logger.error("Async scrape of all services failed", { error });
-        this.scrapeStatusManager.completeScrape("all", error);
+      .catch(error => {
+        logger.error('Async scrape of all providers failed', { error });
+        this.scrapeStatusManager.completeScrape('all', error);
       });
   }
 
   /**
-   * Start an async scrape of a specific service
+   * Start an async scrape of a specific provider
    * Returns immediately after starting the scrape
    */
-  async startAsyncScrapeService(service: ServiceType): Promise<void> {
-    logger.info(`Starting async scrape of ${service}`);
+  async startAsyncScrapeProvider(provider: ProviderKey): Promise<void> {
+    logger.info(`Starting async scrape of ${provider}`);
 
-    // Check if already scraping this service
-    if (this.scrapeStatusManager.isServiceScraping(service)) {
-      logger.warn(`Scrape already in progress for ${service}`);
+    // Check if already scraping this provider
+    if (this.scrapeStatusManager.isProviderScraping(provider)) {
+      logger.warn(`Scrape already in progress for ${provider}`);
       return;
     }
 
-    this.scrapeStatusManager.startScrape(service);
+    this.scrapeStatusManager.startScrape(provider);
 
     // Start the scrape in the background
-    this.forceScrapeService(service)
+    this.forceScrapeProvider(provider)
       .then(() => {
-        logger.info(`Async scrape of ${service} completed successfully`);
-        this.scrapeStatusManager.completeScrape(service);
+        logger.info(`Async scrape of ${provider} completed successfully`);
+        this.scrapeStatusManager.completeScrape(provider);
       })
-      .catch((error) => {
-        logger.error(`Async scrape of ${service} failed`, { error });
-        this.scrapeStatusManager.completeScrape(service, error);
+      .catch(error => {
+        logger.error(`Async scrape of ${provider} failed`, { error });
+        this.scrapeStatusManager.completeScrape(provider, error);
       });
   }
 
@@ -559,12 +560,12 @@ export class ScraperService {
    * Clean up resources
    */
   async close(): Promise<void> {
-    logger.info("Closing ScraperService and cleaning up resources");
+    logger.info('Closing ScraperService and cleaning up resources');
     try {
       await this.repository.close();
-      logger.info("ScraperService closed successfully");
+      logger.info('ScraperService closed successfully');
     } catch (error) {
-      logger.error("Error while closing ScraperService", { error });
+      logger.error('Error while closing ScraperService', { error });
       throw error;
     }
   }

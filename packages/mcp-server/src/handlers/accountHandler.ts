@@ -1,11 +1,11 @@
-import { BaseHandler } from "./base.js";
+import { BaseHandler } from './base.js';
 import {
   AccountsResponse,
   BalanceHistoryArgs,
   BalanceHistoryResponse,
   DEFAULT_BALANCE_HISTORY_DAYS,
-} from "../types.js";
-import { logger } from "../utils/logger.js";
+} from '../types.js';
+import { logger } from '../utils/logger.js';
 
 export class AccountHandler extends BaseHandler {
   async getAccounts() {
@@ -13,7 +13,7 @@ export class AccountHandler extends BaseHandler {
 
     // If no accounts found, trigger an async scrape
     if (accounts.length === 0) {
-      logger.info("No accounts found, triggering async scrape...");
+      logger.info('No accounts found, triggering async scrape...');
       await this.scraperService.startAsyncScrapeAll();
 
       // Don't retry immediately since scraping is async
@@ -33,7 +33,7 @@ export class AccountHandler extends BaseHandler {
 
   async getAccountBalanceHistory(args: BalanceHistoryArgs) {
     if (!args.accountId) {
-      throw new Error("accountId is required");
+      throw new Error('accountId is required');
     }
 
     const history = await this.scraperService.getAccountBalanceHistory(

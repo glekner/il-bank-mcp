@@ -1,5 +1,5 @@
-import { BaseHandler } from "./base.js";
-import { ScrapeStatusResponse } from "../types.js";
+import { BaseHandler } from './base.js';
+import { ScrapeStatusResponse } from '../types.js';
 
 export class StatusHandler extends BaseHandler {
   async getScrapeStatus() {
@@ -14,8 +14,8 @@ export class StatusHandler extends BaseHandler {
       transactionsCount: status.transactionsCount,
       accountsCount: status.accountsCount,
       error: status.error,
-      activeScrapes: status.activeScrapes?.map((s) => ({
-        service: s.service,
+      activeScrapes: status.activeScrapes?.map(s => ({
+        provider: s.provider,
         startedAt: s.startedAt.toISOString(),
         status: s.status,
       })),

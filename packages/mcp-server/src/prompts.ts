@@ -1,4 +1,4 @@
-import type { Prompt } from "@modelcontextprotocol/sdk/types.js";
+import type { Prompt } from '@modelcontextprotocol/sdk/types.js';
 
 export const FINANCIAL_ADVISOR_PROMPT = `You are the Israeli Bank Assistant, a sophisticated financial advisory AI powered by real-time bank and credit card data from Israeli financial institutions.
 
@@ -52,89 +52,89 @@ Remember: You're not just a data retrieval tool - you're a trusted financial adv
 
 export const PROMPTS: Record<string, Prompt> = {
   financial_advisor_context: {
-    name: "financial_advisor_context",
+    name: 'financial_advisor_context',
     description:
-      "Activate the full financial advisor persona with comprehensive context about your capabilities and approach",
+      'Activate the full financial advisor persona with comprehensive context about your capabilities and approach',
     arguments: [],
   },
   financial_review: {
-    name: "financial_review",
-    description: "Comprehensive monthly financial review and recommendations",
+    name: 'financial_review',
+    description: 'Comprehensive monthly financial review and recommendations',
     arguments: [
       {
-        name: "month",
-        description: "Month to review (YYYY-MM format)",
+        name: 'month',
+        description: 'Month to review (YYYY-MM format)',
         required: false,
       },
     ],
   },
   budget_planning: {
-    name: "budget_planning",
+    name: 'budget_planning',
     description:
-      "Create a personalized budget plan based on income and spending patterns",
+      'Create a personalized budget plan based on income and spending patterns',
     arguments: [
       {
-        name: "savings_goal_percentage",
-        description: "Desired savings percentage (0-100)",
+        name: 'savings_goal_percentage',
+        description: 'Desired savings percentage (0-100)',
         required: false,
       },
       {
-        name: "focus_categories",
-        description: "Comma-separated spending categories to optimize",
+        name: 'focus_categories',
+        description: 'Comma-separated spending categories to optimize',
         required: false,
       },
     ],
   },
   subscription_audit: {
-    name: "subscription_audit",
+    name: 'subscription_audit',
     description:
-      "Comprehensive audit of all recurring charges and subscriptions",
+      'Comprehensive audit of all recurring charges and subscriptions',
     arguments: [],
   },
   spending_optimization: {
-    name: "spending_optimization",
+    name: 'spending_optimization',
     description:
-      "Analyze spending patterns and suggest optimization strategies",
+      'Analyze spending patterns and suggest optimization strategies',
     arguments: [
       {
-        name: "time_period_days",
-        description: "Number of days to analyze (default: 30)",
+        name: 'time_period_days',
+        description: 'Number of days to analyze (default: 30)',
         required: false,
       },
     ],
   },
   fraud_detection: {
-    name: "fraud_detection",
-    description: "Scan for suspicious transactions and potential fraud",
+    name: 'fraud_detection',
+    description: 'Scan for suspicious transactions and potential fraud',
     arguments: [
       {
-        name: "sensitivity",
+        name: 'sensitivity',
         description:
-          "Detection sensitivity: low, medium, or high (default: medium)",
+          'Detection sensitivity: low, medium, or high (default: medium)',
         required: false,
       },
     ],
   },
   tax_preparation: {
-    name: "tax_preparation",
-    description: "Generate tax-relevant summaries and deduction opportunities",
+    name: 'tax_preparation',
+    description: 'Generate tax-relevant summaries and deduction opportunities',
     arguments: [
       {
-        name: "tax_year",
-        description: "Tax year to prepare for (YYYY format)",
+        name: 'tax_year',
+        description: 'Tax year to prepare for (YYYY format)',
         required: false,
       },
     ],
   },
   emergency_fund_analysis: {
-    name: "emergency_fund_analysis",
-    description: "Analyze emergency fund adequacy and savings recommendations",
+    name: 'emergency_fund_analysis',
+    description: 'Analyze emergency fund adequacy and savings recommendations',
     arguments: [],
   },
   debt_optimization: {
-    name: "debt_optimization",
+    name: 'debt_optimization',
     description:
-      "Analyze credit card usage and suggest debt reduction strategies",
+      'Analyze credit card usage and suggest debt reduction strategies',
     arguments: [],
   },
 };
@@ -145,21 +145,21 @@ export const PROMPT_TEMPLATES: Record<
 > = {
   financial_advisor_context: () => [
     {
-      role: "user",
+      role: 'user',
       content: {
-        type: "text",
+        type: 'text',
         text: FINANCIAL_ADVISOR_PROMPT,
       },
     },
   ],
 
   financial_review: (args: { month?: string }) => {
-    const month = args.month || "the current month";
+    const month = args.month || 'the current month';
     return [
       {
-        role: "user",
+        role: 'user',
         content: {
-          type: "text",
+          type: 'text',
           text: `Please provide a comprehensive financial review for ${month}. Include:
           
 1. Overall financial summary and health score
@@ -183,14 +183,14 @@ export const PROMPT_TEMPLATES: Record<
   }) => {
     const savingsGoal = args.savings_goal_percentage
       ? `${args.savings_goal_percentage}%`
-      : "an appropriate amount";
-    const categories = args.focus_categories || "all categories";
+      : 'an appropriate amount';
+    const categories = args.focus_categories || 'all categories';
 
     return [
       {
-        role: "user",
+        role: 'user',
         content: {
-          type: "text",
+          type: 'text',
           text: `Create a personalized budget plan with the following requirements:
 
 - Target savings: ${savingsGoal} of income
@@ -209,9 +209,9 @@ Please analyze my income and spending patterns, then provide:
 
   subscription_audit: () => [
     {
-      role: "user",
+      role: 'user',
       content: {
-        type: "text",
+        type: 'text',
         text: `Perform a comprehensive audit of all my recurring charges and subscriptions:
 
 1. List all detected recurring charges
@@ -227,13 +227,13 @@ Please analyze my income and spending patterns, then provide:
   ],
 
   spending_optimization: (args: { time_period_days?: string }) => {
-    const days = args.time_period_days || "30";
+    const days = args.time_period_days || '30';
 
     return [
       {
-        role: "user",
+        role: 'user',
         content: {
-          type: "text",
+          type: 'text',
           text: `Analyze my spending over the last ${days} days and provide optimization strategies:
 
 1. Identify top spending categories and patterns
@@ -250,13 +250,13 @@ Please analyze my income and spending patterns, then provide:
   },
 
   fraud_detection: (args: { sensitivity?: string }) => {
-    const sensitivity = args.sensitivity || "medium";
+    const sensitivity = args.sensitivity || 'medium';
 
     return [
       {
-        role: "user",
+        role: 'user',
         content: {
-          type: "text",
+          type: 'text',
           text: `Perform a ${sensitivity}-sensitivity fraud detection scan on my recent transactions:
 
 1. Identify unusual transaction patterns or amounts
@@ -277,9 +277,9 @@ Please analyze my income and spending patterns, then provide:
 
     return [
       {
-        role: "user",
+        role: 'user',
         content: {
-          type: "text",
+          type: 'text',
           text: `Help me prepare for ${year} taxes with a comprehensive analysis:
 
 1. Categorize all transactions by tax relevance
@@ -298,9 +298,9 @@ Please analyze my income and spending patterns, then provide:
 
   emergency_fund_analysis: () => [
     {
-      role: "user",
+      role: 'user',
       content: {
-        type: "text",
+        type: 'text',
         text: `Analyze my emergency fund readiness and provide recommendations:
 
 1. Calculate my average monthly essential expenses
@@ -318,9 +318,9 @@ Please analyze my income and spending patterns, then provide:
 
   debt_optimization: () => [
     {
-      role: "user",
+      role: 'user',
       content: {
-        type: "text",
+        type: 'text',
         text: `Analyze my credit card usage and create a debt optimization strategy:
 
 1. List all credit cards with current balances and limits

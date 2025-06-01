@@ -2072,6 +2072,17 @@ __metadata:
   languageName: node
   linkType: hard
 
+"il-bank-mcp@workspace:.":
+  version: 0.0.0-use.local
+  resolution: "il-bank-mcp@workspace:."
+  dependencies:
+    eslint: "npm:^9.28.0"
+    prettier: "npm:^3.5.3"
+    turbo: "npm:^2.5.4"
+    typescript: "npm:^5.8.3"
+  languageName: unknown
+  linkType: soft
+
 "import-fresh@npm:^3.2.1, import-fresh@npm:^3.3.0":
   version: 3.3.1
   resolution: "import-fresh@npm:3.3.1"
@@ -2184,17 +2195,6 @@ __metadata:
   checksum: 10/7fe1931ee4e88eb5aa524cd3ceb8c882537bc3a81b02e438b240e47012eef49c86904d0f0e593ea7c3a9996d18d0f1f3be8d3eaa92333977b0c3a9d353d5563e
   languageName: node
   linkType: hard
-
-"israeli-bank-scraper-mcp@workspace:.":
-  version: 0.0.0-use.local
-  resolution: "israeli-bank-scraper-mcp@workspace:."
-  dependencies:
-    eslint: "npm:^9.28.0"
-    prettier: "npm:^3.5.3"
-    turbo: "npm:^2.5.4"
-    typescript: "npm:^5.8.3"
-  languageName: unknown
-  linkType: soft
 
 "israeli-bank-scrapers@npm:^6.1.2":
   version: 6.1.2

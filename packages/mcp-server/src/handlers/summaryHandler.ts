@@ -1,6 +1,6 @@
-import { BaseHandler } from "./base.js";
-import { SummaryArgs, SummaryResponse } from "../types.js";
-import { logger } from "../utils/logger.js";
+import { BaseHandler } from './base.js';
+import { SummaryArgs, SummaryResponse } from '../types.js';
+import { logger } from '../utils/logger.js';
 
 export class SummaryHandler extends BaseHandler {
   async getFinancialSummary(args: SummaryArgs) {
@@ -14,7 +14,7 @@ export class SummaryHandler extends BaseHandler {
 
     // If summary is empty, trigger an async scrape
     if (this.isSummaryEmpty(summary)) {
-      logger.info("Financial summary is empty, triggering async scrape...");
+      logger.info('Financial summary is empty, triggering async scrape...');
       await this.scraperService.startAsyncScrapeAll();
 
       // Don't retry immediately since scraping is async

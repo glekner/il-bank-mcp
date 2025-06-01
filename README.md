@@ -1,24 +1,55 @@
 # Israeli Bank Scraper MCP Server
 
-A powerful Model Context Protocol (MCP) server that provides financial data access through automated Israeli bank and credit card data scraping.
+A powerful Model Context Protocol (MCP) server that provides financial data access through automated Israeli bank and credit card data scraping. Supports all major Israeli financial institutions dynamically based on your configuration.
 
 ## 🚀 What Makes This Special
 
 This is a comprehensive financial data platform that:
 
-- 🏦 **Scrapes your bank and credit card data** automatically
-- 💳 **Analyzes monthly credit card spending** with detailed summaries
+- 🏦 **Scrapes data from ANY Israeli bank or credit card** - automatically detects configured providers
+- 💳 **Analyzes monthly credit card spending** with detailed summaries across all your cards
 - 🔄 **Detects recurring charges** to help identify subscriptions
 - 💾 **Stores data locally** in a secure SQLite database
+- 🎯 **Zero configuration** - just set credentials for the providers you use
 
 ## Features
 
 ### Core Banking Features
 
-- 🏦 Multi-service support: Bank Leumi, Visa Cal, and Max (formerly Leumi Card)
-- 🔄 Automated bank and credit card data scraping using [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers)
-- 💾 Local SQLite database for secure data persistence
-- 🐳 Docker support for easy deployment
+- 🏦 **Universal Support**: Works with all major Israeli banks and credit card companies
+- 🔍 **Dynamic Provider Detection**: Automatically detects which providers you've configured
+- 🔄 **Parallel Scraping**: Scrapes multiple providers simultaneously for efficiency
+- 💾 **Local SQLite database** for secure data persistence
+- 🐳 **Docker support** for easy deployment
+
+### Supported Providers
+
+#### Banks
+
+- Bank Hapoalim
+- Bank Leumi
+- Discount Bank
+- Mercantile Bank
+- Mizrahi Bank
+- Bank Otsar Hahayal
+- Union Bank
+- Beinleumi
+- Yahav
+
+#### Credit Cards
+
+- Visa Cal
+- Max (Leumi Card)
+- Isracard
+- American Express
+
+#### Other Providers
+
+- Massad
+- Beyhad Bishvilha
+- OneZero (Experimental)
+- Behatsdaa
+- Pagi
 
 ### MCP Server Capabilities
 
@@ -125,7 +156,7 @@ The project is organized as a monorepo with two main packages:
 
 ```bash
 git clone <your-repo-url>
-cd mcp-scraper
+cd il-bank-mcp
 ```
 
 2. Install dependencies:
@@ -140,29 +171,25 @@ yarn install
 cp env.example .env
 ```
 
-Edit `.env` and add your credentials:
+Edit `.env` and add credentials for the providers you use. The system will automatically detect which providers to scrape based on the credentials you provide:
 
 ```env
-# Bank Leumi Credentials
-BANK_LEUMI_USERNAME=your_username_here
-BANK_LEUMI_PASSWORD=your_password_here
+# Example: Configure only the providers you use
 
-# Visa Cal Credentials
-VISA_CAL_USERNAME=your_username_here
-VISA_CAL_PASSWORD=your_password_here
+# Bank Leumi
+LEUMI_USERNAME=your_username
+LEUMI_PASSWORD=your_password
 
-# Max (Leumi Card) Credentials
-MAX_USERNAME=your_username_here
-MAX_PASSWORD=your_password_here
+# Visa Cal
+VISA_CAL_USERNAME=your_username
+VISA_CAL_PASSWORD=your_password
 
-# Scraping Configuration
-SCRAPE_MONTHS_BACK=3
-SCRAPE_CRON_SCHEDULE=0 */6 * * *
+# Isracard
+ISRACARD_ID=your_id
+ISRACARD_CARD6DIGITS=last_6_digits
+ISRACARD_PASSWORD=your_password
 
-# Query Configuration (optional)
-# Comma-separated list of account IDs to ignore when querying (does not affect scraping)
-# Example: IGNORED_ACCOUNT_IDS=account1,account2,account3
-IGNORED_ACCOUNT_IDS=
+# See env.example for all available providers and their required fields
 ```
 
 4. Install Chrome for puppeteer:
@@ -212,14 +239,17 @@ yarn build
   "mcpServers": {
     "israeli-bank-assistant": {
       "command": "node",
-      "args": ["/path/to/mcp-scraper/packages/mcp-server/dist/index.js"],
+      "args": ["/path/to/il-bank-mcp/packages/mcp-server/dist/index.js"],
       "env": {
-        "BANK_LEUMI_USERNAME": "your_username",
-        "BANK_LEUMI_PASSWORD": "your_password",
+        // Add only the providers you use
+        "LEUMI_USERNAME": "your_username",
+        "LEUMI_PASSWORD": "your_password",
         "VISA_CAL_USERNAME": "your_username",
         "VISA_CAL_PASSWORD": "your_password",
-        "MAX_USERNAME": "your_username",
-        "MAX_PASSWORD": "your_password"
+        "ISRACARD_ID": "your_id",
+        "ISRACARD_CARD6DIGITS": "last_6_digits",
+        "ISRACARD_PASSWORD": "your_password"
+        // Add more providers as needed
       }
     }
   }
@@ -234,49 +264,74 @@ Build and run with Docker:
 # Build the image
 docker build -t israeli-bank-scraper .
 
-# Run the container
+# Run the container (example with multiple providers)
 docker run -d \
-  -e BANK_LEUMI_USERNAME=your_username \
-  -e BANK_LEUMI_PASSWORD=your_password \
+  -e LEUMI_USERNAME=your_username \
+  -e LEUMI_PASSWORD=your_password \
+  -e HAPOALIM_USERCODE=your_code \
+  -e HAPOALIM_PASSWORD=your_password \
   -e VISA_CAL_USERNAME=your_username \
   -e VISA_CAL_PASSWORD=your_password \
-  -e MAX_USERNAME=your_username \
-  -e MAX_PASSWORD=your_password \
+  -e ISRACARD_ID=your_id \
+  -e ISRACARD_CARD6DIGITS=last_6_digits \
+  -e ISRACARD_PASSWORD=your_password \
   -v $(pwd)/data:/app/data \
   israeli-bank-scraper
 ```
+
+## Dynamic Provider Configuration
+
+The system automatically detects which providers to use based on environment variables. Each provider has a specific pattern:
+
+### Banks
+
+- **Bank Hapoalim**: `HAPOALIM_USERCODE`, `HAPOALIM_PASSWORD`
+- **Bank Leumi**: `LEUMI_USERNAME`, `LEUMI_PASSWORD`
+- **Discount**: `DISCOUNT_ID`, `DISCOUNT_PASSWORD`, `DISCOUNT_NUM`
+- **Mizrahi**: `MIZRAHI_USERNAME`, `MIZRAHI_PASSWORD`
+- And more...
+
+### Credit Cards
+
+- **Visa Cal**: `VISA_CAL_USERNAME`, `VISA_CAL_PASSWORD`
+- **Max**: `MAX_USERNAME`, `MAX_PASSWORD`
+- **Isracard**: `ISRACARD_ID`, `ISRACARD_CARD6DIGITS`, `ISRACARD_PASSWORD`
+- **Amex**: `AMEX_USERNAME`, `AMEX_CARD6DIGITS`, `AMEX_PASSWORD`
+
+See `env.example` for the complete list of supported providers and their required credentials.
 
 ## Development
 
 ### Project Structure
 
 ```
-mcp-scraper/
+il-bank-mcp/
 ├── packages/
-│   ├── scraper/          # Bank scraping service
+│   ├── scraper/             # Bank scraping service
 │   │   ├── src/
-│   │   │   ├── scrapers/  # Individual service scrapers
-│   │   │   ├── services/  # Business logic
-│   │   │   ├── database/  # Data persistence
-│   │   │   └── utils/     # Utilities
+│   │   │   ├── scrapers/    # Generic scraper implementation
+│   │   │   ├── utils/       # Provider detection & configuration
+│   │   │   ├── services/    # Business logic
+│   │   │   ├── database/    # Data persistence
+│   │   │   └── analyzers/   # Financial analysis
 │   │   └── package.json
-│   └── mcp-server/       # MCP server
+│   └── mcp-server/          # MCP server
 │       ├── src/
 │       └── package.json
 ├── docker-compose.yml
 ├── Dockerfile
-└── package.json          # Root workspace config
+└── package.json             # Root workspace config
 ```
 
-### Adding New Services
+### Adding New Providers
 
-To add support for a new bank or credit card:
+The system uses the [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers) library. When new providers are added to that library, you can easily add support by:
 
-1. Create a new scraper in `packages/scraper/src/scrapers/`
-2. Implement the `BaseScraper` interface
-3. Add the service type to `types.ts`
-4. Update the credentials loader
-5. Add environment variables to `.env.example`
+1. Adding the provider configuration to `PROVIDER_CONFIG` in `packages/scraper/src/utils/providers.ts`
+2. Adding appropriate TypeScript types if the provider needs special credentials
+3. Updating the documentation
+
+The system will automatically detect and use the new provider when its environment variables are set.
 
 ## Troubleshooting
 
@@ -301,6 +356,13 @@ If running in Docker, ensure the data directory has proper permissions:
 chmod -R 777 ./data
 ```
 
+### Provider Detection
+
+To see which providers are detected:
+
+- Check the logs when starting the scraper
+- The system will log: "Detected configured provider: [Provider Name]"
+
 ## Configuration Options
 
 ### Ignoring Accounts in Queries
@@ -322,12 +384,23 @@ When accounts are ignored:
 
 To find account IDs, first run the scraper without any ignored accounts and check the account IDs in the results.
 
+### Scraping Configuration
+
+```bash
+# Number of months to scrape backward (default: 3)
+SCRAPE_MONTHS_BACK=3
+
+# Cron schedule for automatic scraping (default: every 6 hours)
+SCRAPE_CRON_SCHEDULE=0 */6 * * *
+```
+
 ## Security Notes
 
 - Credentials are stored in environment variables or a local config file
 - The SQLite database is stored locally in the `data/` directory
 - Never commit credentials to version control
 - Use strong, unique passwords for your bank accounts
+- The system only scrapes providers you explicitly configure
 
 ## Contributing
 

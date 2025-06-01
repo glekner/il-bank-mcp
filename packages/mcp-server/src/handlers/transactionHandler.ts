@@ -1,5 +1,5 @@
-import { BaseHandler } from "./base.js";
-import { TransactionArgs, TransactionResponse } from "../types.js";
+import { BaseHandler } from './base.js';
+import { TransactionArgs, TransactionResponse } from '../types.js';
 
 export class TransactionHandler extends BaseHandler {
   async getTransactions(args: TransactionArgs) {

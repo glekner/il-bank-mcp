@@ -1,38 +1,35 @@
-import {
-  ScrapedAccountData,
-  ServiceType,
-  MultiServiceCredentials,
-} from "./types";
+import { createScraperInstance } from './scrapers';
+import { MultiProviderCredentials, ScrapedAccountData } from './types';
 import {
   loadAllCredentials,
-  loadServiceCredentials,
-} from "./utils/credentials";
-import { logger } from "./utils/logger";
-import { createScraperInstance } from "./scrapers";
+  loadProviderCredentials,
+} from './utils/credentials';
+import { logger } from './utils/logger';
+import type { ProviderKey } from './utils/providers';
 
 /**
- * Scrapes financial data from all configured services in parallel
+ * Scrapes financial data from all configured providers in parallel
  * @returns Promise resolving to the combined scraped data
  */
 export async function scrapeAllBankData(): Promise<ScrapedAccountData> {
   try {
-    logger.info("Starting multi-service scraping process");
+    logger.info('Starting multi-provider scraping process');
     const credentials = loadAllCredentials();
 
-    // Get list of services to scrape from credentials
-    const services = Object.keys(credentials) as ServiceType[];
+    // Get list of providers to scrape from credentials
+    const providers = Object.keys(credentials) as ProviderKey[];
     logger.info(
-      `Found credentials for ${services.length} services: ${services.join(", ")}`
+      `Found credentials for ${providers.length} providers: ${providers.join(', ')}`
     );
 
-    // Create scraping promises for all services
-    const scrapePromises = services.map(async (service) => {
+    // Create scraping promises for all providers
+    const scrapePromises = providers.map(async provider => {
       try {
-        logger.info(`Starting async scrape for ${service}...`);
-        const scraper = createScraperInstance(service, credentials);
+        logger.info(`Starting async scrape for ${provider}...`);
+        const scraper = createScraperInstance(provider, credentials);
 
         if (!scraper) {
-          logger.warn(`No scraper available for ${service}`);
+          logger.warn(`No scraper available for ${provider}`);
           return null;
         }
 
@@ -41,13 +38,13 @@ export async function scrapeAllBankData(): Promise<ScrapedAccountData> {
         const duration = Date.now() - startTime;
 
         logger.info(
-          `Successfully scraped ${service} in ${duration}ms: ${result.accounts.length} accounts, ${result.transactions.length} transactions`
+          `Successfully scraped ${provider} in ${duration}ms: ${result.accounts.length} accounts, ${result.transactions.length} transactions`
         );
 
-        return { service, result };
+        return { provider, result };
       } catch (error) {
-        logger.error(`Failed to scrape ${service}`, { error });
-        return { service, error };
+        logger.error(`Failed to scrape ${provider}`, { error });
+        return { provider, error };
       }
     });
 
@@ -57,36 +54,36 @@ export async function scrapeAllBankData(): Promise<ScrapedAccountData> {
     const allAccounts: any[] = [];
     const allTransactions: any[] = [];
     const allRawData: any[] = [];
-    const errors: { service: string; error: any }[] = [];
+    const errors: { provider: string; error: any }[] = [];
 
     // Process results
     scrapeResults.forEach((result, index) => {
-      if (result.status === "fulfilled" && result.value) {
-        if ("result" in result.value && result.value.result) {
-          const { service, result: scrapedData } = result.value;
+      if (result.status === 'fulfilled' && result.value) {
+        if ('result' in result.value && result.value.result) {
+          const { provider, result: scrapedData } = result.value;
           allAccounts.push(...scrapedData.accounts);
           allTransactions.push(...scrapedData.transactions);
-          allRawData.push({ service, data: scrapedData.rawData });
-        } else if ("error" in result.value) {
-          errors.push(result.value as { service: string; error: any });
+          allRawData.push({ provider, data: scrapedData.rawData });
+        } else if ('error' in result.value) {
+          errors.push(result.value as { provider: string; error: any });
         }
-      } else if (result.status === "rejected") {
-        logger.error(`Promise rejected for service ${services[index]}`, {
+      } else if (result.status === 'rejected') {
+        logger.error(`Promise rejected for provider ${providers[index]}`, {
           reason: result.reason,
         });
-        errors.push({ service: services[index], error: result.reason });
+        errors.push({ provider: providers[index], error: result.reason });
       }
     });
 
     // Log errors summary
     if (errors.length > 0) {
       logger.warn(`Scraping completed with ${errors.length} failures`, {
-        failedServices: errors.map((e) => e.service),
+        failedProviders: errors.map(e => e.provider),
       });
     }
 
     if (allAccounts.length === 0) {
-      throw new Error("No accounts found from any service");
+      throw new Error('No accounts found from any provider');
     }
 
     logger.info(
@@ -100,48 +97,48 @@ export async function scrapeAllBankData(): Promise<ScrapedAccountData> {
       scrapedAt: new Date(),
     };
   } catch (error) {
-    logger.error("Error during multi-service scraping process", { error });
+    logger.error('Error during multi-provider scraping process', { error });
     throw new Error(
-      `Multi-service scraping error: ${error instanceof Error ? error.message : String(error)}`
+      `Multi-provider scraping error: ${error instanceof Error ? error.message : String(error)}`
     );
   }
 }
 
 /**
- * Scrapes financial data from a specific service
- * @param service The service to scrape
+ * Scrapes financial data from a specific provider
+ * @param provider The provider to scrape
  * @returns Promise resolving to the scraped data
  */
-export async function scrapeSingleService(
-  service: ServiceType
+export async function scrapeSingleProvider(
+  provider: ProviderKey
 ): Promise<ScrapedAccountData> {
   try {
-    logger.info(`Starting single service scraping for ${service}`);
+    logger.info(`Starting single provider scraping for ${provider}`);
 
-    const credentials = loadServiceCredentials(service);
+    const credentials = loadProviderCredentials(provider);
     if (!credentials) {
-      throw new Error(`No credentials found for ${service}`);
+      throw new Error(`No credentials found for ${provider}`);
     }
 
-    const allCredentials: MultiServiceCredentials = {
-      [service]: credentials,
-    } as MultiServiceCredentials;
+    const allCredentials: MultiProviderCredentials = {
+      [provider]: credentials,
+    } as MultiProviderCredentials;
 
-    const scraper = createScraperInstance(service, allCredentials);
+    const scraper = createScraperInstance(provider, allCredentials);
     if (!scraper) {
-      throw new Error(`No scraper implementation found for ${service}`);
+      throw new Error(`No scraper implementation found for ${provider}`);
     }
 
     const result = await scraper.scrape();
     logger.info(
-      `Successfully scraped ${service}: ${result.accounts.length} accounts, ${result.transactions.length} transactions`
+      `Successfully scraped ${provider}: ${result.accounts.length} accounts, ${result.transactions.length} transactions`
     );
 
     return result;
   } catch (error) {
-    logger.error(`Error during ${service} scraping process`, { error });
+    logger.error(`Error during ${provider} scraping process`, { error });
     throw new Error(
-      `${service} scraping error: ${error instanceof Error ? error.message : String(error)}`
+      `${provider} scraping error: ${error instanceof Error ? error.message : String(error)}`
     );
   }
 }

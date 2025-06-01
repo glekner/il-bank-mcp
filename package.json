@@ -1,8 +1,7 @@
 {
-  "name": "israeli-bank-scraper-mcp",
-  "version": "2.0.0",
+  "name": "il-bank-mcp",
+  "version": "0.0.1",
   "description": "MCP server for scraping Israeli banks and credit cards data",
-  "private": true,
   "workspaces": [
     "packages/*"
   ],

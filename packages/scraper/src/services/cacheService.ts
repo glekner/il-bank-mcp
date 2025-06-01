@@ -1,6 +1,6 @@
-import { createComponentLogger } from "../utils/logger";
+import { createComponentLogger } from '../utils/logger';
 
-const logger = createComponentLogger("CacheService");
+const logger = createComponentLogger('CacheService');
 
 interface CacheItem<T> {
   data: T;
@@ -15,7 +15,7 @@ export class CacheService {
     // 5 minutes default
     // Cleanup expired items every minute
     this.cleanupInterval = setInterval(() => this.cleanup(), 60 * 1000);
-    logger.info("Cache service initialized", { defaultTTL });
+    logger.info('Cache service initialized', { defaultTTL });
   }
 
   /**
@@ -25,17 +25,17 @@ export class CacheService {
     const item = this.cache.get(key);
 
     if (!item) {
-      logger.debug("Cache miss", { key });
+      logger.debug('Cache miss', { key });
       return null;
     }
 
     if (item.expires < Date.now()) {
-      logger.debug("Cache expired", { key });
+      logger.debug('Cache expired', { key });
       this.cache.delete(key);
       return null;
     }
 
-    logger.debug("Cache hit", { key });
+    logger.debug('Cache hit', { key });
     return item.data as T;
   }
 
@@ -45,7 +45,7 @@ export class CacheService {
   set<T>(key: string, data: T, ttl?: number): void {
     const expires = Date.now() + (ttl || this.defaultTTL);
     this.cache.set(key, { data, expires });
-    logger.debug("Cache set", { key, ttl: ttl || this.defaultTTL });
+    logger.debug('Cache set', { key, ttl: ttl || this.defaultTTL });
   }
 
   /**
@@ -54,7 +54,7 @@ export class CacheService {
   delete(key: string): boolean {
     const result = this.cache.delete(key);
     if (result) {
-      logger.debug("Cache item deleted", { key });
+      logger.debug('Cache item deleted', { key });
     }
     return result;
   }
@@ -65,7 +65,7 @@ export class CacheService {
   clear(): void {
     const size = this.cache.size;
     this.cache.clear();
-    logger.info("Cache cleared", { itemsCleared: size });
+    logger.info('Cache cleared', { itemsCleared: size });
   }
 
   /**
@@ -93,7 +93,7 @@ export class CacheService {
     }
 
     if (cleaned > 0) {
-      logger.debug("Cache cleanup completed", { itemsCleaned: cleaned });
+      logger.debug('Cache cleanup completed', { itemsCleaned: cleaned });
     }
   }
 
@@ -103,7 +103,7 @@ export class CacheService {
   destroy(): void {
     clearInterval(this.cleanupInterval);
     this.clear();
-    logger.info("Cache service destroyed");
+    logger.info('Cache service destroyed');
   }
 }
 
@@ -119,21 +119,21 @@ export function getCacheService(): CacheService {
 
 // Cache key generators
 export const CacheKeys = {
-  accounts: () => "accounts:all",
+  accounts: () => 'accounts:all',
   transactions: (startDate?: Date, endDate?: Date, accountId?: string) => {
-    const parts = ["transactions"];
+    const parts = ['transactions'];
     if (startDate) parts.push(`start:${startDate.toISOString()}`);
     if (endDate) parts.push(`end:${endDate.toISOString()}`);
     if (accountId) parts.push(`account:${accountId}`);
-    return parts.join(":");
+    return parts.join(':');
   },
   financialSummary: (startDate?: Date, endDate?: Date) => {
-    const parts = ["summary"];
+    const parts = ['summary'];
     if (startDate) parts.push(`start:${startDate.toISOString()}`);
     if (endDate) parts.push(`end:${endDate.toISOString()}`);
-    return parts.join(":");
+    return parts.join(':');
   },
   balanceHistory: (accountId: string, days: number) =>
     `balance:${accountId}:days:${days}`,
-  lastScrape: () => "metadata:lastScrape",
+  lastScrape: () => 'metadata:lastScrape',
 };

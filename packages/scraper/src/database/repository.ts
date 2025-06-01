@@ -1,7 +1,7 @@
-import Database from "better-sqlite3";
-import { Transaction, Account, ScrapedAccountData } from "../types";
-import { getDatabase } from "./schema";
-import { logger } from "../utils/logger";
+import Database from 'better-sqlite3';
+import { Transaction, Account, ScrapedAccountData } from '../types';
+import { getDatabase } from './schema';
+import { logger } from '../utils/logger';
 
 export class BankDataRepository {
   private db: Database.Database;
@@ -16,14 +16,14 @@ export class BankDataRepository {
    * Parse ignored account IDs from environment variable
    */
   private parseIgnoredAccounts(): Set<string> {
-    const ignoredAccounts = process.env.IGNORED_ACCOUNT_IDS || "";
+    const ignoredAccounts = process.env.IGNORED_ACCOUNT_IDS || '';
     const accountIds = ignoredAccounts
-      .split(",")
-      .map((id) => id.trim())
-      .filter((id) => id.length > 0);
+      .split(',')
+      .map(id => id.trim())
+      .filter(id => id.length > 0);
 
     if (accountIds.length > 0) {
-      logger.info("Ignoring accounts when querying", {
+      logger.info('Ignoring accounts when querying', {
         accountIds,
         count: accountIds.length,
       });
@@ -72,7 +72,7 @@ export class BankDataRepository {
     `);
 
     stmt.run(
-      success ? "completed" : "failed",
+      success ? 'completed' : 'failed',
       error || null,
       stats?.transactions || 0,
       stats?.accounts || 0,
@@ -105,7 +105,7 @@ export class BankDataRepository {
         accounts: data.accounts.length,
       });
 
-      logger.info("Successfully saved scraped data", {
+      logger.info('Successfully saved scraped data', {
         accounts: data.accounts.length,
         transactions: data.transactions.length,
       });
@@ -166,34 +166,34 @@ export class BankDataRepository {
     endDate?: Date,
     accountId?: string
   ): Transaction[] {
-    let query = "SELECT * FROM transactions WHERE 1=1";
+    let query = 'SELECT * FROM transactions WHERE 1=1';
     const params: any[] = [];
 
     if (startDate) {
-      query += " AND date >= ?";
+      query += ' AND date >= ?';
       params.push(startDate.toISOString());
     }
 
     if (endDate) {
-      query += " AND date <= ?";
+      query += ' AND date <= ?';
       params.push(endDate.toISOString());
     }
 
     if (accountId) {
-      query += " AND account_id = ?";
+      query += ' AND account_id = ?';
       params.push(accountId);
     }
 
     // Add filter for ignored accounts
     if (this.ignoredAccountIds.size > 0) {
       const placeholders = Array.from(this.ignoredAccountIds)
-        .map(() => "?")
-        .join(",");
+        .map(() => '?')
+        .join(',');
       query += ` AND account_id NOT IN (${placeholders})`;
       params.push(...Array.from(this.ignoredAccountIds));
     }
 
-    query += " ORDER BY date DESC";
+    query += ' ORDER BY date DESC';
 
     const stmt = this.db.prepare(query);
     const rows = stmt.all(...params);
@@ -229,8 +229,8 @@ export class BankDataRepository {
     // Add filter for ignored accounts
     if (this.ignoredAccountIds.size > 0) {
       const placeholders = Array.from(this.ignoredAccountIds)
-        .map(() => "?")
-        .join(",");
+        .map(() => '?')
+        .join(',');
       query += ` WHERE a.id NOT IN (${placeholders})`;
       params.push(...Array.from(this.ignoredAccountIds));
     }
@@ -255,7 +255,7 @@ export class BankDataRepository {
   ): { date: Date; balance: number }[] {
     // Return empty array if account is ignored
     if (this.isAccountIgnored(accountId)) {
-      logger.debug("Skipping balance history for ignored account", {
+      logger.debug('Skipping balance history for ignored account', {
         accountId,
       });
       return [];

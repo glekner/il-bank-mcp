@@ -2,7 +2,8 @@ import {
   Transaction,
   Account,
   FinancialSummary,
-} from "@bank-assistant/scraper";
+  ProviderKey,
+} from '@bank-assistant/scraper';
 
 export interface TransactionArgs {
   startDate?: string;
@@ -20,11 +21,9 @@ export interface BalanceHistoryArgs {
   days?: number;
 }
 
-export interface RefreshServiceArgs {
-  service: ServiceName;
+export interface RefreshProviderArgs {
+  provider: ProviderKey;
 }
-
-export type ServiceName = "leumi" | "visaCal" | "max";
 
 export interface ToolResponse<T = unknown> {
   success: boolean;
@@ -66,14 +65,13 @@ export interface ScrapeStatusResponse extends ToolResponse {
   accountsCount?: number;
   error?: string;
   activeScrapes?: Array<{
-    service: string;
+    provider: string;
     startedAt: string;
     status: string;
   }>;
 }
 
 export const DEFAULT_BALANCE_HISTORY_DAYS = 30;
-export const VALID_SERVICES: ServiceName[] = ["leumi", "visaCal", "max"];
 
 // New financial advisory tool types
 export interface MonthlyCreditSummaryArgs {

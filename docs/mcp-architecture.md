@@ -19,8 +19,8 @@ Server instructions are defined at the server initialization level and provide *
 
 ```typescript
 new Server({
-  name: "israeli-bank-assistant",
-  version: "2.0.0",
+  name: 'israeli-bank-assistant',
+  version: '2.0.0',
   instructions: `You are connected to the Israeli Bank Assistant MCP server...`,
 });
 ```

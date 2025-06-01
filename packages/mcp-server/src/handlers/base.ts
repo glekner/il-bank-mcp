@@ -1,4 +1,4 @@
-import { ScraperService } from "@bank-assistant/scraper";
+import { ScraperService } from '@bank-assistant/scraper';
 
 export abstract class BaseHandler {
   constructor(protected scraperService: ScraperService) {}
@@ -17,8 +17,8 @@ export abstract class BaseHandler {
       scrapeStatus.activeScrapes?.length > 0
     ) {
       const runningServices = scrapeStatus.activeScrapes
-        .map((s) => s.service)
-        .join(", ");
+        .map(s => s.provider)
+        .join(', ');
 
       const warningMessage = `Note: Data scraping is currently in progress for: ${runningServices}. The data shown may be stale.`;
 
@@ -37,7 +37,7 @@ export abstract class BaseHandler {
     return {
       content: [
         {
-          type: "text",
+          type: 'text',
           text: JSON.stringify(data, null, 2),
         },
       ],
@@ -50,11 +50,11 @@ export abstract class BaseHandler {
     return {
       content: [
         {
-          type: "text",
+          type: 'text',
           text: JSON.stringify(
             {
               success: false,
-              error: error instanceof Error ? error.message : "Unknown error",
+              error: error instanceof Error ? error.message : 'Unknown error',
             },
             null,
             2

@@ -1,7 +1,7 @@
-import Database from "better-sqlite3";
-import { logger } from "../utils/logger";
-import path from "path";
-import fs from "fs";
+import Database from 'better-sqlite3';
+import { logger } from '../utils/logger';
+import path from 'path';
+import fs from 'fs';
 
 // Helper function to find workspace root
 function findWorkspaceRoot(): string {
@@ -9,11 +9,11 @@ function findWorkspaceRoot(): string {
 
   // Look for the root package.json that has workspaces defined
   while (currentDir !== path.dirname(currentDir)) {
-    const packageJsonPath = path.join(currentDir, "package.json");
+    const packageJsonPath = path.join(currentDir, 'package.json');
     if (fs.existsSync(packageJsonPath)) {
       try {
         const packageJson = JSON.parse(
-          fs.readFileSync(packageJsonPath, "utf-8")
+          fs.readFileSync(packageJsonPath, 'utf-8')
         );
         if (packageJson.workspaces) {
           return currentDir;
@@ -31,23 +31,23 @@ function findWorkspaceRoot(): string {
 
 // Use workspace root for default database path
 const workspaceRoot = findWorkspaceRoot();
-const DEFAULT_DB_PATH = path.join(workspaceRoot, "data", "bank-data.db");
+const DEFAULT_DB_PATH = path.join(workspaceRoot, 'data', 'bank-data.db');
 const DB_PATH = process.env.DATABASE_PATH || DEFAULT_DB_PATH;
 
 export function initializeDatabase(): Database.Database {
-  logger.info("Initializing database", { path: DB_PATH });
+  logger.info('Initializing database', { path: DB_PATH });
 
   // Ensure the directory exists
   const dbDir = path.dirname(DB_PATH);
   if (!fs.existsSync(dbDir)) {
-    logger.info("Creating database directory", { directory: dbDir });
+    logger.info('Creating database directory', { directory: dbDir });
     fs.mkdirSync(dbDir, { recursive: true });
   }
 
   const db = new Database(DB_PATH);
 
   // Enable foreign keys
-  db.pragma("foreign_keys = ON");
+  db.pragma('foreign_keys = ON');
 
   // Create tables
   db.exec(`
@@ -100,7 +100,7 @@ export function initializeDatabase(): Database.Database {
     CREATE INDEX IF NOT EXISTS idx_balances_account_date ON account_balances(account_id, recorded_at);
   `);
 
-  logger.info("Database initialized successfully");
+  logger.info('Database initialized successfully');
   return db;
 }
 
