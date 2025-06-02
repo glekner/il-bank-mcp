@@ -34,6 +34,7 @@ For a complete list of supported banks, credit cards, and other financial provid
 - **`refresh_all_data`**: Force refresh data from all configured services
 - **`refresh_service_data`**: Force refresh data from a specific service
 - **`get_scrape_status`**: Check current scrape status and last scrape times
+- **`get_metadata`**: Get comprehensive metadata about the database state including earliest/latest transactions, configuration settings, account coverage, and system statistics
 
 ### Financial Analysis Tools
 

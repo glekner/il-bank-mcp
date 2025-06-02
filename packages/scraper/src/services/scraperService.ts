@@ -621,6 +621,35 @@ export class ScraperService {
   }
 
   /**
+   * Get comprehensive database statistics
+   */
+  async getDatabaseStatistics() {
+    const timer = createTimer();
+    const operationId = `get-database-statistics-${Date.now()}`;
+
+    logger.startOperation('fetching database statistics', { operationId });
+
+    try {
+      const stats = this.repository.getDatabaseStatistics();
+
+      const duration = timer.elapsed();
+      logger.endOperation('fetching database statistics', duration, {
+        totalTransactions: stats.totalTransactions,
+        totalAccounts: stats.totalAccounts,
+        operationId,
+      });
+
+      return stats;
+    } catch (error) {
+      logger.errorOperation('fetching database statistics', error as Error, {
+        operationId,
+        duration_ms: timer.elapsed(),
+      });
+      throw error;
+    }
+  }
+
+  /**
    * Close the database connection
    */
   async close(): Promise<void> {

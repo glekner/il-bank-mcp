@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import { Transaction, Account, ScrapedAccountData } from '../types';
 import { getDatabase } from './schema';
 import { logger } from '../utils/logger';
+import * as fs from 'fs';
 
 export class BankDataRepository {
   private db: Database.Database;
@@ -407,6 +408,95 @@ export class BankDataRepository {
     return rows
       .map(row => row.category)
       .filter(category => category && category.trim() !== '');
+  }
+
+  /**
+   * Get comprehensive database statistics
+   */
+  getDatabaseStatistics() {
+    // Get earliest and latest transaction dates
+    const dateRangeQuery = `
+      SELECT 
+        MIN(date) as earliest_date,
+        MAX(date) as latest_date,
+        COUNT(*) as total_count
+      FROM transactions
+    `;
+
+    const dateRangeResult = this.db.prepare(dateRangeQuery).get() as {
+      earliest_date: string | null;
+      latest_date: string | null;
+      total_count: number;
+    };
+
+    // Get account statistics
+    const accountStatsQuery = `
+      SELECT 
+        type,
+        COUNT(*) as count
+      FROM accounts
+      GROUP BY type
+    `;
+
+    const accountStats = this.db.prepare(accountStatsQuery).all() as Array<{
+      type: string;
+      count: number;
+    }>;
+
+    const accountsByType: Record<string, number> = {};
+    let totalAccounts = 0;
+
+    for (const stat of accountStats) {
+      accountsByType[stat.type] = stat.count;
+      totalAccounts += stat.count;
+    }
+
+    // Get unique merchants count
+    const merchantCountQuery = `
+      SELECT COUNT(DISTINCT description) as unique_merchants
+      FROM transactions
+      WHERE description IS NOT NULL
+    `;
+
+    const merchantResult = this.db.prepare(merchantCountQuery).get() as {
+      unique_merchants: number;
+    };
+
+    // Get unique categories count
+    const categoryCountQuery = `
+      SELECT COUNT(DISTINCT category) as unique_categories
+      FROM transactions
+      WHERE category IS NOT NULL AND category != ''
+    `;
+
+    const categoryResult = this.db.prepare(categoryCountQuery).get() as {
+      unique_categories: number;
+    };
+
+    // Get database file size
+    let databaseSizeMB: number | undefined;
+    try {
+      const dbPath = this.db.name;
+      const stats = fs.statSync(dbPath);
+      databaseSizeMB = stats.size / (1024 * 1024); // Convert to MB
+    } catch (error) {
+      logger.debug('Could not get database file size', { error });
+    }
+
+    return {
+      earliestTransactionDate: dateRangeResult.earliest_date
+        ? new Date(dateRangeResult.earliest_date)
+        : undefined,
+      latestTransactionDate: dateRangeResult.latest_date
+        ? new Date(dateRangeResult.latest_date)
+        : undefined,
+      totalTransactions: dateRangeResult.total_count,
+      totalAccounts,
+      accountsByType,
+      uniqueMerchants: merchantResult.unique_merchants,
+      uniqueCategories: categoryResult.unique_categories,
+      databaseSizeMB,
+    };
   }
 
   close(): void {

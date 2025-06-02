@@ -127,6 +127,19 @@ export const TOOLS = [
     },
   },
   {
+    name: 'get_metadata',
+    description:
+      'Get metadata about the database state. USE THIS TOOL for questions about: earliest/oldest transaction date, latest/newest transaction date, date range of available data, how far back transactions go, total transaction count, database size, configuration settings, ignored accounts, last scrape time, or system statistics. This is the PREFERRED tool for any metadata or date range availability questions - do NOT use get_transactions to find earliest/latest dates.',
+    inputSchema: {
+      type: 'object',
+      properties: {},
+    },
+    annotations: {
+      title: 'Database Metadata',
+      readOnlyHint: true,
+    },
+  },
+  {
     name: 'get_monthly_credit_summary',
     description:
       'Get a summary of spending for each credit card for the current or specified month, including total charges, number of transactions, and average transaction size',

@@ -21,6 +21,7 @@ import {
   RefreshHandler,
   StatusHandler,
   MerchantAnalysisHandler,
+  MetadataHandler,
 } from './handlers/index.js';
 import { RecurringChargesHandler } from './handlers/financial-advisory/recurring-charges.handler.js';
 import { RecurringIncomeHandler } from './handlers/financial-advisory/recurring-income.handler.js';
@@ -63,6 +64,7 @@ type ToolArgsSpec = {
   refresh_all_data: void;
   refresh_service_data: RefreshProviderArgs;
   get_scrape_status: void;
+  get_metadata: void;
   get_monthly_credit_summary: MonthlyCreditSummaryArgs;
   get_recurring_charges: RecurringChargesArgs;
   get_recurring_income: RecurringIncomeArgs;
@@ -84,6 +86,7 @@ class IsraeliBankMCPServer {
   private recurringIncomeHandler!: RecurringIncomeHandler;
   private merchantAnalysisHandler!: MerchantAnalysisHandler;
   private categoryAwareHandler!: CategoryAwareHandler;
+  private metadataHandler!: MetadataHandler;
 
   constructor() {
     this.server = new Server(
@@ -157,6 +160,7 @@ Remember: You're not just accessing a database - you're providing intelligent fi
       this.scraperService
     );
     this.categoryAwareHandler = new CategoryAwareHandler(this.scraperService);
+    this.metadataHandler = new MetadataHandler(this.scraperService);
   }
 
   private setupRequestHandlers() {
@@ -221,6 +225,8 @@ Remember: You're not just accessing a database - you're providing intelligent fi
         this.refreshHandler.refreshProviderData(args),
 
       get_scrape_status: () => this.statusHandler.getScrapeStatus(),
+
+      get_metadata: () => this.metadataHandler.getMetadata(),
 
       get_monthly_credit_summary: args =>
         this.categoryAwareHandler.getMonthlyCreditSummary(args),

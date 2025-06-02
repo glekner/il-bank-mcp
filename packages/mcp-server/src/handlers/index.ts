@@ -10,3 +10,4 @@ export { RecurringIncomeHandler } from './financial-advisory/recurring-income.ha
 export { MerchantAnalysisHandler } from './merchant-analysis.handler.js';
 export { CategoryAnalysisHandler } from './category-analysis.handler.js';
 export { CategoryAwareHandler } from './category-aware.handler.js';
+export { MetadataHandler } from './metadataHandler.js';
