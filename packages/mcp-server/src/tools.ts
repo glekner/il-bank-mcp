@@ -194,7 +194,7 @@ export const TOOLS = [
   {
     name: 'analyze_merchant_spending',
     description:
-      'Deep-dive analysis for specific merchants! Shows spending patterns, average transaction amounts, frequency, and flags unusual charges (potential errors/fraud). Perfect for questions like "How much do I usually spend at the supermarket?" or "Alert me if any coffee shop charge is 50% higher than normal". The anomaly detection helps catch billing errors.',
+      'Deep-dive analysis for specific merchants! Shows spending patterns, average transaction amounts, frequency, and flags unusual charges (potential errors/fraud). Perfect for questions like "How much do I usually spend at the supermarket?" or "Alert me if any coffee shop charge is 50% higher than normal". The anomaly detection helps catch billing errors. MERCHANT SHOULD NEVER BE ONE OF THE ACCOUNT NAMES, OR A CATEGORY - ONLY A MERCHANT NAME.',
     inputSchema: {
       type: 'object',
       properties: {
