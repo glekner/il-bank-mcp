@@ -6,7 +6,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "dev": "tsx watch src/index.ts",
+    "dev": "yarn build && npx -y @modelcontextprotocol/inspector node dist/index.js",
+    "dev:watch": "yarn tsx watch src/index.ts",
     "start": "node dist/index.js"
   },
   "dependencies": {
@@ -16,6 +17,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.15.29",
+    "concurrently": "^9.1.2",
     "tsx": "^4.19.4",
     "typescript": "^5.8.3"
   }
