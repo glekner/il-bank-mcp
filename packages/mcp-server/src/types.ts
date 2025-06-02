@@ -117,11 +117,6 @@ export interface RecurringCharge {
   totalSpent: number;
 }
 
-export interface RecurringIncomeArgs {
-  minOccurrences?: number;
-  lookbackMonths?: number;
-}
-
 export interface RecurringIncome {
   sourceName: string;
   averageAmount: number;

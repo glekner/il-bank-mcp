@@ -1,46 +1,45 @@
+import { ScraperService } from '@bank-assistant/scraper';
 import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import {
-  ListToolsRequestSchema,
   CallToolRequestSchema,
-  ListPromptsRequestSchema,
   GetPromptRequestSchema,
+  ListPromptsRequestSchema,
+  ListToolsRequestSchema,
 } from '@modelcontextprotocol/sdk/types.js';
-import { ScraperService } from '@bank-assistant/scraper';
 import * as dotenv from 'dotenv';
-import * as path from 'path';
 import * as fs from 'fs';
+import * as path from 'path';
 
-import { TOOLS } from './tools.js';
-import type { ToolName } from './tools.js';
-import { PROMPTS, PROMPT_TEMPLATES } from './prompts.js';
+import { RecurringChargesHandler } from './handlers/financial-advisory/recurring-charges.handler.js';
 import {
-  TransactionHandler,
-  SummaryHandler,
   AccountHandler,
-  RefreshHandler,
-  StatusHandler,
   MerchantAnalysisHandler,
   MetadataHandler,
+  RefreshHandler,
+  StatusHandler,
+  SummaryHandler,
+  TransactionHandler,
 } from './handlers/index.js';
-import { RecurringChargesHandler } from './handlers/financial-advisory/recurring-charges.handler.js';
-import { RecurringIncomeHandler } from './handlers/financial-advisory/recurring-income.handler.js';
+import { PROMPTS, PROMPT_TEMPLATES } from './prompts.js';
+import type { ToolName } from './tools.js';
+import { TOOLS } from './tools.js';
+
 import { CategoryAwareHandler } from './handlers/category-aware.handler.js';
-import { logger } from './utils/logger.js';
 import type {
-  TransactionArgs,
-  SummaryArgs,
+  AvailableCategoriesArgs,
   BalanceHistoryArgs,
-  RefreshProviderArgs,
+  CategoryComparisonArgs,
+  MerchantAnalysisArgs,
   MonthlyCreditSummaryArgs,
   RecurringChargesArgs,
-  RecurringIncomeArgs,
-  MerchantAnalysisArgs,
-  SpendingByMerchantArgs,
-  CategoryComparisonArgs,
+  RefreshProviderArgs,
   SearchTransactionsArgs,
-  AvailableCategoriesArgs,
+  SpendingByMerchantArgs,
+  SummaryArgs,
+  TransactionArgs,
 } from './types.js';
+import { logger } from './utils/logger.js';
 
 // Load environment variables from a local .env file only if it exists. This
 // allows containerised deployments (where credentials are provided via real
@@ -67,7 +66,6 @@ type ToolArgsSpec = {
   get_metadata: void;
   get_monthly_credit_summary: MonthlyCreditSummaryArgs;
   get_recurring_charges: RecurringChargesArgs;
-  get_recurring_income: RecurringIncomeArgs;
   analyze_merchant_spending: MerchantAnalysisArgs;
   get_spending_by_merchant: SpendingByMerchantArgs;
   get_category_comparison: CategoryComparisonArgs;
@@ -83,7 +81,6 @@ class IsraeliBankMCPServer {
   private refreshHandler!: RefreshHandler;
   private statusHandler!: StatusHandler;
   private recurringChargesHandler!: RecurringChargesHandler;
-  private recurringIncomeHandler!: RecurringIncomeHandler;
   private merchantAnalysisHandler!: MerchantAnalysisHandler;
   private categoryAwareHandler!: CategoryAwareHandler;
   private metadataHandler!: MetadataHandler;
@@ -151,9 +148,6 @@ Remember: You're not just accessing a database - you're providing intelligent fi
     this.refreshHandler = new RefreshHandler(this.scraperService);
     this.statusHandler = new StatusHandler(this.scraperService);
     this.recurringChargesHandler = new RecurringChargesHandler(
-      this.scraperService
-    );
-    this.recurringIncomeHandler = new RecurringIncomeHandler(
       this.scraperService
     );
     this.merchantAnalysisHandler = new MerchantAnalysisHandler(
@@ -233,9 +227,6 @@ Remember: You're not just accessing a database - you're providing intelligent fi
 
       get_recurring_charges: args =>
         this.recurringChargesHandler.getRecurringCharges(args),
-
-      get_recurring_income: args =>
-        this.recurringIncomeHandler.getRecurringIncome(args),
 
       analyze_merchant_spending: args =>
         this.merchantAnalysisHandler.analyzeMerchantSpending(args),
