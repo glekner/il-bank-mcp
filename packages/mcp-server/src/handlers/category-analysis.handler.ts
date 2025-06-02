@@ -1,4 +1,5 @@
 import { ScraperService } from '@bank-assistant/scraper';
+import { CategoryMatcher } from '../utils/category-matcher';
 import { logger } from '../utils/logger.js';
 import type {
   CategoryComparisonArgs,
@@ -172,5 +173,37 @@ export class CategoryAnalysisHandler {
       logger.error('Failed to search transactions', { error });
       throw error;
     }
+  }
+
+  /**
+   * Helper method to get available categories for a given context
+   */
+  async getAvailableCategories(options?: {
+    startDate?: Date;
+    endDate?: Date;
+    accountId?: string;
+  }) {
+    const categories = await this.scraperService.getUniqueCategories(options);
+
+    return {
+      content: [
+        {
+          type: 'text',
+          text: JSON.stringify(
+            {
+              success: true,
+              data: {
+                categories,
+                count: categories.length,
+                formattedList:
+                  CategoryMatcher.formatCategoriesForPrompt(categories),
+              },
+            },
+            null,
+            2
+          ),
+        },
+      ],
+    };
   }
 }

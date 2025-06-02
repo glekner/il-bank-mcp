@@ -240,7 +240,7 @@ export const TOOLS = [
   {
     name: 'get_category_comparison',
     description:
-      'Compare spending across different categories and sub-categories over time periods',
+      'Compare spending across different categories and sub-categories over time periods. IMPORTANT: You MUST call get_available_categories first to get the actual category names from the database, then select the most appropriate categories from that list. Categories are often in Hebrew, so exact matching is required.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -250,7 +250,7 @@ export const TOOLS = [
             type: 'string',
           },
           description:
-            'Categories to compare (e.g., ["Food", "Transportation"])',
+            'Categories to compare - MUST be exact category names from get_available_categories',
         },
         period1Start: {
           type: 'string',
@@ -275,7 +275,7 @@ export const TOOLS = [
   {
     name: 'search_transactions',
     description:
-      'Search transactions by multiple criteria including description, amount range, and category',
+      'Search transactions by multiple criteria including description, amount range, and category. IMPORTANT: If filtering by categories, you MUST call get_available_categories first to get the actual category names from the database, then select the most appropriate categories from that list. Categories are often in Hebrew, so exact matching is required.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -296,7 +296,8 @@ export const TOOLS = [
           items: {
             type: 'string',
           },
-          description: 'Filter by specific categories',
+          description:
+            'Filter by specific categories - MUST be exact category names from get_available_categories',
         },
         startDate: {
           type: 'string',

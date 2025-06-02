@@ -20,12 +20,12 @@ import {
   StatusHandler,
   SummaryHandler,
   TransactionHandler,
+  type MonthlyCreditSummaryHandler,
 } from './handlers/index.js';
 import { PROMPTS, PROMPT_TEMPLATES } from './prompts.js';
 import type { ToolName } from './tools.js';
 import { TOOLS } from './tools.js';
 
-import { CategoryAwareHandler } from './handlers/category-aware.handler.js';
 import type {
   AvailableCategoriesArgs,
   BalanceHistoryArgs,
@@ -40,6 +40,7 @@ import type {
   TransactionArgs,
 } from './types.js';
 import { logger } from './utils/logger.js';
+import { CategoryAnalysisHandler } from './handlers/category-analysis.handler.js';
 
 // Load environment variables from a local .env file only if it exists. This
 // allows containerised deployments (where credentials are provided via real
@@ -82,8 +83,9 @@ class IsraeliBankMCPServer {
   private statusHandler!: StatusHandler;
   private recurringChargesHandler!: RecurringChargesHandler;
   private merchantAnalysisHandler!: MerchantAnalysisHandler;
-  private categoryAwareHandler!: CategoryAwareHandler;
   private metadataHandler!: MetadataHandler;
+  private categoryAnalysisHandler!: CategoryAnalysisHandler;
+  private monthlyCreditSummaryHandler!: MonthlyCreditSummaryHandler;
 
   constructor() {
     this.server = new Server(
@@ -147,13 +149,15 @@ Remember: You're not just accessing a database - you're providing intelligent fi
     this.accountHandler = new AccountHandler(this.scraperService);
     this.refreshHandler = new RefreshHandler(this.scraperService);
     this.statusHandler = new StatusHandler(this.scraperService);
+    this.categoryAnalysisHandler = new CategoryAnalysisHandler(
+      this.scraperService
+    );
     this.recurringChargesHandler = new RecurringChargesHandler(
       this.scraperService
     );
     this.merchantAnalysisHandler = new MerchantAnalysisHandler(
       this.scraperService
     );
-    this.categoryAwareHandler = new CategoryAwareHandler(this.scraperService);
     this.metadataHandler = new MetadataHandler(this.scraperService);
   }
 
@@ -197,7 +201,7 @@ Remember: You're not just accessing a database - you're providing intelligent fi
     // 3. Instantiate the handlers – the compiler will enforce the signatures
     const toolHandlers: ToolHandlers = {
       get_available_categories: args =>
-        this.categoryAwareHandler.getAvailableCategories({
+        this.categoryAnalysisHandler.getAvailableCategories({
           startDate: args.startDate ? new Date(args.startDate) : undefined,
           endDate: args.endDate ? new Date(args.endDate) : undefined,
           accountId: args.accountId,
@@ -223,7 +227,7 @@ Remember: You're not just accessing a database - you're providing intelligent fi
       get_metadata: () => this.metadataHandler.getMetadata(),
 
       get_monthly_credit_summary: args =>
-        this.categoryAwareHandler.getMonthlyCreditSummary(args),
+        this.monthlyCreditSummaryHandler.getMonthlyCreditSummary(args),
 
       get_recurring_charges: args =>
         this.recurringChargesHandler.getRecurringCharges(args),
@@ -235,10 +239,10 @@ Remember: You're not just accessing a database - you're providing intelligent fi
         this.merchantAnalysisHandler.getSpendingByMerchant(args),
 
       get_category_comparison: args =>
-        this.categoryAwareHandler.getCategoryComparison(args),
+        this.categoryAnalysisHandler.getCategoryComparison(args),
 
       search_transactions: args =>
-        this.categoryAwareHandler.searchTransactions(args),
+        this.categoryAnalysisHandler.searchTransactions(args),
     };
 
     // 4. Generic helper to execute a tool
