@@ -1,138 +1,97 @@
 # Israeli Bank Scraper MCP Server
 
-A Model Context Protocol (MCP) server that provides access to Israeli bank and credit card data through automated scraping. Supports major Israeli financial institutions based on configured credentials.
+A TypeScript service that scrapes Israeli bank and credit card data, exposed through a Model Context Protocol (MCP) server for AI assistant integration.
+
+## Overview
+
+This project consists of two main components:
+
+- **Scraper Service**: Automates data collection from Israeli financial institutions using [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers)
+- **MCP Server**: Exposes the scraped data through standardized tools for AI assistants
+
+## Quick Start
+
+```bash
+# Clone the repository
+git clone <your-repo-url>
+cd il-bank-mcp
+
+# Run with Docker Compose (using mock credentials)
+LEUMI_USERNAME=mock_user LEUMI_PASSWORD=mock_pass docker-compose up
+```
 
 ## Features
 
-### Core Functionality
-
-- Automated data scraping from Israeli banks and credit card companies
-- Dynamic provider detection based on configured credentials
-- Parallel scraping for multiple providers
+- Automated scraping from Israeli banks and credit cards
 - Local SQLite database for data persistence
-- Docker support for containerized deployment
+- Parallel scraping for multiple providers
+- Dynamic provider detection based on credentials
+- Docker support for easy deployment
 
-### Supported Providers
+## Available Tools
 
-For a complete list of supported banks, credit cards, and other financial providers, see the [israeli-bank-scrapers documentation](https://github.com/eshaham/israeli-bank-scrapers?tab=readme-ov-file#whats-here).
+### Data Retrieval
 
-### MCP Server Capabilities
+- `get_transactions` - Retrieve transactions for a specific time period
+- `get_financial_summary` - Get aggregated income, expenses, and trends
+- `get_accounts` - List all accounts with current balances
+- `get_account_balance_history` - Track balance changes over time
+- `get_metadata` - Get database statistics and available data ranges
+- `search_transactions` - Search transactions by description, amount, or category
 
-- Server instructions for financial advisor context
-- Pre-defined prompts for common financial analysis workflows
-- Direct access to bank data and analysis functions
-- Dynamic context incorporation in prompts
+### Financial Analysis
 
-## Available MCP Tools
+- `get_monthly_credit_summary` - Monthly credit card usage breakdown
+- `get_recurring_charges` - Detect subscriptions and recurring payments
+- `analyze_merchant_spending` - Spending patterns and anomaly detection for specific merchants
+- `get_spending_by_merchant` - Rank merchants by total spending
+- `get_category_comparison` - Compare spending between categories across time periods
+- `analyze_day_of_week_spending` - Analyze spending patterns by day of the week
+- `get_available_categories` - List all transaction categories in your data
 
-### Banking Tools
+### Data Management
 
-- **`get_transactions`**: Retrieve bank and credit card transactions for a specific time period
-- **`get_financial_summary`**: Generate comprehensive financial analysis including trends, income, and expenses
-- **`get_accounts`**: List all bank accounts and credit cards with current balances
-- **`get_account_balance_history`**: Retrieve balance history for a specific account
-- **`refresh_all_data`**: Force refresh data from all configured services
-- **`refresh_service_data`**: Force refresh data from a specific service
-- **`get_scrape_status`**: Check current scrape status and last scrape times
-- **`get_metadata`**: Get comprehensive metadata about the database state including earliest/latest transactions, configuration settings, account coverage, and system statistics
+- `refresh_all_data` - Update data from all configured providers
+- `refresh_service_data` - Update data from a specific provider
+- `get_scrape_status` - Check last update times and scraping status
 
-### Financial Analysis Tools
-
-- **`get_monthly_credit_summary`**: Analyze credit card spending by month
-- **`get_recurring_charges`**: Detect and analyze recurring transactions
-
-## Available MCP Prompts
-
-The server provides structured prompts for financial analysis:
-
-- **`financial_advisor_context`**: Full financial advisor persona with comprehensive capabilities
-- **`financial_review`**: Monthly comprehensive financial analysis
-- **`budget_planning`**: Budget creation based on transaction data
-- **`subscription_audit`**: Detection and analysis of recurring charges
-- **`spending_optimization`**: Expense reduction recommendations
-- **`fraud_detection`**: Suspicious transaction scanning
-- **`tax_preparation`**: Tax-relevant transaction summaries
-- **`emergency_fund_analysis`**: Savings adequacy assessment
-- **`debt_optimization`**: Credit card usage analysis and debt reduction strategies
-
-## Architecture
-
-The project is structured as a monorepo with two main packages:
-
-- **`packages/scraper`**: Backend service for scraping bank and credit card data
-- **`packages/mcp-server`**: MCP server exposing the scraping functionality as tools
-
-### How It Works
-
-1. The scraper service connects to configured financial institutions using credentials
-2. Transaction data is fetched and stored in a local SQLite database
-3. The MCP server exposes this data through standardized tools
-4. AI assistants can query and analyze the financial data using these tools
-
-## Getting Started
+## Installation
 
 ### Prerequisites
 
 - Node.js 18+
-- Yarn (for workspace management)
-- Chrome/Chromium (installed automatically by puppeteer)
+- Yarn
+- Docker (optional)
 
-### Installation
+### Local Setup
 
-1. Clone the repository:
+1. Install dependencies:
 
-```bash
-git clone <your-repo-url>
-cd il-bank-mcp
-```
+   ```bash
+   yarn install
+   ```
 
-2. Install dependencies:
+2. Configure environment:
 
-```bash
-yarn install
-```
+   ```bash
+   cp env.example .env
+   # Edit .env with your credentials
+   ```
 
-3. Configure environment variables:
+3. Build the project:
 
-```bash
-cp env.example .env
-```
+   ```bash
+   yarn build
+   ```
 
-Edit `.env` and add credentials for the providers you use. The system automatically detects which providers to scrape based on provided credentials:
+4. Run services:
+   ```bash
+   yarn dev
+   ```
 
-```env
-# Bank Leumi
-LEUMI_USERNAME=your_username
-LEUMI_PASSWORD=your_password
+### Claude Desktop Integration
 
-# Visa Cal
-VISA_CAL_USERNAME=your_username
-VISA_CAL_PASSWORD=your_password
-
-# Isracard
-ISRACARD_ID=your_id
-ISRACARD_CARD6DIGITS=last_6_digits
-ISRACARD_PASSWORD=your_password
-
-# See env.example for all available providers
-```
-
-4. Install Chrome for puppeteer:
-
-```bash
-cd packages/scraper
-npx puppeteer browsers install chrome
-```
-
-### Claude Desktop Configuration
-
-1. Build the project:
-
-```bash
-yarn build
-```
-
-2. Add to Claude Desktop configuration:
+Add to your Claude Desktop configuration:
 
 ```json
 {
@@ -142,80 +101,46 @@ yarn build
       "args": ["/path/to/il-bank-mcp/packages/mcp-server/dist/index.js"],
       "env": {
         "LEUMI_USERNAME": "your_username",
-        "LEUMI_PASSWORD": "your_password",
-        "VISA_CAL_USERNAME": "your_username",
-        "VISA_CAL_PASSWORD": "your_password",
-        "ISRACARD_ID": "your_id",
-        "ISRACARD_CARD6DIGITS": "last_6_digits",
-        "ISRACARD_PASSWORD": "your_password"
+        "LEUMI_PASSWORD": "your_password"
       }
     }
   }
 }
 ```
 
+## Supported Providers
+
+The system automatically detects providers based on configured credentials. See [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers#whats-here) for the full list of supported institutions.
+
 ## Docker Deployment
 
-Build and run with Docker:
-
 ```bash
-# Build the image
-docker build -t israeli-bank-scraper .
+# Build and run
+docker-compose up
 
-# Run the container
+# Or build manually
+docker build -t israeli-bank-scraper .
 docker run -d \
   -e LEUMI_USERNAME=your_username \
   -e LEUMI_PASSWORD=your_password \
-  -e HAPOALIM_USERCODE=your_code \
-  -e HAPOALIM_PASSWORD=your_password \
-  -e VISA_CAL_USERNAME=your_username \
-  -e VISA_CAL_PASSWORD=your_password \
-  -e ISRACARD_ID=your_id \
-  -e ISRACARD_CARD6DIGITS=last_6_digits \
-  -e ISRACARD_PASSWORD=your_password \
   -v $(pwd)/data:/app/data \
   israeli-bank-scraper
 ```
 
 ## Development
 
-### Project Structure
-
-```
-il-bank-mcp/
-├── packages/
-│   ├── scraper/
-│   │   ├── src/
-│   │   │   ├── scrapers/
-│   │   │   ├── utils/
-│   │   │   ├── services/
-│   │   │   ├── database/
-│   │   │   └── analyzers/
-│   │   └── package.json
-│   └── mcp-server/
-│       ├── src/
-│       └── package.json
-├── docker-compose.yml
-├── Dockerfile
-└── package.json
-```
-
-### Running in Development
-
 ```bash
-# Run both services in development mode
+# Run both services
 yarn dev
 
-# Run only the scraper
+# Run specific service
 yarn workspace @il-bank-mcp/scraper dev
-
-# Run only the MCP server
 yarn workspace @il-bank-mcp/mcp-server dev
 ```
 
 ## License
 
-MIT License
+MIT
 
 ## Acknowledgments
 
