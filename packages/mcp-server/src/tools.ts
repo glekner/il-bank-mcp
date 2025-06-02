@@ -5,29 +5,7 @@ export const TOOLS = [
   {
     name: 'get_available_categories',
     description:
-      'Get all unique transaction categories from the database for a specific time period. Use this tool BEFORE using category filters in other tools to ensure you have the correct category names (which may be in Hebrew).',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        startDate: {
-          type: 'string',
-          description: 'Start date in ISO format (YYYY-MM-DD)',
-        },
-        endDate: {
-          type: 'string',
-          description: 'End date in ISO format (YYYY-MM-DD)',
-        },
-        accountId: {
-          type: 'string',
-          description: 'Optional account ID to filter by',
-        },
-      },
-    },
-  },
-  {
-    name: 'get_transactions',
-    description:
-      'Get bank and credit card transactions for a specific time period from all configured services. When filtering by account, ALWAYS call get_accounts first to get the actual account IDs. Note: For timeframes over 90 days or datasets with 500+ transactions, only the most recent 500 transactions will be returned to prevent response size issues.',
+      'ALWAYS USE THIS FIRST before any category filtering! Retrieves all unique transaction categories from your actual data (often in Hebrew like "מזון", "בילויים", etc.). Essential for category comparison queries like "food vs entertainment spending" or when searching transactions by category. The categories returned are the ONLY valid values you can use in other tools that accept category filters.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -42,7 +20,30 @@ export const TOOLS = [
         accountId: {
           type: 'string',
           description:
-            "Optional account ID to filter by. Must be an actual account ID obtained from get_accounts (not a guessed value like 'visacal')",
+            'Optional account ID to filter by (get this from get_accounts first)',
+        },
+      },
+    },
+  },
+  {
+    name: 'get_transactions',
+    description:
+      'Retrieves individual transactions with full details like date, amount, merchant, and category. Perfect for: reviewing recent purchases, finding specific transactions, analyzing spending patterns by day/week, or getting raw data for custom analysis. IMPORTANT: Always call get_accounts FIRST if filtering by account. For large date ranges (>90 days), only the most recent 500 transactions are returned. Use get_financial_summary for longer-term overviews.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        startDate: {
+          type: 'string',
+          description: 'Start date in ISO format (YYYY-MM-DD)',
+        },
+        endDate: {
+          type: 'string',
+          description: 'End date in ISO format (YYYY-MM-DD)',
+        },
+        accountId: {
+          type: 'string',
+          description:
+            "Account ID from get_accounts - NEVER guess this value! If user says 'Visa Cal' or 'Max card', first call get_accounts to find the matching ID",
         },
       },
     },
@@ -50,7 +51,7 @@ export const TOOLS = [
   {
     name: 'get_financial_summary',
     description:
-      'Get a comprehensive financial summary including trends, income, and expenses from all services. Note: For timeframes over 90 days, responses are automatically optimized to include aggregated data without individual transaction details to prevent response size issues.',
+      'Your go-to tool for burn rate analysis and high-level financial overviews! Returns aggregated income, expenses, and trends without individual transaction details. Perfect for: comparing spending between months, calculating savings rates, understanding overall financial health, or when users ask "How much did I spend this month?" or "What\'s my burn rate?". Automatically optimized for large date ranges.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -67,7 +68,8 @@ export const TOOLS = [
   },
   {
     name: 'get_accounts',
-    description: 'Get all bank accounts and credit cards with current balances',
+    description:
+      'ESSENTIAL FIRST STEP for any account-specific query! Lists all connected bank accounts and credit cards with their current balances and unique IDs. Always use this when users mention account names like "my Visa", "Leumi account", or "Max card" to get the correct account ID. Also shows total net worth across all accounts.',
     inputSchema: {
       type: 'object',
       properties: {},
@@ -76,18 +78,18 @@ export const TOOLS = [
   {
     name: 'get_account_balance_history',
     description:
-      'Get balance history for a specific account. ALWAYS call get_accounts first to get the actual account ID.',
+      'Tracks how an account balance changes over time - essential for balance projections and understanding cash flow patterns. Use this to answer "Will I make it to payday?" or "What\'s my account trend?" by analyzing historical balance movements. MUST have account ID from get_accounts first.',
     inputSchema: {
       type: 'object',
       properties: {
         accountId: {
           type: 'string',
           description:
-            'Account ID obtained from get_accounts (not a guessed value)',
+            'The exact account ID from get_accounts (required - no guessing!)',
         },
         days: {
           type: 'number',
-          description: 'Number of days to look back (default: 30)',
+          description: 'Number of days to look back (default: 30, max: 365)',
         },
       },
       required: ['accountId'],
@@ -95,7 +97,8 @@ export const TOOLS = [
   },
   {
     name: 'refresh_all_data',
-    description: 'Force a fresh scrape of all bank and credit card data',
+    description:
+      'Triggers a fresh scrape of all connected bank and credit card accounts to get the latest data. Use when user mentions recent transactions not appearing, or when get_scrape_status shows data is stale (>24 hours old). This ensures all subsequent analysis uses the most current information.',
     inputSchema: {
       type: 'object',
       properties: {},
@@ -103,14 +106,15 @@ export const TOOLS = [
   },
   {
     name: 'refresh_service_data',
-    description: 'Force a fresh scrape of data from a specific service',
+    description:
+      'Refreshes data from a specific financial provider when you need updated information from just one source. More efficient than refresh_all_data when dealing with single account issues.',
     inputSchema: {
       type: 'object',
       properties: {
         service: {
           type: 'string',
           description:
-            "Service to refresh ('leumi', 'visaCal', or 'max', etc.)",
+            "The specific provider to refresh (e.g., 'leumi' for Bank Leumi, 'visaCal' for Visa Cal credit card, 'max' for Max credit card)",
           enum: Object.keys(PROVIDER_CONFIG),
         },
       },
@@ -120,7 +124,7 @@ export const TOOLS = [
   {
     name: 'get_scrape_status',
     description:
-      'Get the current scrape status and last scrape times for all services',
+      'Check when your financial data was last updated and if any scraping is currently in progress. Always use this at the start of analysis to ensure data freshness. If data is older than 24 hours, suggest refreshing before proceeding with analysis.',
     inputSchema: {
       type: 'object',
       properties: {},
@@ -129,7 +133,7 @@ export const TOOLS = [
   {
     name: 'get_metadata',
     description:
-      'Get metadata about the database state. USE THIS TOOL for questions about: earliest/oldest transaction date, latest/newest transaction date, date range of available data, how far back transactions go, total transaction count, database size, configuration settings, ignored accounts, last scrape time, or system statistics. This is the PREFERRED tool for any metadata or date range availability questions - do NOT use get_transactions to find earliest/latest dates.',
+      'YOUR FIRST STOP for any metadata questions! Instantly returns: earliest/latest transaction dates, total transaction count, date range of available data, database statistics, and system configuration. Use this instead of get_transactions when users ask "How far back does my data go?" or "What\'s the oldest transaction?" - it\'s much faster and more efficient.',
     inputSchema: {
       type: 'object',
       properties: {},
@@ -142,23 +146,25 @@ export const TOOLS = [
   {
     name: 'get_monthly_credit_summary',
     description:
-      'Get a summary of spending for each credit card for the current or specified month, including total charges, number of transactions, and average transaction size',
+      'Provides a comprehensive breakdown of credit card usage for any month, showing total charges, transaction count, and average transaction size per card. Perfect for monthly credit card bill reconciliation or understanding which cards are used most. Can also break down spending by category when requested.',
     inputSchema: {
       type: 'object',
       properties: {
         month: {
           type: 'number',
-          description: 'Month number (1-12). Defaults to current month',
+          description:
+            'Month number (1-12). Defaults to current month if not specified',
           minimum: 1,
           maximum: 12,
         },
         year: {
           type: 'number',
-          description: 'Year (YYYY). Defaults to current year',
+          description: 'Year (YYYY). Defaults to current year if not specified',
         },
         includeCategories: {
           type: 'boolean',
-          description: 'Include spending breakdown by category if available',
+          description:
+            'Set to true to include spending breakdown by category for each card',
         },
       },
     },
@@ -166,19 +172,19 @@ export const TOOLS = [
   {
     name: 'get_recurring_charges',
     description:
-      'Identify and analyze recurring charges like subscriptions, memberships. you should only display charges that are identical or very similar to each other in their total amount and description',
+      'Your subscription detective! Identifies recurring charges like Netflix, Spotify, gym memberships, and other regular payments. Analyzes transaction patterns to find charges that repeat monthly with similar amounts. Essential for answering "What subscriptions am I paying for?" or calculating total monthly fixed costs. Only shows charges that appear consistently.',
     inputSchema: {
       type: 'object',
       properties: {
         minOccurrences: {
           type: 'number',
           description:
-            'Minimum number of occurrences to consider as recurring (default: 2)',
+            'Minimum times a charge must repeat to be considered recurring (default: 2, recommended: 3 for accuracy)',
           minimum: 2,
         },
         lookbackMonths: {
           type: 'number',
-          description: 'Number of months to analyze (default: 6)',
+          description: 'How many months back to analyze (default: 6, max: 12)',
           minimum: 1,
           maximum: 12,
         },
@@ -188,24 +194,25 @@ export const TOOLS = [
   {
     name: 'analyze_merchant_spending',
     description:
-      'Analyze spending patterns for specific merchants, including average transaction amounts, frequency, and anomaly detection',
+      'Deep-dive analysis for specific merchants! Shows spending patterns, average transaction amounts, frequency, and flags unusual charges (potential errors/fraud). Perfect for questions like "How much do I usually spend at the supermarket?" or "Alert me if any coffee shop charge is 50% higher than normal". The anomaly detection helps catch billing errors.',
     inputSchema: {
       type: 'object',
       properties: {
         merchantName: {
           type: 'string',
-          description: 'Merchant name or partial name to search for',
+          description:
+            'Full or partial merchant name (e.g., "Shufersal", "Aroma", "Castro")',
         },
         lookbackMonths: {
           type: 'number',
-          description: 'Number of months to analyze (default: 6)',
+          description: 'Number of months to analyze (default: 6, max: 24)',
           minimum: 1,
           maximum: 24,
         },
         includeAnomalies: {
           type: 'boolean',
           description:
-            'Include transactions that are significantly higher than average',
+            'Set to true to highlight transactions significantly higher than average (helps detect errors)',
         },
       },
       required: ['merchantName'],
@@ -214,7 +221,7 @@ export const TOOLS = [
   {
     name: 'get_spending_by_merchant',
     description:
-      'Get total spending grouped by merchant for a specific time period',
+      'Ranks all merchants by total spending to identify where your money goes. Answers "Who am I spending the most money with?" Perfect for finding cost-cutting opportunities or understanding spending priorities. Can filter to show only significant merchants above a minimum threshold.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -228,11 +235,13 @@ export const TOOLS = [
         },
         minAmount: {
           type: 'number',
-          description: 'Minimum total amount to include merchant',
+          description:
+            'Only show merchants where total spending exceeds this amount',
         },
         topN: {
           type: 'number',
-          description: 'Return only top N merchants by spending',
+          description:
+            'Limit results to top N merchants by spending (e.g., top 10)',
         },
       },
     },
@@ -240,7 +249,7 @@ export const TOOLS = [
   {
     name: 'get_category_comparison',
     description:
-      'Compare spending across different categories and sub-categories over time periods. IMPORTANT: You MUST call get_available_categories first to get the actual category names from the database, then select the most appropriate categories from that list. Categories are often in Hebrew, so exact matching is required.',
+      'Compares spending between categories across different time periods - essential for questions like "Am I spending more on food delivery vs groceries?" or "Which category increased the most?" CRITICAL: You MUST call get_available_categories FIRST to get valid category names (often in Hebrew), then use those exact names here. Perfect for lifestyle analysis and identifying spending trends.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -250,23 +259,23 @@ export const TOOLS = [
             type: 'string',
           },
           description:
-            'Categories to compare - MUST be exact category names from get_available_categories',
+            'Categories to compare - MUST be exact names from get_available_categories (case-sensitive, often in Hebrew)',
         },
         period1Start: {
           type: 'string',
-          description: 'Start date of first period (ISO format)',
+          description: 'Start date of first period (ISO format YYYY-MM-DD)',
         },
         period1End: {
           type: 'string',
-          description: 'End date of first period (ISO format)',
+          description: 'End date of first period (ISO format YYYY-MM-DD)',
         },
         period2Start: {
           type: 'string',
-          description: 'Start date of second period (ISO format)',
+          description: 'Start date of second period (ISO format YYYY-MM-DD)',
         },
         period2End: {
           type: 'string',
-          description: 'End date of second period (ISO format)',
+          description: 'End date of second period (ISO format YYYY-MM-DD)',
         },
       },
       required: ['period1Start', 'period1End', 'period2Start', 'period2End'],
@@ -275,17 +284,19 @@ export const TOOLS = [
   {
     name: 'search_transactions',
     description:
-      'Search transactions by multiple criteria including description, amount range, and category. IMPORTANT: If filtering by categories, you MUST call get_available_categories first to get the actual category names from the database, then select the most appropriate categories from that list. Categories are often in Hebrew, so exact matching is required.',
+      'Powerful transaction search with multiple filters! Find transactions by description (e.g., "uber"), amount range (e.g., "over 1000 NIS"), or category. Perfect for queries like "Show me all Uber rides", "Find all large purchases over 1,000", or "Show restaurant expenses". For category filtering, ALWAYS call get_available_categories first to get valid category names.',
     inputSchema: {
       type: 'object',
       properties: {
         searchTerm: {
           type: 'string',
-          description: 'Text to search in transaction descriptions',
+          description:
+            'Text to search in transaction descriptions (partial match, case-insensitive)',
         },
         minAmount: {
           type: 'number',
-          description: 'Minimum transaction amount',
+          description:
+            'Minimum transaction amount (e.g., 1000 for "transactions over 1,000")',
         },
         maxAmount: {
           type: 'number',
@@ -297,7 +308,7 @@ export const TOOLS = [
             type: 'string',
           },
           description:
-            'Filter by specific categories - MUST be exact category names from get_available_categories',
+            'Filter by categories - MUST be exact names from get_available_categories',
         },
         startDate: {
           type: 'string',
