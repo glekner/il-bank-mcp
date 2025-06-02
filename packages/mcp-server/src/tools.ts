@@ -166,7 +166,7 @@ export const TOOLS = [
   {
     name: 'get_recurring_charges',
     description:
-      'Identify and analyze recurring charges like subscriptions, memberships, and regular payments across all accounts',
+      'Identify and analyze recurring charges like subscriptions, memberships. you should only display charges that are identical or very similar to each other in their total amount and description',
     inputSchema: {
       type: 'object',
       properties: {
