@@ -18,7 +18,8 @@ import {
   StatusHandler,
   SummaryHandler,
   TransactionHandler,
-  type MonthlyCreditSummaryHandler,
+  DayOfWeekAnalysisHandler,
+  MonthlyCreditSummaryHandler,
 } from './handlers/index.js';
 import type { ToolName } from './tools.js';
 import { TOOLS } from './tools.js';
@@ -36,6 +37,7 @@ import type {
   SpendingByMerchantArgs,
   SummaryArgs,
   TransactionArgs,
+  DayOfWeekSpendingArgs,
 } from './types.js';
 import { logger } from './utils/logger.js';
 
@@ -68,6 +70,7 @@ type ToolArgsSpec = {
   get_spending_by_merchant: SpendingByMerchantArgs;
   get_category_comparison: CategoryComparisonArgs;
   search_transactions: SearchTransactionsArgs;
+  analyze_day_of_week_spending: DayOfWeekSpendingArgs;
 };
 
 const INSTRUCTIONS = `You are a sophisticated Personal Finance Advisor powered by the Israeli Bank Assistant MCP server, with real-time access to bank and credit card data from Israeli financial institutions.
@@ -169,6 +172,7 @@ class IsraeliBankMCPServer {
   private metadataHandler!: MetadataHandler;
   private categoryAnalysisHandler!: CategoryAnalysisHandler;
   private monthlyCreditSummaryHandler!: MonthlyCreditSummaryHandler;
+  private dayOfWeekAnalysisHandler!: DayOfWeekAnalysisHandler;
 
   constructor() {
     this.server = new Server(
@@ -208,6 +212,12 @@ class IsraeliBankMCPServer {
       this.scraperService
     );
     this.metadataHandler = new MetadataHandler(this.scraperService);
+    this.dayOfWeekAnalysisHandler = new DayOfWeekAnalysisHandler(
+      this.scraperService
+    );
+    this.monthlyCreditSummaryHandler = new MonthlyCreditSummaryHandler(
+      this.scraperService
+    );
   }
 
   private setupRequestHandlers() {
@@ -265,6 +275,9 @@ class IsraeliBankMCPServer {
 
       search_transactions: args =>
         this.categoryAnalysisHandler.searchTransactions(args),
+
+      analyze_day_of_week_spending: args =>
+        this.dayOfWeekAnalysisHandler.analyzeDayOfWeekSpending(args),
     };
 
     // 4. Generic helper to execute a tool

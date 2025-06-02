@@ -321,6 +321,40 @@ export const TOOLS = [
       },
     },
   },
+  {
+    name: 'analyze_day_of_week_spending',
+    description:
+      'Analyzes spending patterns by day of the week. Perfect for questions like "What\'s my average daily spending on weekdays vs weekends?", "Which day do I spend the most?", or "Show me spending by each day of the week". Can analyze patterns over any time period and provides insights into daily spending habits.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        startDate: {
+          type: 'string',
+          description: 'Start date in ISO format (YYYY-MM-DD)',
+        },
+        endDate: {
+          type: 'string',
+          description: 'End date in ISO format (YYYY-MM-DD)',
+        },
+        groupBy: {
+          type: 'string',
+          description:
+            'How to group the analysis: "day" (each day separately), "weekday_weekend" (weekdays vs weekends), or "all" (both analyses)',
+          enum: ['day', 'weekday_weekend', 'all'],
+        },
+        includeCategories: {
+          type: 'boolean',
+          description:
+            'Include spending breakdown by category for each day/group',
+        },
+        accountId: {
+          type: 'string',
+          description:
+            'Optional account ID to filter by (get this from get_accounts first)',
+        },
+      },
+    },
+  },
 ] as const satisfies Tool[];
 
 export type ToolName = (typeof TOOLS)[number]['name'];

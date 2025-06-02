@@ -164,3 +164,11 @@ export interface AvailableCategoriesArgs {
   endDate?: string;
   accountId?: string;
 }
+
+export interface DayOfWeekSpendingArgs {
+  startDate?: string;
+  endDate?: string;
+  groupBy?: 'day' | 'weekday_weekend' | 'all';
+  includeCategories?: boolean;
+  accountId?: string;
+}
