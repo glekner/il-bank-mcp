@@ -45,7 +45,6 @@ __metadata:
     "@types/node": "npm:^22.15.29"
     better-sqlite3: "npm:^11.10.0"
     dotenv: "npm:^16.5.0"
-    eslint: "npm:^9.28.0"
     israeli-bank-scrapers: "npm:^6.1.2"
     node-cron: "npm:^4.1.0"
     puppeteer: "npm:^24.9.0"
