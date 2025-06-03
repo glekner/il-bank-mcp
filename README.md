@@ -1,31 +1,26 @@
-# Israeli Bank Scraper MCP Server 🐷💸
+# Finance Assistant for Israeli Banks using MCP 🐷💸
 
-Transform your Israeli bank and credit-card data into actionable insights. This repository bundles a headless scraper (powered by [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers)) and an MCP (Model Context Protocol) server so any LLM-powered assistant can reason over your finances.
+Transform your bank and credit-card data into actionable insights. This repository bundles a headless scraper (powered by [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers)) and an MCP (Model Context Protocol) server so any LLM-powered assistant can reason over your finances.
 
----
+## ✨ Demo (Using Raycast)
 
-## ✨ Demo
-
-![Raycast MCP Server running](docs/screenshots/raycast-quickstart.png)
-
-_Talk to your finances directly from Raycast AI._
-
----
+![Raycast MCP Server running](https://raw.githubusercontent.com/glekner/il-bank-mcp/refs/heads/master/public/raycast-examples/summary.jpeg)
 
 ## Quick Start
 
-### 1. Raycast AI (MCP)
+### Raycast AI (MCP)
 
 Raycast ships with first-class MCP support — see the [manual](https://manual.raycast.com/ai). Spin up the server locally and **@-mention** it from any Raycast AI chat.
+You can even use [Ollama](https://ollama.com/) locally with Raycast for a totally free experience.
+
+  1. Install the MCP using the `Install MCP` command (Add env vars for your providers, take a look at [env.example](https://github.com/glekner/il-bank-mcp/blob/master/env.example) for examples
+   <img width="886" alt="image" src="https://github.com/user-attachments/assets/d2de2cbb-d96e-4a06-a575-3b6bc3837820" />
 
 ```bash
-# run in the project root
-# replace /path/to with your actual path if needed
-
-docker compose -f /path/to/il-bank-mcp/docker-compose.yml run --rm -i mcp-server
+// arguments should be
+compose -f /path/to/il-bank-mcp/docker-compose.yml run --rm -i mcp-server
 ```
 
-The server listens on `http://localhost:3000` and Raycast will auto-discover all tools.
 
 ### 2. Claude Desktop _(optional)_
 
@@ -35,10 +30,9 @@ Add the server to Claude Desktop via `~/.claude/config.jsonc`:
 {
   "mcpServers": {
     "israeli-bank-assistant": {
-      "command": "node",
-      "args": ["./packages/mcp-server/dist/index.js"],
+      "command": "docker",
+      "args": ["compose -f /path/to/il-bank-mcp/docker-compose.yml run --rm -i mcp-server"],
       "env": {
-        "DATABASE_PATH": "./data/db.sqlite",
         "LEUMI_USERNAME": "your_username",
         "LEUMI_PASSWORD": "your_password",
       },
@@ -46,8 +40,6 @@ Add the server to Claude Desktop via `~/.claude/config.jsonc`:
   },
 }
 ```
-
----
 
 ## Available Tools
 
@@ -76,17 +68,12 @@ Add the server to Claude Desktop via `~/.claude/config.jsonc`:
 - `get_scrape_status` — Last update times & scraping status
 - `get_metadata` — Database statistics & available ranges
 
----
-
 ## Features
 
 - Automated scraping from Israeli banks & credit-cards
-- Local SQLite database for offline persistence
+- Local SQLite database for offline persistence and security
 - Parallel scraping for multiple providers
 - Dynamic provider detection based on credentials
-- Docker support for zero-setup deployment
-
----
 
 ## Docker Compose (Full Stack)
 
