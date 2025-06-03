@@ -143,8 +143,8 @@ export class BankDataRepository {
   private saveTransaction(transaction: Transaction): void {
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO transactions 
-      (id, account_id, date, description, amount, category, reference, memo)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      (id, account_id, date, description, amount, category, reference, memo, pending)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     stmt.run(
@@ -155,7 +155,8 @@ export class BankDataRepository {
       transaction.amount,
       transaction.category,
       transaction.reference,
-      transaction.memo
+      transaction.memo,
+      transaction.pending ? 1 : 0
     );
   }
 
@@ -208,6 +209,7 @@ export class BankDataRepository {
       category: row.category || 'uncategorized',
       reference: row.reference,
       memo: row.memo,
+      pending: !!row.pending,
     }));
   }
 
@@ -514,6 +516,7 @@ interface TransactionRow {
   category: string | null;
   reference: string | null;
   memo: string | null;
+  pending?: number;
 }
 
 interface AccountRow {

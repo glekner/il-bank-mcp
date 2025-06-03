@@ -75,6 +75,11 @@ export interface Transaction {
   accountId: string;
   reference: string | null;
   memo: string | null;
+  /**
+   * Indicates a transaction that is still pending / has not yet been fully posted by the provider
+   * (the scraper returned both chargedAmount and originalAmount as null and we fall back to 0).
+   */
+  pending?: boolean;
   isInternalTransfer?: boolean;
   isPotentialTransfer?: boolean;
   transferDetails?: {

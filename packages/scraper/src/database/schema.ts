@@ -100,6 +100,17 @@ export function initializeDatabase(): Database.Database {
     CREATE INDEX IF NOT EXISTS idx_balances_account_date ON account_balances(account_id, recorded_at);
   `);
 
+  // Add "pending" column to transactions table if it doesn't exist yet (SQLite supports ALTER TABLE).
+  const columns: Array<{ name: string }> = db
+    .prepare(`PRAGMA table_info(transactions)`)
+    .all() as Array<{ name: string }>;
+
+  const hasPendingColumn = columns.some(col => col.name === 'pending');
+  if (!hasPendingColumn) {
+    logger.info('Adding "pending" column to transactions table');
+    db.exec(`ALTER TABLE transactions ADD COLUMN pending INTEGER DEFAULT 0`);
+  }
+
   logger.info('Database initialized successfully');
   return db;
 }

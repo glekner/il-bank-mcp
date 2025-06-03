@@ -136,6 +136,10 @@ export class GenericScraper implements BaseScraper {
           // Use chargedAmount or originalAmount if chargedAmount is not available
           const amount = txn.chargedAmount ?? txn.originalAmount ?? 0;
 
+          // Determine if this transaction is still pending (library returns null amounts for pending)
+          const isPending =
+            txn.chargedAmount == null && txn.originalAmount == null;
+
           return {
             id: `${this.type}-${txn.identifier || txn.date}-${txn.description}-${amount}`,
             date: new Date(txn.date),
@@ -145,6 +149,7 @@ export class GenericScraper implements BaseScraper {
             accountId: `${this.type}-${account.accountNumber}`,
             reference: null, // Reference field doesn't exist in israeli-bank-scrapers
             memo: txn.memo || null,
+            pending: isPending,
           };
         }) || []
       );
