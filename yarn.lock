@@ -46,7 +46,6 @@ __metadata:
     better-sqlite3: "npm:^11.10.0"
     dotenv: "npm:^16.5.0"
     israeli-bank-scrapers: "npm:^6.1.2"
-    node-cron: "npm:^4.1.0"
     puppeteer: "npm:^24.9.0"
     tsx: "npm:^4.19.4"
     typescript: "npm:^5.8.3"
@@ -542,16 +541,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:*":
-  version: 22.15.27
-  resolution: "@types/node@npm:22.15.27"
-  dependencies:
-    undici-types: "npm:~6.21.0"
-  checksum: 10/22ec9b8f2802437d60e1e9957340fed838f4322f5163e7e9046ff2e19c79d9d12a77b1c16205c21854b68c589b1fc7c3506b8ebd7cd4e7c5ebfcddb8b8083989
-  languageName: node
-  linkType: hard
-
-"@types/node@npm:^22.15.29":
+"@types/node@npm:*, @types/node@npm:^22.15.29":
   version: 22.15.29
   resolution: "@types/node@npm:22.15.29"
   dependencies:
@@ -2957,13 +2947,6 @@ __metadata:
   languageName: node
   linkType: hard
 
-"node-cron@npm:^4.1.0":
-  version: 4.1.0
-  resolution: "node-cron@npm:4.1.0"
-  checksum: 10/c15e40007e4c2e07d3b5864dd693c8c3651de83622e8f55651cea68ab544201e130267c02d891d49e4b793e35e47879b6a95753f59997fa5c30d6277c11aa6ae
-  languageName: node
-  linkType: hard
-
 "node-fetch@npm:^2.2.0":
   version: 2.7.0
   resolution: "node-fetch@npm:2.7.0"
@@ -4495,14 +4478,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"zod@npm:^3.23.8, zod@npm:^3.24.1":
-  version: 3.25.42
-  resolution: "zod@npm:3.25.42"
-  checksum: 10/eb1f86ef6c29f1cb35245b671a1f2a6ad1a40b3b56acd98d72afb1775c12d72631ad161fdf5e5041bcc78560df6a135096244f74734885458ee0aeec8ccb288d
-  languageName: node
-  linkType: hard
-
-"zod@npm:^3.25.45":
+"zod@npm:^3.23.8, zod@npm:^3.24.1, zod@npm:^3.25.45":
   version: 3.25.45
   resolution: "zod@npm:3.25.45"
   checksum: 10/a1d554c1ba5d92d0b3ab065e2ae21d49fe2d342762e4eb8f35893c47c9c87ae903bac960f54237a43ac8fe5f600bd3fa66eddc9545036b1f7cb28bd15d92eb82

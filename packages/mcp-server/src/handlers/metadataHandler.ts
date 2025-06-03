@@ -22,7 +22,7 @@ interface DatabaseMetadata {
     uniqueCount: number;
   };
   configuration: {
-    cronSchedule?: string;
+    scrapeIntervalHours?: string;
     scrapeDepthDays?: number;
     ignoredAccountIds: string[];
     databasePath?: string;
@@ -52,7 +52,7 @@ export class MetadataHandler extends BaseHandler {
 
       // Get configuration from environment
       const config = {
-        cronSchedule: process.env.CRON_SCHEDULE || 'Not set',
+        scrapeIntervalHours: process.env.SCRAPE_EVERY_HOURS || 'Not set',
         scrapeDepthDays: process.env.SCRAPE_DEPTH_DAYS
           ? parseInt(process.env.SCRAPE_DEPTH_DAYS)
           : undefined,

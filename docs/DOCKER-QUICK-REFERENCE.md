@@ -131,7 +131,7 @@ BANK_PASSWORD=your_password
 
 # Optional
 SCRAPE_MONTHS_BACK=6              # Default: 6
-SCRAPE_CRON_SCHEDULE=0 */6 * * * # Default: every 6 hours
+SCRAPE_EVERY_HOURS=6							# Default: 6
 DATABASE_PATH=/app/data/bank.db   # Default: ./data/bank.db
 LOG_LEVEL=info                    # Default: info
 ```

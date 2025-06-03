@@ -31,7 +31,7 @@ REQUIRED_VARS=(
 # Optional but recommended variables
 OPTIONAL_VARS=(
     "SCRAPE_MONTHS_BACK"
-    "SCRAPE_CRON_SCHEDULE"
+    "SCRAPE_EVERY_HOURS"
     "DATABASE_PATH"
     "LOG_LEVEL"
 )

@@ -48,7 +48,7 @@ echo "Configuration:"
 echo "  Database: ${DATABASE_PATH:-/app/data/bank.db}"
 echo "  Environment: ${NODE_ENV:-production}"
 echo "  Log Level: ${LOG_LEVEL:-info}"
-echo "  Scrape Schedule: ${SCRAPE_CRON_SCHEDULE:-0 */6 * * *}"
+echo "  Scrape Schedule: ${SCRAPE_EVERY_HOURS:-6}"
 
 # Execute the main command
 echo_info "Starting application..."
