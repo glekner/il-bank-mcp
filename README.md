@@ -13,10 +13,11 @@ Finance Assistant for Israeli Banks using MCP. Transform your bank and credit-ca
 Raycast ships with first-class MCP support — see the [manual](https://manual.raycast.com/ai). Spin up the server locally and **@-mention** it from any Raycast AI chat.
 You can even use [Ollama](https://ollama.com/) locally with Raycast for a totally free experience.
 
-1. Install the MCP using the `Install MCP` command (Add env vars for your providers, take a look at [env.example](https://github.com/glekner/il-bank-mcp/blob/master/env.example) for examples
-   <img width="886" alt="image" src="https://github.com/user-attachments/assets/d2de2cbb-d96e-4a06-a575-3b6bc3837820" />
+Install the MCP extension and use the `Install MCP` command (Add env vars for your providers, take a look at [env.example](https://github.com/glekner/il-bank-mcp/blob/master/env.example) for examples
 
 ```bash
+// command should be
+docker
 // arguments should be
 compose -f /path/to/il-bank-mcp/docker-compose.yml run --rm -i mcp-server
 ```
