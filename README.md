@@ -1,142 +1,117 @@
-# Israeli Bank Scraper MCP Server
+# Israeli Bank Scraper MCP Server 🐷💸
 
-A TypeScript service that scrapes Israeli bank and credit card data, exposed through a Model Context Protocol (MCP) server for AI assistant integration.
+Transform your Israeli bank and credit-card data into actionable insights. This repository bundles a headless scraper (powered by [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers)) and an MCP (Model Context Protocol) server so any LLM-powered assistant can reason over your finances.
 
-## Overview
+---
 
-This project consists of two main components:
+## ✨ Demo
 
-- **Scraper Service**: Automates data collection from Israeli financial institutions using [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers)
-- **MCP Server**: Exposes the scraped data through standardized tools for AI assistants
+![Raycast MCP Server running](docs/screenshots/raycast-quickstart.png)
+
+_Talk to your finances directly from Raycast AI._
+
+---
 
 ## Quick Start
 
-```bash
-# Clone the repository
-git clone <your-repo-url>
-cd il-bank-mcp
+### 1. Raycast AI (MCP)
 
-# Run with Docker Compose (using mock credentials)
-LEUMI_USERNAME=mock_user LEUMI_PASSWORD=mock_pass docker-compose up
+Raycast ships with first-class MCP support — see the [manual](https://manual.raycast.com/ai). Spin up the server locally and **@-mention** it from any Raycast AI chat.
+
+```bash
+# run in the project root
+# replace /path/to with your actual path if needed
+
+docker compose -f /path/to/il-bank-mcp/docker-compose.yml run --rm -i mcp-server
 ```
 
-## Features
+The server listens on `http://localhost:3000` and Raycast will auto-discover all tools.
 
-- Automated scraping from Israeli banks and credit cards
-- Local SQLite database for data persistence
-- Parallel scraping for multiple providers
-- Dynamic provider detection based on credentials
-- Docker support for easy deployment
+### 2. Claude Desktop _(optional)_
+
+Add the server to Claude Desktop via `~/.claude/config.jsonc`:
+
+```jsonc
+{
+  "mcpServers": {
+    "israeli-bank-assistant": {
+      "command": "node",
+      "args": ["./packages/mcp-server/dist/index.js"],
+      "env": {
+        "DATABASE_PATH": "./data/db.sqlite",
+        "LEUMI_USERNAME": "your_username",
+        "LEUMI_PASSWORD": "your_password",
+      },
+    },
+  },
+}
+```
+
+---
 
 ## Available Tools
 
 ### Data Retrieval
 
-- `get_transactions` - Retrieve transactions for a specific time period
-- `get_financial_summary` - Get aggregated income, expenses, and trends
-- `get_accounts` - List all accounts with current balances
-- `get_account_balance_history` - Track balance changes over time
-- `get_metadata` - Get database statistics and available data ranges
-- `search_transactions` - Search transactions by description, amount, or category
+- `get_transactions` — Retrieve transactions for a specific time period
+- `get_financial_summary` — Aggregated income, expenses & trends
+- `get_accounts` — List all accounts with current balances
+- `get_account_balance_history` — Balance changes over time
+- `search_transactions` — Search by description, amount or category
 
 ### Financial Analysis
 
-- `get_monthly_credit_summary` - Monthly credit card usage breakdown
-- `get_recurring_charges` - Detect subscriptions and recurring payments
-- `analyze_merchant_spending` - Spending patterns and anomaly detection for specific merchants
-- `get_spending_by_merchant` - Rank merchants by total spending
-- `get_category_comparison` - Compare spending between categories across time periods
-- `analyze_day_of_week_spending` - Analyze spending patterns by day of the week
-- `get_available_categories` - List all transaction categories in your data
+- `get_monthly_credit_summary` — Monthly credit-card usage breakdown
+- `get_recurring_charges` — Detect subscriptions & recurring payments
+- `analyze_merchant_spending` — Spending patterns & anomaly detection per merchant
+- `get_spending_by_merchant` — Rank merchants by total spending
+- `get_category_comparison` — Compare category spending across periods
+- `analyze_day_of_week_spending` — Spending habits by weekday
+- `get_available_categories` — List all categories present in your data
 
 ### Data Management
 
-- `refresh_all_data` - Update data from all configured providers
-- `refresh_service_data` - Update data from a specific provider
-- `get_scrape_status` - Check last update times and scraping status
+- `refresh_all_data` — Update data from all providers
+- `refresh_service_data` — Update data from a single provider
+- `get_scrape_status` — Last update times & scraping status
+- `get_metadata` — Database statistics & available ranges
 
-## Installation
+---
 
-### Prerequisites
+## Features
 
-- Node.js 18+
-- Yarn
-- Docker (optional)
+- Automated scraping from Israeli banks & credit-cards
+- Local SQLite database for offline persistence
+- Parallel scraping for multiple providers
+- Dynamic provider detection based on credentials
+- Docker support for zero-setup deployment
 
-### Local Setup
+---
 
-1. Install dependencies:
+## Docker Compose (Full Stack)
 
-   ```bash
-   yarn install
-   ```
+Prefer a one-liner? Start the scraper **and** database in the background:
 
-2. Configure environment:
-
-   ```bash
-   cp env.example .env
-   # Edit .env with your credentials
-   ```
-
-3. Build the project:
-
-   ```bash
-   yarn build
-   ```
-
-4. Run services:
-   ```bash
-   yarn dev
-   ```
-
-### Claude Desktop Integration
-
-Add to your Claude Desktop configuration:
-
-```json
-{
-  "mcpServers": {
-    "israeli-bank-assistant": {
-      "command": "node",
-      "args": ["/path/to/il-bank-mcp/packages/mcp-server/dist/index.js"],
-      "env": {
-        "LEUMI_USERNAME": "your_username",
-        "LEUMI_PASSWORD": "your_password"
-      }
-    }
-  }
-}
+```bash
+LEUMI_USERNAME=my_user LEUMI_PASSWORD=my_pass \
+  docker compose up -d
 ```
+
+Logs will stream to `./logs` and the database lives in `./data`.
+
+---
 
 ## Supported Providers
 
-The system automatically detects providers based on configured credentials. See [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers#whats-here) for the full list of supported institutions.
+The system autodetects providers by your supplied credentials. See the [`israeli-bank-scrapers` list](https://github.com/eshaham/israeli-bank-scrapers#whats-here) for all supported institutions.
 
-## Docker Deployment
+---
 
-```bash
-# Build and run
-docker-compose up
+## Contributing
 
-# Or build manually
-docker build -t israeli-bank-scraper .
-docker run -d \
-  -e LEUMI_USERNAME=your_username \
-  -e LEUMI_PASSWORD=your_password \
-  -v $(pwd)/data:/app/data \
-  israeli-bank-scraper
-```
+Early-stage project — PRs and bug reports are welcome! 🙏
 
-## Development
-
-```bash
-# Run both services
-yarn dev
-
-# Run specific service
-yarn workspace @il-bank-mcp/scraper dev
-yarn workspace @il-bank-mcp/mcp-server dev
-```
+---
 
 ## License
 
