@@ -1,6 +1,6 @@
-# Finance Assistant for Israeli Banks using MCP 🐷💸
+# `il-bank-mcp` 🐷💸
 
-Transform your bank and credit-card data into actionable insights. This repository bundles a headless scraper (powered by [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers)) and an MCP (Model Context Protocol) server so any LLM-powered assistant can reason over your finances.
+Finance Assistant for Israeli Banks using MCP. Transform your bank and credit-card data into actionable insights. This repository bundles a headless scraper (powered by [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers)) and an MCP (Model Context Protocol) server so any LLM-powered assistant can reason over your finances.
 
 ## ✨ Demo (Using Raycast)
 
@@ -13,14 +13,13 @@ Transform your bank and credit-card data into actionable insights. This reposito
 Raycast ships with first-class MCP support — see the [manual](https://manual.raycast.com/ai). Spin up the server locally and **@-mention** it from any Raycast AI chat.
 You can even use [Ollama](https://ollama.com/) locally with Raycast for a totally free experience.
 
-  1. Install the MCP using the `Install MCP` command (Add env vars for your providers, take a look at [env.example](https://github.com/glekner/il-bank-mcp/blob/master/env.example) for examples
+1. Install the MCP using the `Install MCP` command (Add env vars for your providers, take a look at [env.example](https://github.com/glekner/il-bank-mcp/blob/master/env.example) for examples
    <img width="886" alt="image" src="https://github.com/user-attachments/assets/d2de2cbb-d96e-4a06-a575-3b6bc3837820" />
 
 ```bash
 // arguments should be
 compose -f /path/to/il-bank-mcp/docker-compose.yml run --rm -i mcp-server
 ```
-
 
 ### 2. Claude Desktop _(optional)_
 
@@ -31,7 +30,9 @@ Add the server to Claude Desktop via `~/.claude/config.jsonc`:
   "mcpServers": {
     "israeli-bank-assistant": {
       "command": "docker",
-      "args": ["compose -f /path/to/il-bank-mcp/docker-compose.yml run --rm -i mcp-server"],
+      "args": [
+        "compose -f /path/to/il-bank-mcp/docker-compose.yml run --rm -i mcp-server",
+      ],
       "env": {
         "LEUMI_USERNAME": "your_username",
         "LEUMI_PASSWORD": "your_password",
