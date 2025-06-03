@@ -22,7 +22,7 @@ docker
 compose -f /path/to/il-bank-mcp/docker-compose.yml run --rm -i mcp-server
 ```
 
-### 2. Claude Desktop _(optional)_
+### 2. Claude Desktop
 
 Add the server to Claude Desktop via `~/.claude/config.jsonc`:
 
