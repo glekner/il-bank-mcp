@@ -15,7 +15,7 @@ IL Bank MCP is a finance assistant that brings your Israeli bank data to any AI 
 Run it with Docker Compose for the quickest setup:
 
 ```bash
-LEUMI_USERNAME=my_user LEUMI_PASSWORD=my_pass \
+LEUMI_USERNAME=my_user LEUMI_PASSWORD=my_pass ... \
   docker compose up -d
 ```
 
@@ -60,6 +60,16 @@ See [env.example](https://github.com/glekner/il-bank-mcp/blob/master/env.example
 - **Real-time Updates**: Refresh data on-demand from any provider
 - **Automated Sync**: By default, scrapes your bank data every 6 hours to keep everything current
 
+### What questions can I ask?
+
+Here are some questions to get insights from your financial data:
+
+- "Analyze spending patterns of Wolt"
+- "Show me all subscriptions I'm paying for and their total monthly cost"
+- "Show me all transactions over ₪1,000 in the last 30 days with their categories"
+- "How much did I spend on groceries last month?"
+- "Compare my spending this month vs last month"
+
 ### What tools does IL Bank MCP provide?
 
 - `get_transactions` - Fetch transactions for any time period
@@ -70,16 +80,6 @@ See [env.example](https://github.com/glekner/il-bank-mcp/blob/master/env.example
 - `analyze_merchant_spending` - Spot unusual spending patterns
 - `refresh_all_data` - Update from all connected accounts
 - `get_scrape_status` - Check when data was last updated
-
-### What questions can I ask?
-
-Here are some questions to get insights from your financial data:
-
-- "Analyze spending patterns of Wolt"
-- "Show me all subscriptions I'm paying for and their total monthly cost"
-- "Show me all transactions over ₪1,000 in the last 30 days with their categories"
-- "How much did I spend on groceries last month?"
-- "Compare my spending this month vs last month"
 
 ### FAQ from IL Bank MCP
 
