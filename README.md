@@ -1,30 +1,31 @@
-# IL Bank MCP 🐷💸
+<div align="center">
+<h1>IL Bank MCP 🐷💸</h1>
+</div>
 
-Finance Assistant for Israeli Banks using MCP. Transform your bank and credit-card data into actionable insights. This repository bundles a headless scraper (powered by [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers)) and an MCP (Model Context Protocol) server so any LLM-powered assistant can reason over your finances.
+## What is IL Bank MCP?
 
-## ✨ Demo (Using Raycast)
+IL Bank MCP is a finance assistant that brings your Israeli bank data to any AI assistant. It combines a headless scraper (powered by [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers)) with an MCP server, letting LLMs analyze your transactions, track spending patterns, and provide financial insights.
+
+### ✨ Demo
 
 ![Raycast MCP Server running](https://raw.githubusercontent.com/glekner/il-bank-mcp/refs/heads/master/public/raycast-examples/summary.jpeg)
 
-## Quick Start
+### How to use IL Bank MCP?
 
-### Raycast AI (MCP)
+Run it with Docker Compose for the quickest setup:
 
-Raycast ships with first-class MCP support — see the [manual](https://manual.raycast.com/ai). Spin up the server locally and **@-mention** it from any Raycast AI chat.
-You can even use [Ollama](https://ollama.com/) locally with Raycast for a totally free experience.
+```bash
+LEUMI_USERNAME=my_user LEUMI_PASSWORD=my_pass \
+  docker compose up -d
+```
 
-You can install the MCP extension and use the `Install MCP` command.
-The command should be:
+Then add it to your AI assistant. For Raycast, use their MCP extension with:
 
-`docker compose -f /path/to/il-bank-mcp/docker-compose.yml run --rm -i mcp-server`
+```
+docker compose -f /path/to/il-bank-mcp/docker-compose.yml run --rm -i mcp-server
+```
 
-Add env vars for your providers, take a look at [env.example](https://github.com/glekner/il-bank-mcp/blob/master/env.example) for examples
-
-<img width="886" alt="image" src="https://github.com/user-attachments/assets/f13b0929-78df-4247-b108-6f7484138e70" />
-
-### Claude Desktop
-
-Add the server to Claude Desktop via `~/.claude/config.jsonc`:
+For Claude Desktop, add to `~/.claude/config.jsonc`:
 
 ```json
 {
@@ -32,76 +33,102 @@ Add the server to Claude Desktop via `~/.claude/config.jsonc`:
     "israeli-bank-assistant": {
       "command": "docker",
       "args": [
-        "compose -f /path/to/il-bank-mcp/docker-compose.yml run --rm -i mcp-server",
+        "compose",
+        "-f",
+        "/path/to/il-bank-mcp/docker-compose.yml",
+        "run",
+        "--rm",
+        "-i",
+        "mcp-server"
       ],
       "env": {
         "LEUMI_USERNAME": "your_username",
-        "LEUMI_PASSWORD": "your_password",
-      },
-    },
-  },
+        "LEUMI_PASSWORD": "your_password"
+      }
+    }
+  }
 }
 ```
 
-## Available Tools
+See [env.example](https://github.com/glekner/il-bank-mcp/blob/master/env.example) for all credential and configuration options.
 
-### Data Retrieval
+### Key features of IL Bank MCP?
 
-- `get_transactions` — Retrieve transactions for a specific time period
-- `get_financial_summary` — Aggregated income, expenses & trends
-- `get_accounts` — List all accounts with current balances
-- `get_account_balance_history` — Balance changes over time
-- `search_transactions` — Search by description, amount or category
+- **Smart Analysis**: Get spending breakdowns, detect recurring charges, and track merchant patterns
+- **Local & Secure**: All data stays in a local SQLite database
+- **Multi-Provider**: Works with most Israeli banks and credit cards
+- **Real-time Updates**: Refresh data on-demand from any provider
+- **Automated Sync**: By default, scrapes your bank data every 6 hours to keep everything current
 
-### Financial Analysis
+### What tools does IL Bank MCP provide?
 
-- `get_monthly_credit_summary` — Monthly credit-card usage breakdown
-- `get_recurring_charges` — Detect subscriptions & recurring payments
-- `analyze_merchant_spending` — Spending patterns & anomaly detection per merchant
-- `get_spending_by_merchant` — Rank merchants by total spending
-- `get_category_comparison` — Compare category spending across periods
-- `analyze_day_of_week_spending` — Spending habits by weekday
-- `get_available_categories` — List all categories present in your data
+**Data Retrieval**
 
-### Data Management
+- `get_transactions` - Fetch transactions for any time period
+- `get_financial_summary` - Income, expenses, and trends at a glance
+- `search_transactions` - Find specific transactions by amount or description
 
-- `refresh_all_data` — Update data from all providers
-- `refresh_service_data` — Update data from a single provider
-- `get_scrape_status` — Last update times & scraping status
-- `get_metadata` — Database statistics & available ranges
+**Financial Analysis**
 
-## Features
+- `get_monthly_credit_summary` - Credit card usage breakdown
+- `get_recurring_charges` - Find subscriptions and repeated payments
+- `analyze_merchant_spending` - Spot unusual spending patterns
 
-- Automated scraping from Israeli banks & credit-cards
-- Local SQLite database for offline persistence and security
-- Parallel scraping for multiple providers
-- Dynamic provider detection based on credentials
+**Data Management**
 
+- `refresh_all_data` - Update from all connected accounts
+- `get_scrape_status` - Check when data was last updated
 
-## Docker Compose (Full Stack)
+### Use cases of IL Bank MCP?
 
-Prefer a one-liner? Start the scraper **and** database in the background:
+- Ask "How much did I spend on groceries last month?"
+- Track subscription creep with "Show me all my recurring charges"
+- Prepare taxes with "Get all my business expenses for 2024"
+- Budget planning with "Compare my spending this month vs last month"
 
-```bash
-LEUMI_USERNAME=my_user LEUMI_PASSWORD=my_pass \
-  docker compose up -d
-```
+### What questions can I ask?
 
-Logs will stream to `./logs` and the database lives in `./data`.
+Here are some powerful questions to get actionable insights from your financial data:
 
----
+**Spending Analysis**
 
-## Supported Providers
+- "What's my burn rate this month compared to last month?" - See if you're spending more or less than usual
+- "How much did I spend on food delivery vs groceries this month?" - The eternal question of cooking vs ordering in
+- "What's my average daily spending on weekdays vs weekends?" - Understand your spending patterns
 
-The system autodetects providers by your supplied credentials. See the [`israeli-bank-scrapers` list](https://github.com/eshaham/israeli-bank-scrapers#whats-here) for all supported institutions.
+**Subscription Management**
 
----
+- "Show me all subscriptions I'm paying for and their total monthly cost" - Find those forgotten recurring charges
+- "Compare my utility bills month-over-month for the last year" - Spot unusual spikes or negotiation opportunities
+
+**Savings & Budget Tracking**
+
+- "What percentage of my income am I saving each month for the last 6 months?" - Track your savings goals
+- "What's my projected balance at the end of the month based on current spending patterns?" - Know if you'll make it to payday
+
+**Anomaly Detection**
+
+- "Alert me when any transaction is 50% higher than my average for that merchant" - Catch errors or potential fraud
+- "Show me all transactions over ₪1,000 in the last 30 days with their categories" - Quick review of major expenses
+- "Which category increased the most in spending over the last 3 months?" - Identify lifestyle creep
+
+### FAQ from IL Bank MCP?
+
+**Which banks are supported?**  
+Any bank supported by [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers#whats-here) - includes Leumi, Hapoalim, Discount, and most credit card companies.
+
+**Is my data secure?**  
+Yes. Everything runs locally on your machine. No data leaves your computer.
+
+**Can I use it with local LLMs?**  
+Absolutely. Works great with Ollama through Raycast for a completely offline setup.
+
+**What if scraping fails?**  
+Check the logs in `./logs`. Most issues are login-related - verify your credentials match exactly what you use on the bank's website.
 
 ## Contributing
 
-Early-stage project — PRs and bug reports are welcome! 🙏
-
----
+Early days - contributions welcome! 🙏
 
 ## License
 
@@ -109,5 +136,5 @@ MIT
 
 ## Acknowledgments
 
-- [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers) - Core scraping functionality
+- [israeli-bank-scrapers](https://github.com/eshaham/israeli-bank-scrapers) - Core scraping engine
 - [Model Context Protocol](https://modelcontextprotocol.io/) - MCP framework
