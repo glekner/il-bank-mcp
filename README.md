@@ -62,57 +62,26 @@ See [env.example](https://github.com/glekner/il-bank-mcp/blob/master/env.example
 
 ### What tools does IL Bank MCP provide?
 
-**Data Retrieval**
-
 - `get_transactions` - Fetch transactions for any time period
 - `get_financial_summary` - Income, expenses, and trends at a glance
 - `search_transactions` - Find specific transactions by amount or description
-
-**Financial Analysis**
-
 - `get_monthly_credit_summary` - Credit card usage breakdown
 - `get_recurring_charges` - Find subscriptions and repeated payments
 - `analyze_merchant_spending` - Spot unusual spending patterns
-
-**Data Management**
-
 - `refresh_all_data` - Update from all connected accounts
 - `get_scrape_status` - Check when data was last updated
 
-### Use cases of IL Bank MCP?
-
-- Ask "How much did I spend on groceries last month?"
-- Track subscription creep with "Show me all my recurring charges"
-- Prepare taxes with "Get all my business expenses for 2024"
-- Budget planning with "Compare my spending this month vs last month"
-
 ### What questions can I ask?
 
-Here are some powerful questions to get actionable insights from your financial data:
+Here are some questions to get insights from your financial data:
 
-**Spending Analysis**
+- "Analyze spending patterns of Wolt"
+- "Show me all subscriptions I'm paying for and their total monthly cost"
+- "Show me all transactions over ₪1,000 in the last 30 days with their categories"
+- "How much did I spend on groceries last month?"
+- "Compare my spending this month vs last month"
 
-- "What's my burn rate this month compared to last month?" - See if you're spending more or less than usual
-- "How much did I spend on food delivery vs groceries this month?" - The eternal question of cooking vs ordering in
-- "What's my average daily spending on weekdays vs weekends?" - Understand your spending patterns
-
-**Subscription Management**
-
-- "Show me all subscriptions I'm paying for and their total monthly cost" - Find those forgotten recurring charges
-- "Compare my utility bills month-over-month for the last year" - Spot unusual spikes or negotiation opportunities
-
-**Savings & Budget Tracking**
-
-- "What percentage of my income am I saving each month for the last 6 months?" - Track your savings goals
-- "What's my projected balance at the end of the month based on current spending patterns?" - Know if you'll make it to payday
-
-**Anomaly Detection**
-
-- "Alert me when any transaction is 50% higher than my average for that merchant" - Catch errors or potential fraud
-- "Show me all transactions over ₪1,000 in the last 30 days with their categories" - Quick review of major expenses
-- "Which category increased the most in spending over the last 3 months?" - Identify lifestyle creep
-
-### FAQ from IL Bank MCP?
+### FAQ from IL Bank MCP
 
 **Which banks are supported?**  
 Any bank supported by [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers#whats-here) - includes Leumi, Hapoalim, Discount, and most credit card companies.
