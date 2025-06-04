@@ -80,6 +80,13 @@ export interface Transaction {
    * (the scraper returned both chargedAmount and originalAmount as null and we fall back to 0).
    */
   pending?: boolean;
+  /**
+   * Installments information for transactions paid in installments
+   */
+  installments?: {
+    number: number; // Current installment number
+    total: number; // Total number of installments
+  } | null;
   isInternalTransfer?: boolean;
   isPotentialTransfer?: boolean;
   transferDetails?: {

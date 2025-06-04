@@ -111,6 +111,24 @@ export function initializeDatabase(): Database.Database {
     db.exec(`ALTER TABLE transactions ADD COLUMN pending INTEGER DEFAULT 0`);
   }
 
+  // Add installments columns if they don't exist
+  const hasInstallmentNumber = columns.some(
+    col => col.name === 'installment_number'
+  );
+  const hasInstallmentTotal = columns.some(
+    col => col.name === 'installment_total'
+  );
+
+  if (!hasInstallmentNumber) {
+    logger.info('Adding "installment_number" column to transactions table');
+    db.exec(`ALTER TABLE transactions ADD COLUMN installment_number INTEGER`);
+  }
+
+  if (!hasInstallmentTotal) {
+    logger.info('Adding "installment_total" column to transactions table');
+    db.exec(`ALTER TABLE transactions ADD COLUMN installment_total INTEGER`);
+  }
+
   logger.info('Database initialized successfully');
   return db;
 }

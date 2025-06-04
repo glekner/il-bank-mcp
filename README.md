@@ -27,7 +27,6 @@ docker compose -f /path/to/il-bank-mcp/docker-compose.yml run --rm -i mcp-server
 
 <img width="886" alt="image" src="https://github.com/user-attachments/assets/27bdcdea-0c70-4f6a-8f39-2134bced7d27" />
 
-
 For Claude Desktop, add to `~/.claude/config.jsonc`:
 
 ```json
