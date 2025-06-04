@@ -22,15 +22,20 @@ export async function scrapeAllBankData(): Promise<ScrapedAccountData> {
       `Found credentials for ${providers.length} providers: ${providers.join(', ')}`
     );
 
-    // Create scraping promises for all providers
-    const scrapePromises = providers.map(async provider => {
+    const allAccounts: ScrapedAccountData['accounts'] = [];
+    const allTransactions: ScrapedAccountData['transactions'] = [];
+    const allRawData: ScrapedAccountData['rawData'] = [];
+    const errors: { provider: string; error: unknown }[] = [];
+
+    // Run scrapers sequentially to avoid resource contention
+    for (const provider of providers) {
       try {
-        logger.info(`Starting async scrape for ${provider}...`);
+        logger.info(`Starting scrape for ${provider}...`);
         const scraper = createScraperInstance(provider, credentials);
 
         if (!scraper) {
           logger.warn(`No scraper available for ${provider}`);
-          return null;
+          continue;
         }
 
         const startTime = Date.now();
@@ -41,39 +46,15 @@ export async function scrapeAllBankData(): Promise<ScrapedAccountData> {
           `Successfully scraped ${provider} in ${duration}ms: ${result.accounts.length} accounts, ${result.transactions.length} transactions`
         );
 
-        return { provider, result };
+        // Add results to collections
+        allAccounts.push(...result.accounts);
+        allTransactions.push(...result.transactions);
+        allRawData.push({ provider, data: result.rawData });
       } catch (error) {
         logger.error(`Failed to scrape ${provider}`, { error });
-        return { provider, error };
+        errors.push({ provider, error });
       }
-    });
-
-    // Execute all scrapes in parallel with Promise.allSettled
-    const scrapeResults = await Promise.allSettled(scrapePromises);
-
-    const allAccounts: ScrapedAccountData['accounts'] = [];
-    const allTransactions: ScrapedAccountData['transactions'] = [];
-    const allRawData: ScrapedAccountData['rawData'] = [];
-    const errors: { provider: string; error: unknown }[] = [];
-
-    // Process results
-    scrapeResults.forEach((result, index) => {
-      if (result.status === 'fulfilled' && result.value) {
-        if ('result' in result.value && result.value.result) {
-          const { provider, result: scrapedData } = result.value;
-          allAccounts.push(...scrapedData.accounts);
-          allTransactions.push(...scrapedData.transactions);
-          allRawData.push({ provider, data: scrapedData.rawData });
-        } else if ('error' in result.value) {
-          errors.push(result.value as { provider: string; error: unknown });
-        }
-      } else if (result.status === 'rejected') {
-        logger.error(`Promise rejected for provider ${providers[index]}`, {
-          reason: result.reason,
-        });
-        errors.push({ provider: providers[index], error: result.reason });
-      }
-    });
+    }
 
     // Log errors summary
     if (errors.length > 0) {
@@ -87,7 +68,7 @@ export async function scrapeAllBankData(): Promise<ScrapedAccountData> {
     }
 
     logger.info(
-      `Parallel scraping completed: ${allAccounts.length} total accounts, ${allTransactions.length} total transactions`
+      `Sequential scraping completed: ${allAccounts.length} total accounts, ${allTransactions.length} total transactions`
     );
 
     return {

@@ -14,6 +14,15 @@ x-service-defaults: &service-defaults # Common runtime settings for all services
     - seccomp=unconfined
   cap_add:
     - SYS_ADMIN
+  # Add resource limits to prevent runaway processes
+  deploy:
+    resources:
+      limits:
+        cpus: '2'
+        memory: 2G
+      reservations:
+        cpus: '0.5'
+        memory: 512M
 
 services:
   # Scraper service - runs the bank scraping backend
@@ -27,13 +36,22 @@ services:
     volumes:
       - bank-data:/app/data # Persist scraped DB between container restarts
       - ./packages/scraper/logs:/app/packages/scraper/logs
-    command: ["node", "dist/scheduler.js"]
+    command: ['node', 'dist/scheduler.js']
     healthcheck:
-      test: ["CMD", "node", "-e", "process.exit(0)"]
+      test: ['CMD', 'node', '-e', 'process.exit(0)']
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 40s
+    # Override with more generous limits for scraper
+    deploy:
+      resources:
+        limits:
+          cpus: '3'
+          memory: 3G
+        reservations:
+          cpus: '1'
+          memory: 1G
 
   # MCP Server - Model Context Protocol server
   mcp-server:
