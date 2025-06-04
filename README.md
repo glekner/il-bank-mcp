@@ -2,7 +2,7 @@
 <h1>IL Bank MCP 🐷💸</h1>
 </div>
 
-## What is IL Bank MCP?
+## What is it?
 
 IL Bank MCP is a finance assistant that brings your Israeli bank data to any AI assistant. It combines a headless scraper (powered by [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers)) with an MCP server, letting LLMs analyze your transactions, track spending patterns, and provide financial insights.
 
@@ -24,6 +24,9 @@ Then add it to your AI assistant. For Raycast, use their MCP extension with:
 ```
 docker compose -f /path/to/il-bank-mcp/docker-compose.yml run --rm -i mcp-server
 ```
+
+<img width="886" alt="image" src="https://github.com/user-attachments/assets/27bdcdea-0c70-4f6a-8f39-2134bced7d27" />
+
 
 For Claude Desktop, add to `~/.claude/config.jsonc`:
 
@@ -52,7 +55,7 @@ For Claude Desktop, add to `~/.claude/config.jsonc`:
 
 See [env.example](https://github.com/glekner/il-bank-mcp/blob/master/env.example) for all credential and configuration options.
 
-### Key features of IL Bank MCP?
+### Key features of IL Bank MCP
 
 - **Smart Analysis**: Get spending breakdowns, detect recurring charges, and track merchant patterns
 - **Local & Secure**: All data stays in a local SQLite database
