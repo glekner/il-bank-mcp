@@ -1,4 +1,4 @@
-# `il-bank-mcp` 🐷💸
+# IL Bank MCP 🐷💸
 
 Finance Assistant for Israeli Banks using MCP. Transform your bank and credit-card data into actionable insights. This repository bundles a headless scraper (powered by [`israeli-bank-scrapers`](https://github.com/eshaham/israeli-bank-scrapers)) and an MCP (Model Context Protocol) server so any LLM-powered assistant can reason over your finances.
 
@@ -13,20 +13,20 @@ Finance Assistant for Israeli Banks using MCP. Transform your bank and credit-ca
 Raycast ships with first-class MCP support — see the [manual](https://manual.raycast.com/ai). Spin up the server locally and **@-mention** it from any Raycast AI chat.
 You can even use [Ollama](https://ollama.com/) locally with Raycast for a totally free experience.
 
-Install the MCP extension and use the `Install MCP` command (Add env vars for your providers, take a look at [env.example](https://github.com/glekner/il-bank-mcp/blob/master/env.example) for examples
+You can install the MCP extension and use the `Install MCP` command.
+The command should be:
 
-```bash
-// command should be
-docker
-// arguments should be
-compose -f /path/to/il-bank-mcp/docker-compose.yml run --rm -i mcp-server
-```
+`docker compose -f /path/to/il-bank-mcp/docker-compose.yml run --rm -i mcp-server`
 
-### 2. Claude Desktop
+Add env vars for your providers, take a look at [env.example](https://github.com/glekner/il-bank-mcp/blob/master/env.example) for examples
+
+<img width="886" alt="image" src="https://github.com/user-attachments/assets/f13b0929-78df-4247-b108-6f7484138e70" />
+
+### Claude Desktop
 
 Add the server to Claude Desktop via `~/.claude/config.jsonc`:
 
-```jsonc
+```json
 {
   "mcpServers": {
     "israeli-bank-assistant": {
@@ -76,6 +76,7 @@ Add the server to Claude Desktop via `~/.claude/config.jsonc`:
 - Local SQLite database for offline persistence and security
 - Parallel scraping for multiple providers
 - Dynamic provider detection based on credentials
+
 
 ## Docker Compose (Full Stack)
 
