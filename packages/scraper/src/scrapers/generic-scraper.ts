@@ -142,7 +142,7 @@ export class GenericScraper implements BaseScraper {
 
           return {
             id: `${this.type}-${txn.identifier || txn.date}-${txn.description}-${amount}`,
-            date: new Date(txn.date),
+            date: txn.date,
             description: txn.description || 'No description',
             amount: amount,
             category: txn.category || 'Uncategorized',

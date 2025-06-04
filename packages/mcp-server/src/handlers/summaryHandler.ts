@@ -26,8 +26,8 @@ export class SummaryHandler extends BaseHandler {
     // Optimize the summary for large timeframes to prevent MCP response size errors
     const optimizedSummary = optimizeFinancialSummary(
       summary,
-      startDate,
-      endDate
+      startDate?.toISOString(),
+      endDate?.toISOString()
     );
 
     let response: SummaryResponse = {

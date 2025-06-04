@@ -16,9 +16,10 @@ export function processTransactions(
       // Determine if transaction is income or expense based on amount
       const isExpense = transaction.amount < 0;
       const isIncome = transaction.amount > 0;
+      const tDate = new Date(transaction.date);
 
       // Extract month for trend analysis (format: YYYY-MM)
-      const month = `${transaction.date.getFullYear()}-${String(transaction.date.getMonth() + 1).padStart(2, '0')}`;
+      const month = `${tDate.getFullYear()}-${String(tDate.getMonth() + 1).padStart(2, '0')}`;
 
       return {
         ...transaction,
@@ -27,7 +28,7 @@ export function processTransactions(
         month,
       };
     })
-    .sort((a, b) => b.date.getTime() - a.date.getTime()); // Sort by date descending
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Sort by date descending
 }
 
 /**
@@ -39,7 +40,7 @@ export function filterTransactionsByDateRange(
   endDate: Date
 ): ProcessedTransaction[] {
   return transactions.filter(transaction => {
-    const txnDate = transaction.date.getTime();
+    const txnDate = new Date(transaction.date).getTime();
     return txnDate >= startDate.getTime() && txnDate <= endDate.getTime();
   });
 }
@@ -57,7 +58,7 @@ export function groupTransactionsByPeriod(
     let key: string;
 
     if (period === 'day') {
-      key = transaction.date.toISOString().split('T')[0]; // YYYY-MM-DD
+      key = transaction.date.split('T')[0]; // YYYY-MM-DD
     } else if (period === 'week') {
       const date = new Date(transaction.date);
       const day = date.getDay();

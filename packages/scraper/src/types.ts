@@ -68,7 +68,7 @@ export type MultiProviderCredentials = Partial<
 
 export interface Transaction {
   id: string;
-  date: Date;
+  date: string;
   description: string;
   amount: number;
   category: string;

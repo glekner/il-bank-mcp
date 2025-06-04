@@ -150,7 +150,7 @@ export class BankDataRepository {
     stmt.run(
       transaction.id,
       transaction.accountId,
-      transaction.date.toISOString(),
+      transaction.date,
       transaction.description,
       transaction.amount,
       transaction.category,
@@ -203,7 +203,7 @@ export class BankDataRepository {
     return rows.map((row: TransactionRow) => ({
       id: row.id,
       accountId: row.account_id,
-      date: new Date(row.date),
+      date: row.date,
       description: row.description,
       amount: row.amount,
       category: row.category || 'uncategorized',

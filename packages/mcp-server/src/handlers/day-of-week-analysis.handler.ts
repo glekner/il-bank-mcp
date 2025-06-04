@@ -120,10 +120,9 @@ export class DayOfWeekAnalysisHandler extends BaseHandler {
             transactionCount: expenses.length,
             periodStart:
               startDate?.toISOString() ||
-              expenses[expenses.length - 1]?.date.toISOString() ||
+              expenses[expenses.length - 1]?.date ||
               '',
-            periodEnd:
-              endDate?.toISOString() || expenses[0]?.date.toISOString() || '',
+            periodEnd: endDate?.toISOString() || expenses[0]?.date || '',
           },
           insights,
         },

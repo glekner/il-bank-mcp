@@ -154,7 +154,7 @@ export class CategoryAnalysisHandler {
                 data: {
                   transactions: filteredTransactions.map(t => ({
                     ...t,
-                    date: t.date.toISOString(),
+                    date: t.date,
                   })),
                   count: filteredTransactions.length,
                   totalAmount: filteredTransactions.reduce(

@@ -34,8 +34,8 @@ export interface OptimizedFinancialSummary {
   transactions?: ProcessedTransaction[]; // Optional, may be omitted for large datasets
   transactionCount: number;
   dateRange: {
-    start: Date;
-    end: Date;
+    start: string;
+    end: string;
   };
   trends: FinancialTrend[];
   income: OptimizedCategoryBreakdown;
@@ -65,9 +65,11 @@ export interface OptimizedFinancialSummary {
 /**
  * Calculate the number of days between two dates
  */
-function getDaysBetween(startDate?: Date, endDate?: Date): number {
+function getDaysBetween(startDate?: string, endDate?: string): number {
   if (!startDate || !endDate) return 0;
-  const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+  const diffTime = Math.abs(
+    new Date(endDate).getTime() - new Date(startDate).getTime()
+  );
   return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 }
 
@@ -160,8 +162,8 @@ function calculateSummaryStats(
  */
 export function optimizeFinancialSummary(
   summary: FinancialSummary,
-  startDate?: Date,
-  endDate?: Date
+  startDate?: string,
+  endDate?: string
 ): OptimizedFinancialSummary {
   const daysBetween = getDaysBetween(startDate, endDate);
   const estimatedSize = estimateSize(summary);

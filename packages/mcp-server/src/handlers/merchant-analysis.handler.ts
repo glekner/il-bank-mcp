@@ -58,15 +58,15 @@ export class MerchantAnalysisHandler {
                 data: {
                   ...analysis,
                   // Convert dates to ISO strings for JSON serialization
-                  firstSeen: analysis.firstSeen.toISOString(),
-                  lastSeen: analysis.lastSeen.toISOString(),
+                  firstSeen: analysis.firstSeen,
+                  lastSeen: analysis.lastSeen,
                   transactions: analysis.transactions.map(t => ({
                     ...t,
-                    date: t.date.toISOString(),
+                    date: t.date,
                   })),
                   anomalies: analysis.anomalies?.map(t => ({
                     ...t,
-                    date: t.date.toISOString(),
+                    date: t.date,
                   })),
                 },
               },
@@ -112,7 +112,7 @@ export class MerchantAnalysisHandler {
                     ...m,
                     transactions: m.transactions.map(t => ({
                       ...t,
-                      date: t.date.toISOString(),
+                      date: t.date,
                     })),
                   })),
                   totalMerchants: merchantSpending.length,

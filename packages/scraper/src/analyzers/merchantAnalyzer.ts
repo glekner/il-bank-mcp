@@ -7,8 +7,8 @@ export interface MerchantAnalysis {
   averageAmount: number;
   minAmount: number;
   maxAmount: number;
-  firstSeen: Date;
-  lastSeen: Date;
+  firstSeen: string;
+  lastSeen: string;
   transactions: Transaction[];
   frequency: 'daily' | 'weekly' | 'monthly' | 'irregular';
   anomalies?: Transaction[];
@@ -58,7 +58,9 @@ export function analyzeMerchantSpending(
   }
 
   // Sort by date
-  merchantTransactions.sort((a, b) => a.date.getTime() - b.date.getTime());
+  merchantTransactions.sort(
+    (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+  );
 
   const amounts = merchantTransactions.map(t => Math.abs(t.amount));
   const totalAmount = amounts.reduce((sum, amt) => sum + amt, 0);
@@ -162,7 +164,8 @@ function determineFrequency(
   const intervals: number[] = [];
   for (let i = 1; i < transactions.length; i++) {
     const days = Math.floor(
-      (transactions[i].date.getTime() - transactions[i - 1].date.getTime()) /
+      (new Date(transactions[i].date).getTime() -
+        new Date(transactions[i - 1].date).getTime()) /
         (1000 * 60 * 60 * 24)
     );
     intervals.push(days);
@@ -187,7 +190,9 @@ export function findUnusualMerchantCharges(
   const cutoffDate = new Date();
   cutoffDate.setMonth(cutoffDate.getMonth() - lookbackMonths);
 
-  const recentTransactions = transactions.filter(t => t.date >= cutoffDate);
+  const recentTransactions = transactions.filter(
+    t => new Date(t.date) >= cutoffDate
+  );
   const merchantAnalyses: MerchantAnalysis[] = [];
 
   // Get unique merchants

@@ -38,7 +38,7 @@ export class TransactionHandler extends BaseHandler {
 
       // Sort by date (newest first) and take the most recent transactions
       const sortedTransactions = [...transactions]
-        .sort((a, b) => b.date.getTime() - a.date.getTime())
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, MAX_TRANSACTIONS_PER_RESPONSE);
 
       response = {
