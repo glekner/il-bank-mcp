@@ -7,6 +7,31 @@ import {
 import { logger } from './utils/logger';
 import type { ProviderKey } from './utils/providers';
 
+// Timeout for individual provider scrape operations (in minutes)
+const PROVIDER_SCRAPE_TIMEOUT_MINUTES = 10;
+const PROVIDER_SCRAPE_TIMEOUT_MS = PROVIDER_SCRAPE_TIMEOUT_MINUTES * 60 * 1000;
+
+/**
+ * Wraps a scraping operation with a timeout
+ */
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  provider: string
+): Promise<T> {
+  const timeoutPromise = new Promise<never>((_, reject) => {
+    setTimeout(() => {
+      reject(
+        new Error(
+          `Scraping ${provider} timed out after ${timeoutMs / 60000} minutes`
+        )
+      );
+    }, timeoutMs);
+  });
+
+  return Promise.race([promise, timeoutPromise]);
+}
+
 /**
  * Scrapes financial data from all configured providers in parallel
  * @returns Promise resolving to the combined scraped data
@@ -39,7 +64,14 @@ export async function scrapeAllBankData(): Promise<ScrapedAccountData> {
         }
 
         const startTime = Date.now();
-        const result = await scraper.scrape();
+
+        // Wrap the scrape operation with a timeout
+        const result = await withTimeout(
+          scraper.scrape(),
+          PROVIDER_SCRAPE_TIMEOUT_MS,
+          provider
+        );
+
         const duration = Date.now() - startTime;
 
         logger.info(
@@ -51,7 +83,11 @@ export async function scrapeAllBankData(): Promise<ScrapedAccountData> {
         allTransactions.push(...result.transactions);
         allRawData.push({ provider, data: result.rawData });
       } catch (error) {
-        logger.error(`Failed to scrape ${provider}`, { error });
+        logger.error(`Failed to scrape ${provider}`, {
+          error,
+          isTimeout:
+            error instanceof Error && error.message.includes('timed out'),
+        });
         errors.push({ provider, error });
       }
     }
@@ -60,6 +96,12 @@ export async function scrapeAllBankData(): Promise<ScrapedAccountData> {
     if (errors.length > 0) {
       logger.warn(`Scraping completed with ${errors.length} failures`, {
         failedProviders: errors.map(e => e.provider),
+        timeouts: errors
+          .filter(
+            e =>
+              e.error instanceof Error && e.error.message.includes('timed out')
+          )
+          .map(e => e.provider),
       });
     }
 
@@ -110,14 +152,27 @@ export async function scrapeSingleProvider(
       throw new Error(`No scraper implementation found for ${provider}`);
     }
 
-    const result = await scraper.scrape();
+    const startTime = Date.now();
+
+    // Wrap the scrape operation with a timeout
+    const result = await withTimeout(
+      scraper.scrape(),
+      PROVIDER_SCRAPE_TIMEOUT_MS,
+      provider
+    );
+
+    const duration = Date.now() - startTime;
+
     logger.info(
-      `Successfully scraped ${provider}: ${result.accounts.length} accounts, ${result.transactions.length} transactions`
+      `Successfully scraped ${provider} in ${duration}ms: ${result.accounts.length} accounts, ${result.transactions.length} transactions`
     );
 
     return result;
   } catch (error) {
-    logger.error(`Error during ${provider} scraping process`, { error });
+    logger.error(`Error during ${provider} scraping process`, {
+      error,
+      isTimeout: error instanceof Error && error.message.includes('timed out'),
+    });
     throw new Error(
       `${provider} scraping error: ${error instanceof Error ? error.message : String(error)}`
     );

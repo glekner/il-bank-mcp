@@ -306,6 +306,7 @@ export class BankDataRepository {
       | undefined;
 
     if (!lastRun || !lastRun.completed_at) {
+      logger.info('Should scrape: No successful runs found yet');
       return true; // No successful runs yet
     }
 
@@ -313,7 +314,17 @@ export class BankDataRepository {
     const hoursSinceLastRun =
       (Date.now() - lastRunDate.getTime()) / (1000 * 60 * 60);
 
-    return hoursSinceLastRun >= hoursThreshold;
+    const shouldScrape = hoursSinceLastRun >= hoursThreshold;
+
+    logger.info('Freshness check result', {
+      lastRunDate: lastRunDate.toISOString(),
+      hoursSinceLastRun: hoursSinceLastRun.toFixed(2),
+      hoursThreshold,
+      shouldScrape,
+      decision: shouldScrape ? 'SCRAPE' : 'SKIP',
+    });
+
+    return shouldScrape;
   }
 
   /**
