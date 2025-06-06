@@ -3,6 +3,7 @@ import { logger } from './utils/logger';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import { setInterval } from 'node:timers';
+import { ProcessMonitor } from './utils/process-monitor';
 
 // Load environment variables from root directory
 dotenv.config({ path: path.resolve(__dirname, '../../../.env') });
@@ -64,6 +65,10 @@ async function runScheduledScrape(): Promise<void> {
 }
 
 function startScheduler(): void {
+  // Start process monitor to clean up hanging Chrome processes
+  const processMonitor = ProcessMonitor.getInstance();
+  processMonitor.startMonitoring();
+
   // Run immediately on startup so new environments get data straight away
   logger.info('Running initial scrape on startup');
   runScheduledScrapeWithTimeout().catch(e =>
@@ -83,6 +88,7 @@ function startScheduler(): void {
   const shutdown = () => {
     logger.info('Scheduler shutting down...');
     clearInterval(interval);
+    processMonitor.stopMonitoring();
     process.exit(0);
   };
 
@@ -95,10 +101,16 @@ function startScheduler(): void {
       error: error.message,
       stack: error.stack,
     });
+    // Exit the process to prevent hanging in an undefined state
+    // The container will restart automatically
+    process.exit(1);
   });
 
   process.on('unhandledRejection', (reason, promise) => {
     logger.error('Unhandled rejection in scheduler', { reason, promise });
+    // Exit the process to prevent hanging in an undefined state
+    // The container will restart automatically
+    process.exit(1);
   });
 
   logger.info('Bank data scraper scheduler started', {

@@ -82,7 +82,7 @@ export class GenericScraper implements BaseScraper {
         new Date().setMonth(new Date().getMonth() - monthsBack)
       ),
       executablePath,
-      verbose: true,
+      verbose: false, // Disable verbose logging to reduce log noise
       args: chromeArgs,
       navigationRetryCount: 3,
       additionalTransactionInformation: true,
@@ -98,6 +98,11 @@ export class GenericScraper implements BaseScraper {
       '--disable-web-security',
       '--disable-features=IsolateOrigins',
       '--disable-site-isolation-trials',
+      // Add memory optimization flags for containers
+      '--memory-pressure-off',
+      '--disable-background-timer-throttling',
+      '--disable-renderer-backgrounding',
+      '--disable-backgrounding-occluded-windows',
     ];
 
     const envArgs =

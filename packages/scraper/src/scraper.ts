@@ -19,17 +19,28 @@ async function withTimeout<T>(
   timeoutMs: number,
   provider: string
 ): Promise<T> {
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    setTimeout(() => {
-      reject(
-        new Error(
-          `Scraping ${provider} timed out after ${timeoutMs / 60000} minutes`
-        )
-      );
+  let timeoutId: NodeJS.Timeout | undefined;
+
+  const timeoutPromise = new Promise<never>(() => {
+    timeoutId = setTimeout(() => {
+      logger.error('Scrape timeout - killing process to prevent hanging', {
+        provider,
+        timeoutMinutes: timeoutMs / 60000,
+      });
+      // Force exit to prevent hanging browser processes
+      // The container will restart automatically
+      process.exit(1);
     }, timeoutMs);
   });
 
-  return Promise.race([promise, timeoutPromise]);
+  try {
+    const result = await Promise.race([promise, timeoutPromise]);
+    clearTimeout(timeoutId);
+    return result;
+  } catch (error) {
+    clearTimeout(timeoutId);
+    throw error;
+  }
 }
 
 /**

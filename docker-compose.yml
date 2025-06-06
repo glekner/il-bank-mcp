@@ -8,6 +8,7 @@ x-service-defaults: &service-defaults # Common runtime settings for all services
     DATABASE_PATH: /app/data/bank.db
     PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium-browser
     PUPPETEER_ARGS: --no-sandbox,--disable-setuid-sandbox,--disable-dev-shm-usage
+    LOG_LEVEL: info # Ensure info level logging
   networks:
     - bank-network
   security_opt:
@@ -23,6 +24,11 @@ x-service-defaults: &service-defaults # Common runtime settings for all services
       reservations:
         cpus: '0.5'
         memory: 512M
+  logging:
+    driver: json-file
+    options:
+      max-size: '10m'
+      max-file: '3'
 
 services:
   # Scraper service - runs the bank scraping backend
@@ -38,7 +44,13 @@ services:
       - ./packages/scraper/logs:/app/packages/scraper/logs
     command: ['node', 'dist/scheduler.js']
     healthcheck:
-      test: ['CMD', 'node', '-e', 'process.exit(0)']
+      test:
+        [
+          'CMD',
+          'sh',
+          '-c',
+          'ps aux | grep -v grep | grep "node dist/scheduler.js" || exit 1',
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
