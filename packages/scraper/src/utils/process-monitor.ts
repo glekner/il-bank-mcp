@@ -7,8 +7,9 @@ const execAsync = promisify(exec);
 export class ProcessMonitor {
   private static instance: ProcessMonitor;
   private monitorInterval: NodeJS.Timeout | null = null;
-  private readonly CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
-  private readonly MAX_CHROME_AGE_MS = 15 * 60 * 1000; // 15 minutes
+  private readonly CHECK_INTERVAL_MS = 2 * 60 * 1000; // Check every 2 minutes
+  private readonly MAX_CHROME_AGE_MS = 10 * 60 * 1000; // Kill Chrome processes older than 10 minutes
+  private readonly MAX_MEMORY_MB = 500; // Kill Chrome processes using more than 500MB
 
   private constructor() {}
 
@@ -45,48 +46,126 @@ export class ProcessMonitor {
 
   private async checkForHangingProcesses(): Promise<void> {
     try {
-      // Find Chrome processes older than MAX_CHROME_AGE_MS
+      // Kill zombie processes first
+      await this.killZombieProcesses();
+
+      // Find all Chrome-related processes
       const psCommand = `ps aux | grep -E "(chromium|chrome)" | grep -v grep`;
-      const { stdout } = await execAsync(psCommand);
+      const { stdout } = await execAsync(psCommand).catch(() => ({
+        stdout: '',
+      }));
 
       if (!stdout.trim()) {
         return; // No Chrome processes
       }
 
       const lines = stdout.trim().split('\n');
-      const now = Date.now();
+      let killedCount = 0;
 
       for (const line of lines) {
         const parts = line.split(/\s+/);
         const pid = parts[1];
+        const cpu = parseFloat(parts[2]);
+        const rss = parseInt(parts[5]); // Resident set size in KB
 
-        // Get process start time
-        const statCommand = `stat -c %Y /proc/${pid}/stat 2>/dev/null || echo 0`;
+        // Check for high memory usage
+        const memoryMB = rss / 1024;
+        if (memoryMB > this.MAX_MEMORY_MB) {
+          logger.warn('Found Chrome process with excessive memory usage', {
+            pid,
+            memoryMB: Math.round(memoryMB),
+            cpu: `${cpu}%`,
+          });
+
+          try {
+            await execAsync(`kill -9 ${pid}`);
+            killedCount++;
+            logger.info('Killed high-memory Chrome process', {
+              pid,
+              memoryMB: Math.round(memoryMB),
+            });
+          } catch (error) {
+            logger.debug('Could not kill process', { pid, error });
+          }
+          continue;
+        }
+
+        // Check for old processes
         try {
-          const { stdout: statOutput } = await execAsync(statCommand);
-          const startTime = parseInt(statOutput.trim()) * 1000;
+          // Use ps to get process start time
+          const { stdout: etimeOutput } = await execAsync(
+            `ps -o etime= -p ${pid} 2>/dev/null || echo "00:00"`
+          );
+          const etime = etimeOutput.trim();
 
-          if (startTime > 0) {
-            const ageMs = now - startTime;
+          // Parse elapsed time (format can be: SS, MM:SS, HH:MM:SS, or DD-HH:MM:SS)
+          const ageMs = this.parseElapsedTime(etime);
 
-            if (ageMs > this.MAX_CHROME_AGE_MS) {
-              logger.warn('Found hanging Chrome process', {
-                pid,
-                ageMinutes: Math.round(ageMs / 60000),
-              });
+          if (ageMs > this.MAX_CHROME_AGE_MS) {
+            logger.warn('Found old Chrome process', {
+              pid,
+              ageMinutes: Math.round(ageMs / 60000),
+              cpu: `${cpu}%`,
+              memoryMB: Math.round(memoryMB),
+            });
 
-              // Kill the process
-              await execAsync(`kill -9 ${pid}`);
-              logger.info('Killed hanging Chrome process', { pid });
-            }
+            await execAsync(`kill -9 ${pid}`);
+            killedCount++;
+            logger.info('Killed old Chrome process', {
+              pid,
+              ageMinutes: Math.round(ageMs / 60000),
+            });
           }
         } catch (error) {
           // Process might have already exited
           logger.debug('Could not check process age', { pid, error });
         }
       }
+
+      if (killedCount > 0) {
+        logger.info('Chrome process cleanup completed', { killedCount });
+      }
     } catch (error) {
       logger.error('Error checking for hanging processes', { error });
     }
+  }
+
+  private async killZombieProcesses(): Promise<void> {
+    try {
+      // Find and kill zombie processes
+      const { stdout } = await execAsync(
+        `ps aux | grep -E "Z|<defunct>" | grep -v grep`
+      ).catch(() => ({ stdout: '' }));
+
+      if (stdout.trim()) {
+        const lines = stdout.trim().split('\n');
+        for (const line of lines) {
+          const parts = line.split(/\s+/);
+          const pid = parts[1];
+
+          try {
+            await execAsync(`kill -9 ${pid}`);
+            logger.info('Killed zombie process', { pid });
+          } catch {
+            // Zombie might be cleaned up by parent
+          }
+        }
+      }
+    } catch (error) {
+      logger.debug('Error killing zombie processes', { error });
+    }
+  }
+
+  private parseElapsedTime(etime: string): number {
+    // Parse elapsed time format: SS, MM:SS, HH:MM:SS, or DD-HH:MM:SS
+    const parts = etime.split(/[-:]/).reverse();
+    const seconds = parseInt(parts[0] || '0');
+    const minutes = parseInt(parts[1] || '0');
+    const hours = parseInt(parts[2] || '0');
+    const days = parseInt(parts[3] || '0');
+
+    return (
+      (days * 24 * 60 * 60 + hours * 60 * 60 + minutes * 60 + seconds) * 1000
+    );
   }
 }

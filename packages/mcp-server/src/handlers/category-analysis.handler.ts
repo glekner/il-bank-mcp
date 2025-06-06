@@ -126,13 +126,17 @@ export class CategoryAnalysisHandler {
       // Amount range filter
       if (args.minAmount !== undefined) {
         filteredTransactions = filteredTransactions.filter(
-          t => Math.abs(t.amount) >= args.minAmount!
+          t =>
+            Math.abs(t.chargedAmount ?? t.originalAmount ?? 0) >=
+            args.minAmount!
         );
       }
 
       if (args.maxAmount !== undefined) {
         filteredTransactions = filteredTransactions.filter(
-          t => Math.abs(t.amount) <= args.maxAmount!
+          t =>
+            Math.abs(t.chargedAmount ?? t.originalAmount ?? 0) <=
+            args.maxAmount!
         );
       }
 
@@ -140,7 +144,7 @@ export class CategoryAnalysisHandler {
       if (args.categories && args.categories.length > 0) {
         const categoriesLower = args.categories.map(c => c.toLowerCase());
         filteredTransactions = filteredTransactions.filter(t =>
-          categoriesLower.includes(t.category.toLowerCase())
+          categoriesLower.includes(t.category?.toLowerCase() ?? '')
         );
       }
 
@@ -158,7 +162,8 @@ export class CategoryAnalysisHandler {
                   })),
                   count: filteredTransactions.length,
                   totalAmount: filteredTransactions.reduce(
-                    (sum, t) => sum + t.amount,
+                    (sum, t) =>
+                      sum + Math.abs(t.chargedAmount ?? t.originalAmount ?? 0),
                     0
                   ),
                 },

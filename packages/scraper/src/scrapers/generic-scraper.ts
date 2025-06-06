@@ -4,15 +4,11 @@ import {
   type ScraperOptions,
   type ScraperScrapingResult,
 } from 'israeli-bank-scrapers';
-import { ProviderCredentials, ScrapedAccountData } from '../types';
+import { ProviderCredentials, ScrapedAccountData, Transaction } from '../types';
 import { getChromeExecutablePath } from '../utils/chrome';
 import { logger } from '../utils/logger';
 import { getProviderDisplayName, type ProviderKey } from '../utils/providers';
 import { BaseScraper } from './base';
-
-type IBSTransaction = NonNullable<
-  ScraperScrapingResult['accounts']
->[number]['txns'][number];
 
 /**
  * Generic scraper that can handle any Israeli bank provider
@@ -103,6 +99,35 @@ export class GenericScraper implements BaseScraper {
       '--disable-background-timer-throttling',
       '--disable-renderer-backgrounding',
       '--disable-backgrounding-occluded-windows',
+      // Aggressive memory limits
+      '--max_old_space_size=512',
+      '--js-flags=--max-old-space-size=512',
+      '--renderer-process-limit=2',
+      '--single-process',
+      '--no-zygote',
+      '--no-first-run',
+      '--disable-extensions',
+      '--disable-default-apps',
+      '--disable-translate',
+      '--disable-sync',
+      '--metrics-recording-only',
+      '--safebrowsing-disable-auto-update',
+      '--disable-component-update',
+      '--disable-background-networking',
+      '--disable-features=TranslateUI',
+      '--disable-ipc-flooding-protection',
+      // Prevent memory leaks from media/audio
+      '--autoplay-policy=user-gesture-required',
+      '--disable-background-media-suspend',
+      '--disable-blink-features=AutomationControlled',
+      '--disable-features=AudioServiceOutOfProcess',
+      '--disable-print-preview',
+      '--disable-site-isolation-for-policy',
+      '--disable-speech-api',
+      '--disable-voice-input',
+      '--mute-audio',
+      '--no-default-browser-check',
+      '--no-pings',
     ];
 
     const envArgs =
@@ -136,95 +161,38 @@ export class GenericScraper implements BaseScraper {
   ): ScrapedAccountData {
     logger.info(`Formatting ${this.type} scraped data`);
 
-    // Extract all transactions from all accounts
-    const allTransactions = this.extractTransactions(accounts!);
+    // Extract all transactions from all accounts with proper account association
+    const allTransactions: Transaction[] = [];
 
-    // Filter out any invalid transactions
-    const validTransactions = this.filterValidTransactions(allTransactions);
+    for (const account of accounts) {
+      const accountId = `${this.type}-${account.accountNumber}`;
+
+      if (account.txns) {
+        for (const txn of account.txns) {
+          // Add accountId to each transaction
+          const transactionWithAccount = {
+            ...txn,
+            accountId,
+          };
+
+          allTransactions.push(transactionWithAccount);
+        }
+      }
+    }
 
     logger.info(
-      `Processed ${validTransactions.length} valid ${this.type} transactions out of ${allTransactions.length} total`
+      `Processed ${allTransactions.length} ${this.type} transactions`
     );
 
     // Extract account information
-    const accountsInfo = this.extractAccountInfo(accounts!);
+    const accountsInfo = this.extractAccountInfo(accounts);
 
     return {
       accounts: accountsInfo,
-      transactions: validTransactions,
+      transactions: allTransactions,
       rawData: accounts as unknown[],
       scrapedAt: new Date(),
     };
-  }
-
-  private extractTransactions(
-    accounts: NonNullable<ScraperScrapingResult['accounts']>
-  ) {
-    return accounts.flatMap(account => {
-      logger.info(`Processing ${this.type} account ${account.accountNumber}`, {
-        transactionCount: account.txns?.length || 0,
-      });
-
-      return (account.txns || []).map(txn =>
-        this.mapTransaction(txn, account.accountNumber)
-      );
-    });
-  }
-
-  private mapTransaction(txn: IBSTransaction, accountNumber: string) {
-    // Log transaction details for debugging
-    if (txn.chargedAmount === null || txn.chargedAmount === undefined) {
-      logger.warn(
-        `${this.type} transaction with null/undefined chargedAmount`,
-        {
-          date: txn.date,
-          description: txn.description,
-          originalAmount: txn.originalAmount,
-          chargedAmount: txn.chargedAmount,
-          status: txn.status,
-        }
-      );
-    }
-
-    // Use chargedAmount or originalAmount if chargedAmount is not available
-    const amount = txn.chargedAmount ?? txn.originalAmount ?? 0;
-
-    // Use the status field to determine if pending
-    const isPending = txn.status === 'pending';
-
-    return {
-      id: `${this.type}-${txn.identifier || txn.date}-${txn.description}-${amount}`,
-      date: txn.date,
-      description: txn.description || 'No description',
-      amount: amount,
-      category: txn.category || 'Uncategorized',
-      accountId: `${this.type}-${accountNumber}`,
-      reference: null, // Reference field doesn't exist in israeli-bank-scrapers
-      memo: txn.memo || null,
-      pending: isPending,
-      installments: txn.installments
-        ? {
-            number: txn.installments.number,
-            total: txn.installments.total,
-          }
-        : null,
-    };
-  }
-
-  private filterValidTransactions(
-    transactions: ReturnType<typeof this.mapTransaction>[]
-  ) {
-    return transactions.filter(txn => {
-      const isValid = txn.date && txn.description && !isNaN(txn.amount);
-
-      if (!isValid) {
-        logger.warn(`Filtering out invalid ${this.type} transaction`, {
-          transaction: txn,
-        });
-      }
-
-      return isValid;
-    });
   }
 
   private extractAccountInfo(

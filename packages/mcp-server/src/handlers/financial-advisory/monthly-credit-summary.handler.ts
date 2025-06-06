@@ -57,12 +57,16 @@ export class MonthlyCreditSummaryHandler extends BaseHandler {
         if (cardTransactions.length === 0) continue;
 
         const totalSpent = cardTransactions.reduce(
-          (sum, txn) => sum + Math.abs(txn.amount),
+          (sum, txn) =>
+            sum + Math.abs(txn.chargedAmount ?? txn.originalAmount ?? 0),
           0
         );
 
         const largestTransaction = cardTransactions.reduce((prev, current) =>
-          Math.abs(current.amount) > Math.abs(prev.amount) ? current : prev
+          Math.abs(current.chargedAmount ?? current.originalAmount ?? 0) >
+          Math.abs(prev.chargedAmount ?? prev.originalAmount ?? 0)
+            ? current
+            : prev
         );
 
         const summary: CreditCardSummary = {
@@ -81,7 +85,8 @@ export class MonthlyCreditSummaryHandler extends BaseHandler {
           cardTransactions.forEach(txn => {
             const category = txn.category || 'Uncategorized';
             categoryBreakdown[category] =
-              (categoryBreakdown[category] || 0) + Math.abs(txn.amount);
+              (categoryBreakdown[category] || 0) +
+              Math.abs(txn.chargedAmount ?? txn.originalAmount ?? 0);
           });
 
           summary.categoryBreakdown = categoryBreakdown;

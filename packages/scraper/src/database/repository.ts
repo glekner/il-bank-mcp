@@ -140,23 +140,31 @@ export class BankDataRepository {
     stmt.run(accountId, balance, date.toISOString());
   }
 
-  private saveTransaction(transaction: Transaction): void {
+  private saveTransaction(
+    transaction: Transaction & { accountId?: string }
+  ): void {
     const stmt = this.db.prepare(`
       INSERT OR REPLACE INTO transactions 
       (id, account_id, date, description, amount, category, reference, memo, pending, installment_number, installment_total)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
+    // Generate unique ID from transaction data
+    const transactionId = `${transaction.identifier || ''}-${transaction.date}-${transaction.description}-${transaction.chargedAmount || transaction.originalAmount}`;
+
+    // Get amount from chargedAmount or originalAmount
+    const amount = transaction.chargedAmount ?? transaction.originalAmount ?? 0;
+
     stmt.run(
-      transaction.id,
-      transaction.accountId,
+      transactionId,
+      transaction.accountId || 'unknown', // accountId might not be set on raw transactions
       transaction.date,
       transaction.description,
-      transaction.amount,
-      transaction.category,
-      transaction.reference,
-      transaction.memo,
-      transaction.pending ? 1 : 0,
+      amount,
+      transaction.category || 'uncategorized',
+      null, // reference doesn't exist in israeli-bank-scrapers
+      transaction.memo || null,
+      transaction.status === 'pending' ? 1 : 0,
       transaction.installments?.number || null,
       transaction.installments?.total || null
     );
@@ -202,24 +210,33 @@ export class BankDataRepository {
     const stmt = this.db.prepare(query);
     const rows = stmt.all(...params) as TransactionRow[];
 
-    return rows.map((row: TransactionRow) => ({
-      id: row.id,
-      accountId: row.account_id,
-      date: row.date,
-      description: row.description,
-      amount: row.amount,
-      category: row.category || 'uncategorized',
-      reference: row.reference,
-      memo: row.memo,
-      pending: !!row.pending,
-      installments:
-        row.installment_number && row.installment_total
-          ? {
-              number: row.installment_number,
-              total: row.installment_total,
-            }
-          : null,
-    }));
+    return rows.map((row: TransactionRow) => {
+      // Map database row to match israeli-bank-scrapers Transaction type
+      // with additional fields we need
+      return {
+        // israeli-bank-scrapers required fields
+        type: 'normal' as const,
+        identifier: row.id,
+        date: row.date,
+        processedDate: row.date,
+        originalAmount: row.amount,
+        originalCurrency: 'ILS',
+        chargedAmount: row.amount,
+        description: row.description,
+        category: row.category || 'uncategorized',
+        status: row.pending ? ('pending' as const) : ('completed' as const),
+        memo: row.memo,
+        installments:
+          row.installment_number && row.installment_total
+            ? {
+                number: row.installment_number,
+                total: row.installment_total,
+              }
+            : undefined,
+        // Additional fields we add
+        accountId: row.account_id,
+      } as Transaction & { accountId: string };
+    });
   }
 
   /**

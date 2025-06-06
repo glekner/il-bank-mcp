@@ -70,7 +70,9 @@ export class DayOfWeekAnalysisHandler extends BaseHandler {
       });
 
       // Filter out income (positive amounts)
-      const expenses = transactions.filter(t => t.amount < 0);
+      const expenses = transactions.filter(
+        t => t.chargedAmount ?? t.originalAmount ?? 0 < 0
+      );
 
       if (expenses.length === 0) {
         return this.formatResponse({
@@ -115,7 +117,11 @@ export class DayOfWeekAnalysisHandler extends BaseHandler {
           ...result,
           summary: {
             totalExpenses: Math.abs(
-              expenses.reduce((sum, t) => sum + t.amount, 0)
+              expenses.reduce(
+                (sum, t) =>
+                  sum + Math.abs(t.chargedAmount ?? t.originalAmount ?? 0),
+                0
+              )
             ),
             transactionCount: expenses.length,
             periodStart:
@@ -173,7 +179,9 @@ export class DayOfWeekAnalysisHandler extends BaseHandler {
       const dayOfWeek = date.getDay();
       const stats = dayStats.get(dayOfWeek)!;
 
-      stats.total += Math.abs(transaction.amount);
+      stats.total += Math.abs(
+        transaction.chargedAmount ?? transaction.originalAmount ?? 0
+      );
       stats.count += 1;
 
       if (includeCategories && transaction.category) {
@@ -181,7 +189,10 @@ export class DayOfWeekAnalysisHandler extends BaseHandler {
           stats.categories.get(transaction.category) || 0;
         stats.categories.set(
           transaction.category,
-          currentCategoryTotal + Math.abs(transaction.amount)
+          currentCategoryTotal +
+            Math.abs(
+              transaction.chargedAmount ?? transaction.originalAmount ?? 0
+            )
         );
       }
     });
@@ -245,7 +256,9 @@ export class DayOfWeekAnalysisHandler extends BaseHandler {
       const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
       const stats = isWeekend ? weekendStats : weekdayStats;
 
-      stats.total += Math.abs(transaction.amount);
+      stats.total += Math.abs(
+        transaction.chargedAmount ?? transaction.originalAmount ?? 0
+      );
       stats.count += 1;
 
       if (includeCategories && transaction.category) {
@@ -253,7 +266,10 @@ export class DayOfWeekAnalysisHandler extends BaseHandler {
           stats.categories.get(transaction.category) || 0;
         stats.categories.set(
           transaction.category,
-          currentCategoryTotal + Math.abs(transaction.amount)
+          currentCategoryTotal +
+            Math.abs(
+              transaction.chargedAmount ?? transaction.originalAmount ?? 0
+            )
         );
       }
     });

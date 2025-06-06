@@ -13,9 +13,13 @@ export function processTransactions(
 
   return transactions
     .map(transaction => {
+      // Get the actual amount from chargedAmount or originalAmount
+      const amount =
+        transaction.chargedAmount ?? transaction.originalAmount ?? 0;
+
       // Determine if transaction is income or expense based on amount
-      const isExpense = transaction.amount < 0;
-      const isIncome = transaction.amount > 0;
+      const isExpense = amount < 0;
+      const isIncome = amount > 0;
       const tDate = new Date(transaction.date);
 
       // Extract month for trend analysis (format: YYYY-MM)
@@ -23,6 +27,7 @@ export function processTransactions(
 
       return {
         ...transaction,
+        amount,
         isExpense,
         isIncome,
         month,

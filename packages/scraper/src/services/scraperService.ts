@@ -9,7 +9,6 @@ import { createComponentLogger, createTimer } from '../utils/logger';
 import { getCacheService, CacheKeys } from './cacheService';
 import { ScrapeStatusManager } from './scrapeStatusManager';
 import type { ProviderKey } from '../utils/providers';
-import { TransferDetector } from '../utils/transfer-detector';
 
 const logger = createComponentLogger('ScraperService');
 
@@ -68,12 +67,58 @@ export class ScraperService {
         operationId,
       });
 
-      // Remove validation - we trust israeli-bank-scrapers
+      // Validate scraped data before saving
+      if (!scrapedData.transactions || !scrapedData.accounts) {
+        logger.error('Invalid scraped data structure', {
+          hasTransactions: !!scrapedData.transactions,
+          hasAccounts: !!scrapedData.accounts,
+          operationId,
+        });
+        throw new Error(
+          'Invalid scraped data: missing transactions or accounts'
+        );
+      }
+
+      // Basic validation - log first few errors only to prevent log flooding
+      const validationErrors: string[] = [];
+      const MAX_VALIDATION_ERRORS = 10;
+
+      scrapedData.transactions.forEach((txn, index) => {
+        if (validationErrors.length >= MAX_VALIDATION_ERRORS) return;
+
+        if (
+          !txn.date ||
+          !txn.description ||
+          (txn.chargedAmount === undefined && txn.originalAmount === undefined)
+        ) {
+          validationErrors.push(
+            `Transaction ${index}: missing required fields`
+          );
+        }
+      });
+
+      if (validationErrors.length > 0) {
+        logger.warn('Data validation warnings', {
+          errors: validationErrors,
+          totalTransactions: scrapedData.transactions.length,
+          operationId,
+        });
+      }
+
+      // Save to database
       logger.info('Saving data to database', {
         operationId,
       });
-      // Save to database
-      this.repository.saveScrapedData(scrapedData);
+
+      try {
+        this.repository.saveScrapedData(scrapedData);
+      } catch (dbError) {
+        logger.error('Failed to save scraped data to database', {
+          error: dbError,
+          operationId,
+        });
+        throw new Error('Database save failed');
+      }
 
       // Clear cache after successful scrape
       this.cache.clear();
@@ -272,24 +317,7 @@ export class ScraperService {
 
       logger.info('Fetching transactions from database', { operationId });
       // Get transactions from database
-      let transactions = this.repository.getTransactions(startDate, endDate);
-
-      // Get all accounts to detect internal transfers
-      const accounts = await this.getAccounts();
-
-      // Process transactions through transfer detector
-      if (accounts.length > 0) {
-        const transferDetector = new TransferDetector(accounts);
-        transactions = transferDetector.processTransactions(transactions);
-
-        const stats = transferDetector.getTransferStats(transactions);
-        logger.info('Transfer detection completed for financial summary', {
-          totalTransactions: transactions.length,
-          internalTransfers: stats.totalInternalTransfers,
-          internalTransferAmount: stats.totalInternalAmount,
-          operationId,
-        });
-      }
+      const transactions = this.repository.getTransactions(startDate, endDate);
 
       logger.info('Processing transactions', {
         transactionCount: transactions.length,
@@ -371,28 +399,13 @@ export class ScraperService {
       }
 
       // Not in cache, fetch from database
-      let transactions = this.repository.getTransactions(
+      const transactions = this.repository.getTransactions(
         options?.startDate,
         options?.endDate,
         options?.accountId
       );
 
       // Get all accounts to detect internal transfers
-      const accounts = await this.getAccounts();
-
-      // Process transactions through transfer detector
-      if (accounts.length > 0) {
-        const transferDetector = new TransferDetector(accounts);
-        transactions = transferDetector.processTransactions(transactions);
-
-        const stats = transferDetector.getTransferStats(transactions);
-        logger.info('Transfer detection completed', {
-          totalTransactions: transactions.length,
-          internalTransfers: stats.totalInternalTransfers,
-          internalTransferAmount: stats.totalInternalAmount,
-          operationId,
-        });
-      }
 
       // Cache the results
       this.cache.set(cacheKey, transactions, 5 * 60 * 1000); // 5 minutes

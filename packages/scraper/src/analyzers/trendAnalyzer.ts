@@ -36,10 +36,12 @@ export function analyzeFinancialTrends(
 
       monthTransactions.forEach(transaction => {
         const category = transaction.category;
-        if (!categories[category]) {
-          categories[category] = 0;
+        if (category && transaction.isExpense) {
+          if (!categories[category]) {
+            categories[category] = 0;
+          }
+          categories[category] += Math.abs(transaction.amount);
         }
-        categories[category] += Math.abs(transaction.amount);
       });
 
       return {

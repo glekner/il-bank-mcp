@@ -67,7 +67,7 @@ export class RecurringChargesHandler extends BaseHandler {
       // Filter out income transactions (positive amounts and income keywords) AND internal transfers
       const expenseTransactions = transactions.filter(txn => {
         // Exclude positive amounts (income)
-        if (txn.amount > 0) return false;
+        if (txn.chargedAmount ?? txn.originalAmount ?? 0 > 0) return false;
 
         // Exclude internal transfers
         if ('isInternalTransfer' in txn && txn.isInternalTransfer) return false;
@@ -201,7 +201,9 @@ export class RecurringChargesHandler extends BaseHandler {
 
       const pattern = groups.get(merchant)!;
       // Use the actual negative amount for expenses
-      pattern.amounts.push(Math.abs(txn.amount)); // Convert to positive for calculations
+      pattern.amounts.push(
+        Math.abs(txn.chargedAmount ?? txn.originalAmount ?? 0)
+      ); // Convert to positive for calculations
       pattern.dates.push(new Date(txn.date));
       pattern.transactions.push(txn);
     });

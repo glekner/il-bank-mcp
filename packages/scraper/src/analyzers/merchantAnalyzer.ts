@@ -62,14 +62,16 @@ export function analyzeMerchantSpending(
     (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
   );
 
-  const amounts = merchantTransactions.map(t => Math.abs(t.amount));
-  const totalAmount = amounts.reduce((sum, amt) => sum + amt, 0);
+  const amounts = merchantTransactions.map(t =>
+    Math.abs(t.chargedAmount ?? t.originalAmount ?? 0)
+  );
+  const totalAmount = amounts.reduce((sum, amount) => sum + amount, 0);
   const averageAmount = totalAmount / amounts.length;
 
   // Calculate standard deviation for anomaly detection
   const variance =
-    amounts.reduce((sum, amt) => {
-      const diff = amt - averageAmount;
+    amounts.reduce((sum, amount) => {
+      const diff = amount - averageAmount;
       return sum + diff * diff;
     }, 0) / amounts.length;
   const stdDev = Math.sqrt(variance);
@@ -77,7 +79,7 @@ export function analyzeMerchantSpending(
   let anomalies: Transaction[] | undefined;
   if (includeAnomalies) {
     anomalies = merchantTransactions.filter(t => {
-      const amount = Math.abs(t.amount);
+      const amount = Math.abs(t.chargedAmount ?? t.originalAmount ?? 0);
       return amount > averageAmount + 1.5 * stdDev;
     });
   }
@@ -114,19 +116,20 @@ export function getSpendingByMerchant(
 
   // Group transactions by merchant
   transactions.forEach(transaction => {
-    if (transaction.amount >= 0) return; // Skip income
+    const amount = transaction.chargedAmount ?? transaction.originalAmount ?? 0;
+    if (amount >= 0) return; // Skip income
 
     const merchantName = extractMerchantName(transaction.description);
     const existing = merchantMap.get(merchantName);
 
     if (existing) {
-      existing.totalAmount += Math.abs(transaction.amount);
+      existing.totalAmount += Math.abs(amount);
       existing.transactionCount++;
       existing.transactions.push(transaction);
     } else {
       merchantMap.set(merchantName, {
         merchant: merchantName,
-        totalAmount: Math.abs(transaction.amount),
+        totalAmount: Math.abs(amount),
         transactionCount: 1,
         transactions: [transaction],
       });

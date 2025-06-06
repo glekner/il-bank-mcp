@@ -1,3 +1,4 @@
+import type { ScraperScrapingResult } from 'israeli-bank-scrapers';
 import type { ProviderKey } from './utils/providers';
 
 // Re-export ProviderKey
@@ -66,35 +67,11 @@ export type MultiProviderCredentials = Partial<
   Record<ProviderKey, ProviderCredentials>
 >;
 
-export interface Transaction {
-  id: string;
-  date: string;
-  description: string;
-  amount: number;
-  category: string;
+export type Transaction = NonNullable<
+  ScraperScrapingResult['accounts']
+>[number]['txns'][number] & {
   accountId: string;
-  reference: string | null;
-  memo: string | null;
-  /**
-   * Indicates a transaction that is still pending / has not yet been fully posted by the provider
-   * (the scraper returned both chargedAmount and originalAmount as null and we fall back to 0).
-   */
-  pending?: boolean;
-  /**
-   * Installments information for transactions paid in installments
-   */
-  installments?: {
-    number: number; // Current installment number
-    total: number; // Total number of installments
-  } | null;
-  isInternalTransfer?: boolean;
-  isPotentialTransfer?: boolean;
-  transferDetails?: {
-    targetAccountId?: string;
-    targetAccountName?: string;
-    direction: 'from' | 'to';
-  };
-}
+};
 
 export interface Account {
   id: string;
@@ -115,6 +92,7 @@ export interface ProcessedTransaction extends Transaction {
   isExpense: boolean;
   isIncome: boolean;
   month: string; // Format: YYYY-MM
+  amount: number; // Derived from chargedAmount or originalAmount
 }
 
 export interface CategoryBreakdown {
