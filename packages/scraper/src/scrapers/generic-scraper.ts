@@ -10,6 +10,12 @@ import { logger } from '../utils/logger';
 import { getProviderDisplayName, type ProviderKey } from '../utils/providers';
 import { BaseScraper } from './base';
 
+// Type for the scraper instance returned by createScraper
+interface ScraperInstance {
+  scrape(credentials: ProviderCredentials): Promise<ScraperScrapingResult>;
+  terminate?(): Promise<void>;
+}
+
 /**
  * Generic scraper that can handle any Israeli bank provider
  */
@@ -29,11 +35,13 @@ export class GenericScraper implements BaseScraper {
   }
 
   async scrape(): Promise<ScrapedAccountData> {
+    let scraper: ScraperInstance | null = null;
+
     try {
       logger.info(`Starting ${this.type} scraper`);
 
       const options = this.buildScraperOptions();
-      const scraper = createScraper(options);
+      scraper = createScraper(options) as ScraperInstance;
 
       logger.info('Starting scraping process');
       const scrapeResult = await scraper.scrape(this.credentials);
@@ -51,6 +59,18 @@ export class GenericScraper implements BaseScraper {
       throw new Error(
         `${this.type} scraping process error: ${error instanceof Error ? error.message : String(error)}`
       );
+    } finally {
+      // Ensure browser is closed even if an error occurs
+      if (scraper && typeof scraper.terminate === 'function') {
+        try {
+          logger.info(`Closing browser for ${this.type} scraper`);
+          await scraper.terminate();
+        } catch (cleanupError) {
+          logger.error(`Error closing browser for ${this.type}`, {
+            cleanupError,
+          });
+        }
+      }
     }
   }
 
@@ -82,6 +102,8 @@ export class GenericScraper implements BaseScraper {
       args: chromeArgs,
       navigationRetryCount: 3,
       additionalTransactionInformation: true,
+      // Add protocol timeout to prevent hanging
+      timeout: 60000, // 60 seconds page timeout
     };
   }
 
