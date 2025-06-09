@@ -61,9 +61,5 @@ echo -e "\n${GREEN}✅ Docker restart complete!${NC}"
 echo -e "\n${YELLOW}📊 Container Status:${NC}"
 docker-compose ps
 
-echo -e "\n${YELLOW}📝 Next steps:${NC}"
-echo "  - View logs: npm run docker:logs"
-echo "  - Check status: npm run docker:status"
-echo "  - Configure Claude Desktop: make claude-config"
 
 echo -e "\n${GREEN}🎉 All done!${NC}" 

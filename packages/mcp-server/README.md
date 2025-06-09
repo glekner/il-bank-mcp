@@ -275,7 +275,7 @@ If you try to use a category that doesn't exist in your database, the tool will 
 ### Building
 
 ```bash
-npm run build
+yarn build
 ```
 
 ### Running

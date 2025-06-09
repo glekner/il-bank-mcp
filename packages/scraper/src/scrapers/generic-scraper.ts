@@ -108,53 +108,9 @@ export class GenericScraper implements BaseScraper {
   }
 
   private getChromeArgs(): string[] {
-    const defaultArgs = [
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-dev-shm-usage',
-      '--disable-gpu',
-      '--disable-web-security',
-      '--disable-features=IsolateOrigins',
-      '--disable-site-isolation-trials',
-      // Add memory optimization flags for containers
-      '--memory-pressure-off',
-      '--disable-background-timer-throttling',
-      '--disable-renderer-backgrounding',
-      '--disable-backgrounding-occluded-windows',
-      // Aggressive memory limits
-      '--max_old_space_size=512',
-      '--js-flags=--max-old-space-size=512',
-      '--renderer-process-limit=2',
-      '--single-process',
-      '--no-zygote',
-      '--no-first-run',
-      '--disable-extensions',
-      '--disable-default-apps',
-      '--disable-translate',
-      '--disable-sync',
-      '--metrics-recording-only',
-      '--safebrowsing-disable-auto-update',
-      '--disable-component-update',
-      '--disable-background-networking',
-      '--disable-features=TranslateUI',
-      '--disable-ipc-flooding-protection',
-      // Prevent memory leaks from media/audio
-      '--autoplay-policy=user-gesture-required',
-      '--disable-background-media-suspend',
-      '--disable-blink-features=AutomationControlled',
-      '--disable-features=AudioServiceOutOfProcess',
-      '--disable-print-preview',
-      '--disable-site-isolation-for-policy',
-      '--disable-speech-api',
-      '--disable-voice-input',
-      '--mute-audio',
-      '--no-default-browser-check',
-      '--no-pings',
-    ];
-
     const envArgs =
       process.env.PUPPETEER_ARGS?.split(',').filter(Boolean) || [];
-    return envArgs.length > 0 ? envArgs : defaultArgs;
+    return envArgs.length > 0 ? envArgs : [];
   }
 
   private validateScrapeResult(
