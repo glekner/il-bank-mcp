@@ -63,15 +63,18 @@ export class DayOfWeekAnalysisHandler extends BaseHandler {
       const groupBy = args.groupBy || 'all';
 
       // Get transactions
-      const transactions = await this.scraperService.getTransactions({
-        startDate,
-        endDate,
-        accountId: args.accountId,
-      });
+      const processedTransactions =
+        await this.scraperService.getProcessedTransactions({
+          startDate,
+          endDate,
+          accountId: args.accountId,
+        });
 
-      // Filter out income (positive amounts)
-      const expenses = transactions.filter(
-        t => t.chargedAmount ?? t.originalAmount ?? 0 < 0
+      // Filter out income (positive amounts) and internal transfers
+      const expenses = processedTransactions.filter(
+        t =>
+          (t.chargedAmount ?? t.originalAmount ?? 0 < 0) &&
+          !t.isInternalTransfer
       );
 
       if (expenses.length === 0) {

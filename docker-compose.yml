@@ -8,7 +8,6 @@ x-service-defaults: &service-defaults # Common runtime settings for all services
     DATABASE_PATH: /app/data/bank.db
     PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium-browser
     PUPPETEER_ARGS: --no-sandbox,--disable-setuid-sandbox,--disable-dev-shm-usage
-    LOG_LEVEL: info # Ensure info level logging
   networks:
     - bank-network
   security_opt:

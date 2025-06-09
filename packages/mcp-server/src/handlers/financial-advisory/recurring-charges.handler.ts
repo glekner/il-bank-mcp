@@ -55,22 +55,23 @@ export class RecurringChargesHandler extends BaseHandler {
       });
 
       // Get all transactions for the period
-      const transactions = await this.scraperService.getTransactions({
-        startDate,
-        endDate,
-      });
+      const processedTransactions =
+        await this.scraperService.getProcessedTransactions({
+          startDate,
+          endDate,
+        });
 
-      if (!transactions || transactions.length === 0) {
+      if (!processedTransactions || processedTransactions.length === 0) {
         throw new Error('No transactions found for analysis');
       }
 
       // Filter out income transactions (positive amounts and income keywords) AND internal transfers
-      const expenseTransactions = transactions.filter(txn => {
+      const expenseTransactions = processedTransactions.filter(txn => {
         // Exclude positive amounts (income)
         if (txn.chargedAmount ?? txn.originalAmount ?? 0 > 0) return false;
 
         // Exclude internal transfers
-        if ('isInternalTransfer' in txn && txn.isInternalTransfer) return false;
+        if (txn.isInternalTransfer) return false;
 
         // Exclude transactions with income-related keywords
         const descLower = txn.description.toLowerCase();
@@ -80,9 +81,9 @@ export class RecurringChargesHandler extends BaseHandler {
       });
 
       logger.info('Filtered transactions', {
-        totalTransactions: transactions.length,
+        totalTransactions: processedTransactions.length,
         expenseTransactions: expenseTransactions.length,
-        filteredOut: transactions.length - expenseTransactions.length,
+        filteredOut: processedTransactions.length - expenseTransactions.length,
       });
 
       // Group transactions by merchant

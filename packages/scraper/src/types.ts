@@ -93,6 +93,8 @@ export interface ProcessedTransaction extends Transaction {
   isIncome: boolean;
   month: string; // Format: YYYY-MM
   amount: number; // Derived from chargedAmount or originalAmount
+  isInternalTransfer?: boolean;
+  matchingTransactionId?: string; // ID of the matching transfer transaction
 }
 
 export interface CategoryBreakdown {

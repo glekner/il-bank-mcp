@@ -1,5 +1,6 @@
 import { Transaction, ProcessedTransaction } from '../types';
 import { logger } from '../utils/logger';
+import { detectInternalTransfers } from '../utils/internalTransferDetector';
 
 /**
  * Processes raw transactions to add additional metadata and categorization
@@ -10,6 +11,9 @@ export function processTransactions(
   transactions: Transaction[]
 ): ProcessedTransaction[] {
   logger.info('Processing transactions', { count: transactions.length });
+
+  // Detect internal transfers first
+  const transferPairs = detectInternalTransfers(transactions);
 
   return transactions
     .map(transaction => {
@@ -25,13 +29,26 @@ export function processTransactions(
       // Extract month for trend analysis (format: YYYY-MM)
       const month = `${tDate.getFullYear()}-${String(tDate.getMonth() + 1).padStart(2, '0')}`;
 
+      // Check if this is an internal transfer
+      const transactionId = transaction.identifier
+        ? String(transaction.identifier)
+        : undefined;
+      const isInternalTransfer = transactionId
+        ? transferPairs.has(transactionId)
+        : false;
+      const matchingTransactionId = transactionId
+        ? transferPairs.get(transactionId)
+        : undefined;
+
       return {
         ...transaction,
         amount,
         isExpense,
         isIncome,
         month,
-      };
+        isInternalTransfer,
+        matchingTransactionId,
+      } satisfies ProcessedTransaction;
     })
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // Sort by date descending
 }

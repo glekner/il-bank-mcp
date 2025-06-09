@@ -4,7 +4,12 @@ import { analyzeFinancialTrends } from '../analyzers/trendAnalyzer';
 import { BankDataRepository } from '../database/repository';
 import { processTransactions } from '../processors/transactionProcessor';
 import { scrapeAllBankData, scrapeSingleProvider } from '../scraper';
-import { FinancialSummary, Transaction, type Account } from '../types';
+import {
+  FinancialSummary,
+  Transaction,
+  type Account,
+  type ProcessedTransaction,
+} from '../types';
 import { createComponentLogger, createTimer } from '../utils/logger';
 import { getCacheService, CacheKeys } from './cacheService';
 import { ScrapeStatusManager } from './scrapeStatusManager';
@@ -419,6 +424,50 @@ export class ScraperService {
       return transactions;
     } catch (error) {
       logger.errorOperation('fetching transactions', error as Error, {
+        operationId,
+        duration_ms: timer.elapsed(),
+      });
+      throw error;
+    }
+  }
+
+  /**
+   * Get processed transactions with internal transfer detection
+   */
+  async getProcessedTransactions(options?: {
+    startDate?: Date;
+    endDate?: Date;
+    accountId?: string;
+  }): Promise<ProcessedTransaction[]> {
+    const timer = createTimer();
+    const operationId = `get-processed-transactions-${Date.now()}`;
+
+    logger.startOperation('fetching processed transactions', {
+      startDate: options?.startDate?.toISOString(),
+      endDate: options?.endDate?.toISOString(),
+      accountId: options?.accountId,
+      operationId,
+    });
+
+    try {
+      // Get raw transactions
+      const transactions = await this.getTransactions(options);
+
+      // Process transactions (adds isInternalTransfer detection)
+      const processedTransactions = processTransactions(transactions);
+
+      const duration = timer.elapsed();
+      logger.endOperation('fetching processed transactions', duration, {
+        transactionCount: processedTransactions.length,
+        internalTransfers: processedTransactions.filter(
+          t => t.isInternalTransfer
+        ).length,
+        operationId,
+      });
+
+      return processedTransactions;
+    } catch (error) {
+      logger.errorOperation('fetching processed transactions', error as Error, {
         operationId,
         duration_ms: timer.elapsed(),
       });

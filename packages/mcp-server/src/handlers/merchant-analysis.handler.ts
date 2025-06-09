@@ -19,10 +19,16 @@ export class MerchantAnalysisHandler {
       const startDate = new Date();
       startDate.setMonth(startDate.getMonth() - lookbackMonths);
 
-      const transactions = await this.scraperService.getTransactions({
-        startDate,
-        endDate,
-      });
+      const processedTransactions =
+        await this.scraperService.getProcessedTransactions({
+          startDate,
+          endDate,
+        });
+
+      // Filter out internal transfers for accurate merchant analysis
+      const transactions = processedTransactions.filter(
+        t => !t.isInternalTransfer
+      );
 
       const analysis = analyzeMerchantSpending(
         transactions,
@@ -90,10 +96,16 @@ export class MerchantAnalysisHandler {
       const startDate = args.startDate ? new Date(args.startDate) : undefined;
       const endDate = args.endDate ? new Date(args.endDate) : undefined;
 
-      const transactions = await this.scraperService.getTransactions({
-        startDate,
-        endDate,
-      });
+      const processedTransactions =
+        await this.scraperService.getProcessedTransactions({
+          startDate,
+          endDate,
+        });
+
+      // Filter out internal transfers for accurate merchant analysis
+      const transactions = processedTransactions.filter(
+        t => !t.isInternalTransfer
+      );
 
       const merchantSpending = getSpendingByMerchant(transactions, {
         minAmount: args.minAmount,

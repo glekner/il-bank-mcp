@@ -105,13 +105,21 @@ export class CategoryAnalysisHandler {
 
     try {
       // Get transactions with date filter
-      const transactions = await this.scraperService.getTransactions({
-        startDate: args.startDate ? new Date(args.startDate) : undefined,
-        endDate: args.endDate ? new Date(args.endDate) : undefined,
-      });
+      const processedTransactions =
+        await this.scraperService.getProcessedTransactions({
+          startDate: args.startDate ? new Date(args.startDate) : undefined,
+          endDate: args.endDate ? new Date(args.endDate) : undefined,
+        });
 
       // Apply filters
-      let filteredTransactions = transactions;
+      let filteredTransactions = processedTransactions;
+
+      // Filter out internal transfers by default (can be overridden with search term)
+      if (!args.searchTerm?.toLowerCase().includes('internal')) {
+        filteredTransactions = filteredTransactions.filter(
+          t => !t.isInternalTransfer
+        );
+      }
 
       // Search term filter
       if (args.searchTerm) {
