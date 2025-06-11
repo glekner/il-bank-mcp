@@ -22,7 +22,6 @@ interface DatabaseMetadata {
     uniqueCount: number;
   };
   configuration: {
-    scrapeIntervalHours?: string;
     scrapeDepthDays?: number;
     ignoredAccountIds: string[];
     databasePath?: string;
@@ -52,7 +51,6 @@ export class MetadataHandler extends BaseHandler {
 
       // Get configuration from environment
       const config = {
-        scrapeIntervalHours: process.env.SCRAPE_EVERY_HOURS || 'Not set',
         scrapeDepthDays: process.env.SCRAPE_DEPTH_DAYS
           ? parseInt(process.env.SCRAPE_DEPTH_DAYS)
           : undefined,
@@ -64,7 +62,7 @@ export class MetadataHandler extends BaseHandler {
           process.env.DATABASE_PATH || 'Default: ./data/bank-data.db',
         refreshThresholdHours: process.env.REFRESH_THRESHOLD_HOURS
           ? parseInt(process.env.REFRESH_THRESHOLD_HOURS)
-          : 24,
+          : 12,
       };
 
       // Get last scrape info

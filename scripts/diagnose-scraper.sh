@@ -45,8 +45,6 @@ echo ""
 # Check environment variables
 echo "8. Key Environment Variables:"
 docker exec bank-scraper sh -c 'echo "LOG_LEVEL=$LOG_LEVEL"'
-docker exec bank-scraper sh -c 'echo "SCRAPE_EVERY_HOURS=$SCRAPE_EVERY_HOURS"'
-docker exec bank-scraper sh -c 'echo "SCRAPE_TIMEOUT_MINUTES=$SCRAPE_TIMEOUT_MINUTES"'
 echo ""
 
 # Suggestions

@@ -38,30 +38,9 @@ export class ScraperService {
     try {
       logger.startOperation('multi-provider data scraping', { operationId });
 
-      // Get the scraping interval from environment
-      const scrapeEveryHours = Number(process.env.SCRAPE_EVERY_HOURS ?? '12');
-
-      // Check if we should scrape - use the configured interval as the threshold
-      if (!this.repository.shouldScrape(scrapeEveryHours)) {
-        const lastScrapeInfo = this.repository.getLastScrapeInfo();
-        const hoursSinceLastScrape = lastScrapeInfo?.lastScrapeAt
-          ? (Date.now() - lastScrapeInfo.lastScrapeAt.getTime()) /
-            (1000 * 60 * 60)
-          : null;
-
-        logger.info('Skipping scrape - data is still fresh', {
-          lastScrapeAt: lastScrapeInfo?.lastScrapeAt,
-          hoursSinceLastScrape: hoursSinceLastScrape?.toFixed(2),
-          scrapeEveryHours,
-          operationId,
-        });
-        return;
-      }
-
       logger.info('Starting bank data scraping', {
         operationId,
-        scrapeEveryHours,
-        reason: 'Data freshness threshold exceeded',
+        reason: 'On-demand scrape requested',
       });
       // Scrape data from all providers
       const scrapedData = await scrapeAllBankData();

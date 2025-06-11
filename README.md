@@ -60,7 +60,7 @@ See [env.example](https://github.com/glekner/il-bank-mcp/blob/master/env.example
 - **Local & Secure**: All data stays in a local SQLite database
 - **Multi-Provider**: Works with most Israeli banks and credit cards
 - **Real-time Updates**: Refresh data on-demand from any provider
-- **Automated Sync**: By default, scrapes your bank data every 6 hours to keep everything current
+- **On-Demand Sync**: Scrape your bank data whenever you need fresh insights
 
 ### What questions can I ask?
 

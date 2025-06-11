@@ -22,6 +22,7 @@ help:
 	@echo "  make shell-scraper  - Access scraper container shell"
 	@echo "  make shell-mcp      - Access MCP container shell"
 	@echo "  make status         - Show service status"
+	@echo "  make scrape         - Run on-demand bank data scrape"
 
 # Initial setup
 setup:
@@ -122,6 +123,12 @@ status:
 	@echo ""
 	@echo "Resource Usage:"
 	@docker stats --no-stream bank-scraper bank-mcp-server
+
+# Run on-demand scrape
+scrape:
+	@echo "Running on-demand bank data scrape..."
+	@chmod +x scripts/scrape-on-demand.sh
+	@./scripts/scrape-on-demand.sh
 
 # Development targets
 dev-build:

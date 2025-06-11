@@ -9,9 +9,7 @@
     "dev": "tsx watch src/index.ts",
     "setup": "tsx src/setup.ts",
     "scrape": "tsx src/cli.ts scrape",
-    "scrape:scheduled": "tsx src/scheduler.ts",
     "lint": "eslint .",
-    "start": "node dist/scheduler.js",
     "test:multi": "tsx src/test-multi-service.ts",
     "list-accounts": "tsx src/list-accounts.ts",
     "test:ignored": "tsx src/test-ignored-accounts.ts"

@@ -41,19 +41,10 @@ services:
     volumes:
       - bank-data:/app/data # Persist scraped DB between container restarts
       - ./packages/scraper/logs:/app/packages/scraper/logs
-    command: ['node', 'dist/scheduler.js']
-    healthcheck:
-      test:
-        [
-          'CMD',
-          'sh',
-          '-c',
-          'ps aux | grep -v grep | grep "node dist/scheduler.js" || exit 1',
-        ]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 40s
+    # No command specified - container will exit after build
+    # Can be run on-demand with: docker-compose run scraper node dist/cli.js scrape
+    profiles:
+      - tools
     # Override with more generous limits for scraper
     deploy:
       resources:
@@ -74,9 +65,6 @@ services:
     container_name: bank-mcp-server
     volumes:
       - bank-data:/app/data # Read-write access to DB for forced scraping
-    depends_on:
-      scraper:
-        condition: service_healthy
     stdin_open: true
     tty: true
     # MCP servers communicate via stdio, so we don't expose ports
