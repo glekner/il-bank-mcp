@@ -68,7 +68,7 @@ export class RecurringChargesHandler extends BaseHandler {
       // Filter out income transactions (positive amounts and income keywords) AND internal transfers
       const expenseTransactions = processedTransactions.filter(txn => {
         // Exclude positive amounts (income)
-        if (txn.chargedAmount ?? txn.originalAmount ?? 0 > 0) return false;
+        if ((txn.chargedAmount ?? txn.originalAmount ?? 0) > 0) return false;
 
         // Exclude internal transfers
         if (txn.isInternalTransfer) return false;
