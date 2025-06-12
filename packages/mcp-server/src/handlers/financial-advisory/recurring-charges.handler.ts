@@ -67,8 +67,9 @@ export class RecurringChargesHandler extends BaseHandler {
 
       // Filter out income transactions (positive amounts and income keywords) AND internal transfers
       const expenseTransactions = processedTransactions.filter(txn => {
+        const amount = txn.chargedAmount ?? txn.originalAmount ?? 0;
         // Exclude positive amounts (income)
-        if ((txn.chargedAmount ?? txn.originalAmount ?? 0) > 0) return false;
+        if (amount > 0) return false;
 
         // Exclude internal transfers
         if (txn.isInternalTransfer) return false;
@@ -90,6 +91,18 @@ export class RecurringChargesHandler extends BaseHandler {
       const merchantGroups =
         this.groupTransactionsByMerchant(expenseTransactions);
 
+      logger.info('Merchant groups created', {
+        totalMerchants: merchantGroups.size,
+        merchantSample: Array.from(merchantGroups.entries())
+          .slice(0, 5)
+          .map(([merchant, pattern]) => ({
+            merchant,
+            occurrences: pattern.transactions.length,
+            firstDate: pattern.dates[0]?.toISOString(),
+            lastDate: pattern.dates[pattern.dates.length - 1]?.toISOString(),
+          })),
+      });
+
       // Analyze patterns for recurring charges
       const recurringCharges: RecurringCharge[] = [];
 
@@ -97,6 +110,17 @@ export class RecurringChargesHandler extends BaseHandler {
         if (pattern.transactions.length < minOccurrences) continue;
 
         const analysis = this.analyzeRecurrencePattern(pattern);
+
+        // Log analysis details for merchants with enough occurrences
+        if (pattern.transactions.length >= 3) {
+          logger.info('Analyzing merchant pattern', {
+            merchant,
+            occurrences: pattern.transactions.length,
+            isRecurring: analysis.isRecurring,
+            frequency: analysis.frequency,
+            averageAmount: analysis.averageAmount,
+          });
+        }
 
         if (analysis.isRecurring) {
           recurringCharges.push({
@@ -213,12 +237,65 @@ export class RecurringChargesHandler extends BaseHandler {
   }
 
   private normalizeMerchantName(description: string): string {
-    // Remove common variations in merchant names
+    // Preserve original for known subscription patterns
+    const lowerDesc = description.toLowerCase();
+
+    // Common subscription service patterns that should be preserved
+    const subscriptionPatterns = [
+      'netflix',
+      'spotify',
+      'youtube',
+      'disney',
+      'apple',
+      'google',
+      'amazon',
+      'microsoft',
+      'adobe',
+      'dropbox',
+      'icloud',
+      'gym',
+      'fitness',
+      'club',
+      // Hebrew patterns
+      'נטפליקס',
+      'ספוטיפיי',
+      'יוטיוב',
+      'דיסני',
+      'חדר כושר',
+      'מועדון',
+      'מנוי',
+      'ביטוח',
+      // Common Israeli services
+      'yes',
+      'hot',
+      'partner',
+      'cellcom',
+      'pelephone',
+      'bezeq',
+      'בזק',
+      'הוט',
+      'פרטנר',
+      'סלקום',
+      'פלאפון',
+    ];
+
+    // Check if this is a known subscription service
+    const isKnownSubscription = subscriptionPatterns.some(pattern =>
+      lowerDesc.includes(pattern)
+    );
+
+    // For known subscriptions, minimal normalization
+    if (isKnownSubscription) {
+      return description.toLowerCase().replace(/\s+/g, ' ').trim();
+    }
+
+    // For other merchants, more aggressive normalization
     return description
       .toLowerCase()
       .replace(/\s+/g, ' ')
-      .replace(/[0-9]{4,}/g, '') // Remove long numbers (transaction IDs, etc.)
-      .replace(/\*{2,}/g, '') // Remove multiple asterisks
+      .replace(/[0-9]{6,}/g, '') // Only remove very long numbers (6+ digits)
+      .replace(/\*{3,}/g, '') // Only remove 3+ asterisks
+      .replace(/\s*-\s*[0-9]+$/, '') // Remove trailing transaction numbers
       .trim();
   }
 
@@ -242,27 +319,44 @@ export class RecurringChargesHandler extends BaseHandler {
       intervals.push(daysDiff);
     }
 
+    // If we don't have enough intervals, can't determine pattern
+    if (intervals.length === 0) {
+      return {
+        isRecurring: false,
+        frequency: 'unknown',
+        averageAmount:
+          amounts.reduce((sum, amt) => sum + amt, 0) / amounts.length,
+      };
+    }
+
     // Analyze intervals to determine frequency
     const avgInterval =
       intervals.reduce((sum, int) => sum + int, 0) / intervals.length;
     const stdDev = this.calculateStdDev(intervals);
 
-    // Check if pattern is consistent (low standard deviation)
-    const isRecurring = stdDev < avgInterval * 0.3; // 30% tolerance
+    // Check if pattern is consistent (increased tolerance from 30% to 50%)
+    // Also, for single interval (2 transactions), be more lenient
+    const tolerance = intervals.length === 1 ? 0.7 : 0.5; // 70% for 2 transactions, 50% for more
+    const isRecurring = stdDev < avgInterval * tolerance;
 
     let frequency = 'unknown';
     let nextExpectedDate: Date | undefined;
 
-    if (isRecurring) {
+    if (isRecurring || intervals.length === 1) {
+      // Consider 2 transactions as potentially recurring
       if (avgInterval <= 7) {
         frequency = 'weekly';
-      } else if (avgInterval <= 31) {
+      } else if (avgInterval <= 35) {
+        // Increased from 31 to account for monthly variations
         frequency = 'monthly';
-      } else if (avgInterval <= 93) {
+      } else if (avgInterval <= 95) {
+        // Increased from 93
         frequency = 'quarterly';
-      } else if (avgInterval <= 186) {
+      } else if (avgInterval <= 190) {
+        // Increased from 186
         frequency = 'semi-annual';
-      } else if (avgInterval <= 366) {
+      } else if (avgInterval <= 380) {
+        // Increased from 366
         frequency = 'annual';
       }
 
@@ -279,7 +373,8 @@ export class RecurringChargesHandler extends BaseHandler {
       amounts.reduce((sum, amt) => sum + amt, 0) / amounts.length;
 
     return {
-      isRecurring,
+      isRecurring:
+        isRecurring || (intervals.length === 1 && frequency !== 'unknown'),
       frequency,
       averageAmount,
       nextExpectedDate,
